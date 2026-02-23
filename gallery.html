@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gallery Walk</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #8ba87a;
+    }
+    #scroll-driver {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow-y: scroll;
+      z-index: 10;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      pointer-events: none;
+    }
+    #scroll-driver::-webkit-scrollbar {
+      display: none;
+    }
+    #scroll-content {
+      width: 100%;
+      height: 30000px;
+    }
+    #scene {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: auto;
+      z-index: 1;
+      overflow: hidden;
+    }
+    #wall {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      will-change: transform;
+    }
+    .wall-frame {
+      position: absolute;
+      pointer-events: auto;
+      cursor: pointer;
+      transition: filter 0.35s ease, transform 0.35s ease;
+    }
+    .wall-frame.hovered {
+      filter: drop-shadow(0 0 12px rgba(58, 107, 39, 0.45));
+      transform: scale(1.015);
+    }
+    .wall-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(3px 4px 8px rgba(0,0,0,0.2));
+    }
+
+    /* Zoom overlay */
+    #zoom-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 100;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+    #zoom-overlay.active {
+      pointer-events: auto;
+      opacity: 1;
+    }
+    #zoom-backdrop {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    #zoom-frame {
+      position: absolute;
+      transition: left 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                  top 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                  width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                  height 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      filter: drop-shadow(0 12px 40px rgba(0,0,0,0.5));
+    }
+    #zoom-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    .gallery-object {
+      position: absolute;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .gallery-object img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    #character {
+      position: fixed;
+      bottom: 8%;
+      z-index: 5;
+      will-change: left;
+    }
+    #character img {
+      position: absolute;
+      top: -100%;
+      left: 0;
+      width: 250%;
+      height: 250%;
+      object-fit: contain;
+      opacity: 0;
+    }
+    #character img.active {
+      opacity: 1;
+    }
+    #floor {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 6.5%;
+      background: #ffffff;
+      z-index: 0;
+      pointer-events: none;
+    }
+    #floor-line {
+      position: fixed;
+      bottom: 6.5%;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: rgb(0, 0, 0);
+      z-index: 0;
+      pointer-events: none;
+    }
+    #vignette {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 6;
+      background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.12) 100%);
+    }
+  </style>
+</head>
+<body>
+  <div id="scroll-driver">
+    <div id="scroll-content"></div>
+  </div>
+  <div id="scene">
+    <div id="wall"></div>
+    <div id="character">
+      <img id="walkR1" src="gallery-character/walkright1.svg" alt="walk right 1" />
+      <img id="walkR2" src="gallery-character/walkright2.svg" alt="walk right 2" />
+      <img id="walkR3" src="gallery-character/walkright3.svg" alt="walk right 3" />
+      <img id="walkR4" src="gallery-character/walkright4.svg" alt="walk right 4" />
+      <img id="walkL1" src="gallery-character/walkleft1.svg" alt="walk left 1" />
+      <img id="walkL2" src="gallery-character/walkleft2.svg" alt="walk left 2" />
+      <img id="walkL3" src="gallery-character/walkleft3.svg" alt="walk left 3" />
+      <img id="walkL4" src="gallery-character/walkleft4.svg" alt="walk left 4" />
+      <img id="idleRight" src="gallery-character/idleright.svg" alt="idle facing right" class="active" />
+      <img id="idleLeft" src="gallery-character/idleleft.svg" alt="idle facing left" />
+    </div>
+  </div>
+  <div id="floor"></div>
+  <div id="floor-line"></div>
+  <div id="vignette"></div>
+
+  <!-- Zoom overlay for painting close-up -->
+  <div id="zoom-overlay">
+    <div id="zoom-backdrop"></div>
+    <div id="zoom-frame"></div>
+  </div>
+
+  <script>
+    const BASE_VW = 1920;
+    const BASE_VH = 900;
+
+    const frameLayout = [
+      { id: 1,  x: 370,   y: 20,  w: 250, h: 250 },
+      { id: 2,  x: 450,   y: 50, w: 250, h: 250 },
+      { id: 3,  x: 700,   y: 4,  w: 250, h: 250 },
+      { id: 4,  x: 750,   y: 35, w: 280, h: 280 },
+      { id: 5,  x: 1050,  y: 8,  w: 250, h: 250 },
+      { id: 6,  x: 1050,  y: 45, w: 250, h: 250 },
+      { id: 7,  x: 1360,  y: 46,  w: 280, h: 280 },
+      { id: 8,  x: 1780,  y: 4, w: 280, h: 280 },
+      { id: 9,  x: 1380,  y: 9,  w: 350, h: 350 },
+      { id: 10, x: 1700,  y: 48, w: 350, h: 350 },
+      { id: 101, x: 2130,  y: -10, w: 1100, h: 1100 },
+      { id: 11, x: 3300,  y: 4,  w: 250, h: 250 },
+      { id: 12, x: 3440,  y: 30, w: 280, h: 280 },
+      { id: 13, x: 3350,  y: 60,  w: 280, h: 280 },
+      { id: 14, x: 3730,  y: 46, w: 350, h: 350 },
+      { id: 15, x: 3870,  y: 8,  w: 330, h: 330 },
+      { id: 16, x: 4200,  y: 40, w: 350, h: 350 },
+      { id: 17, x: 4270,  y: 3,  w: 280, h: 280 },
+      { id: 18, x: 4580,  y: 55, w: 280, h: 280 },
+      { id: 19, x: 4920,  y: 57,  w: 250, h: 250 },
+      { id: 20, x: 7000,  y: 32, w: 280, h: 280 },
+      { id: 102, x: 4580,  y: -3,  w: 600, h: 600 },
+      { id: 103, x: 5230,  y: -10,  w: 1100, h: 1100 },
+      { id: 21, x: 6410,  y: 4,  w: 350, h: 350 },
+      { id: 22, x: 6340,  y: 42, w: 320, h: 320 },
+      { id: 23, x: 6700,  y: 44,  w: 280, h: 280 },
+      { id: 24, x: 6800,  y: 5, w: 250, h: 250 },
+      { id: 25, x: 7350,  y: 5,  w: 350, h: 350 },
+      { id: 26, x: 7080,  y: 65,  w: 250, h: 250 },
+      { id: 27, x: 7400,  y: 46, w: 280, h: 280 },
+      { id: 104, x: 7760,  y: 36,  w: 600, h: 600 },
+      { id: 28, x: 7740,  y: 8, w: 250, h: 250 },
+      { id: 29, x: 8020,  y: 3,  w: 350, h: 350 },
+      { id: 105, x: 8460,  y: 0,  w: 550, h: 550 },
+      { id: 30, x: 8400,  y: 52, w: 280, h: 280 },
+      { id: 31, x: 8725,  y: 52,  w: 280, h: 280 },
+      { id: 32, x: 9080,  y: 4, w: 350, h: 350 },
+      { id: 33, x: 9080,  y: 40,  w: 350, h: 350 },
+    ];
+
+    const WALL_BASE_WIDTH = 9530;
+    const wallEl = document.getElementById('wall');
+
+    function buildWall() {
+      wallEl.innerHTML = '';
+      const s = Math.min(window.innerWidth / BASE_VW, window.innerHeight / BASE_VH);
+      const wallWidth = WALL_BASE_WIDTH * s;
+      wallEl.style.width = wallWidth + 'px';
+
+      frameLayout.forEach(f => {
+        const div = document.createElement('div');
+        div.className = 'wall-frame';
+        div.dataset.frameId = f.id;
+        div.style.left = (f.x * s) + 'px';
+        div.style.top = f.y + '%';
+        div.style.width = (f.w * s) + 'px';
+        div.style.height = (f.h * s) + 'px';
+        div.innerHTML = `<img src="galleryframe${f.id}.svg" alt="gallery frame ${f.id}" />`;
+        wallEl.appendChild(div);
+      });
+
+      const lamp = document.createElement('div');
+      lamp.className = 'gallery-object';
+      lamp.style.left = (40 * s) + 'px';
+      lamp.style.bottom = '3%';
+      lamp.style.width = (400 * s) + 'px';
+      lamp.style.height = (800 * s) + 'px';
+      lamp.innerHTML = '<img src="gallery-objects/gallerylamp.svg" alt="lamp" />';
+      wallEl.appendChild(lamp);
+
+      const plant = document.createElement('div');
+      plant.className = 'gallery-object';
+      plant.style.left = (400 * s) + 'px';
+      plant.style.bottom = '5%';
+      plant.style.width = (110 * s) + 'px';
+      plant.style.height = (140 * s) + 'px';
+      plant.innerHTML = '<img src="gallery-objects/galleryplant.svg" alt="plant" />';
+      wallEl.appendChild(plant);
+
+      return wallWidth;
+    }
+
+    let wallWidth = buildWall();
+    attachFrameClicks();
+
+    const charEl = document.getElementById('character');
+    let charWidth = 0;
+
+    function sizeCharacter() {
+      const s = Math.min(window.innerWidth / BASE_VW, window.innerHeight / BASE_VH);
+      charWidth = 80 * s;
+      charEl.style.width = charWidth + 'px';
+      charEl.style.height = (130 * s) + 'px';
+    }
+    sizeCharacter();
+
+    // --- New movement system ---
+    // characterX: pixel position of character on screen (from left)
+    // wallOffset: how far the wall has scrolled (0 = start)
+    // When moving right: character walks right across screen first.
+    //   When character reaches RIGHT_EDGE, wall starts scrolling and character stays put.
+    //   When wall reaches end, character continues walking right to screen edge.
+    // When moving left: character walks left across screen first.
+    //   When character reaches LEFT_EDGE, wall starts scrolling back and character stays put.
+    //   When wall reaches 0, character continues walking left.
+
+    const LEFT_EDGE = 0.05;    // 5% from left as fraction
+    const RIGHT_EDGE = 0.70;   // 70% from left as fraction (where wall starts scrolling)
+
+    let characterX = window.innerWidth * 0.30; // start at 30%
+    let wallOffset = 0;
+    let MAX_WALL_OFFSET = Math.max(0, wallWidth - window.innerWidth);
+
+    function getCharMinX() { return window.innerWidth * LEFT_EDGE; }
+    function getCharMaxX() { return window.innerWidth - charWidth * 2.5; } // actual right edge of screen minus char
+    function getCharScrollRightX() { return window.innerWidth * RIGHT_EDGE; } // where wall starts scrolling going right
+    function getCharScrollLeftX() { return window.innerWidth * 0.30; } // where wall starts scrolling going left
+
+    function applyPositions() {
+      charEl.style.left = characterX + 'px';
+      wallEl.style.transform = `translateX(${-wallOffset}px)`;
+    }
+
+    window.addEventListener('resize', () => {
+      wallWidth = buildWall();
+      attachFrameClicks();
+      sizeCharacter();
+      MAX_WALL_OFFSET = Math.max(0, wallWidth - window.innerWidth);
+      wallOffset = Math.min(wallOffset, MAX_WALL_OFFSET);
+      characterX = Math.max(getCharMinX(), Math.min(characterX, getCharMaxX()));
+      applyPositions();
+    });
+
+    const walkRightFrames = [
+      document.getElementById('walkR1'),
+      document.getElementById('walkR2'),
+      document.getElementById('walkR3'),
+      document.getElementById('walkR4'),
+    ];
+    const walkLeftFrames = [
+      document.getElementById('walkL1'),
+      document.getElementById('walkL2'),
+      document.getElementById('walkL3'),
+      document.getElementById('walkL4'),
+    ];
+    const idleRight = document.getElementById('idleRight');
+    const idleLeft = document.getElementById('idleLeft');
+    const allFrames = [...walkRightFrames, ...walkLeftFrames, idleRight, idleLeft];
+
+    let currentFrameIndex = 0;
+    let lastDirection = 'right';
+    let idleTimeout = null;
+    let accumulatedDelta = 0;
+    let keysHeld = { left: false, right: false };
+    let keyAnimFrame = null;
+
+    const WALK_SPEED = 8;
+    const SCROLL_TO_WALK = 0.4;
+    const FRAME_STEP = 80;
+    const IDLE_DELAY = 250;
+
+    function showFrame(frameEl) {
+      allFrames.forEach(f => f.classList.remove('active'));
+      frameEl.classList.add('active');
+    }
+    function showIdle() {
+      showFrame(lastDirection === 'right' ? idleRight : idleLeft);
+    }
+    function advanceWalkFrame(direction) {
+      const frames = direction === 'right' ? walkRightFrames : walkLeftFrames;
+      lastDirection = direction;
+      currentFrameIndex = (currentFrameIndex + 1) % 4;
+      showFrame(frames[currentFrameIndex]);
+      clearTimeout(idleTimeout);
+      idleTimeout = setTimeout(showIdle, IDLE_DELAY);
+    }
+
+    function moveBy(deltaPx) {
+      if (Math.abs(deltaPx) < 0.5) return;
+
+      const direction = deltaPx > 0 ? 'right' : 'left';
+      let remaining = deltaPx;
+
+      if (direction === 'right') {
+        // Phase 1: Move character to the scroll trigger point
+        if (characterX < getCharScrollRightX()) {
+          const charMove = Math.min(remaining, getCharScrollRightX() - characterX);
+          characterX += charMove;
+          remaining -= charMove;
+        }
+
+        // Phase 2: Scroll the wall
+        if (remaining > 0 && wallOffset < MAX_WALL_OFFSET) {
+          const wallMove = Math.min(remaining, MAX_WALL_OFFSET - wallOffset);
+          wallOffset += wallMove;
+          remaining -= wallMove;
+        }
+
+        // Phase 3: Wall is at end, character continues walking to right edge
+        if (remaining > 0) {
+          characterX = Math.min(characterX + remaining, getCharMaxX());
+        }
+      } else {
+        // direction === 'left', deltaPx is negative
+        remaining = Math.abs(remaining);
+
+        // Phase 1: Move character left to the scroll trigger point
+        if (characterX > getCharScrollLeftX()) {
+          const charMove = Math.min(remaining, characterX - getCharScrollLeftX());
+          characterX -= charMove;
+          remaining -= charMove;
+        }
+
+        // Phase 2: Scroll the wall back
+        if (remaining > 0 && wallOffset > 0) {
+          const wallMove = Math.min(remaining, wallOffset);
+          wallOffset -= wallMove;
+          remaining -= wallMove;
+        }
+
+        // Phase 3: Wall is at start, character continues walking to left edge
+        if (remaining > 0) {
+          characterX = Math.max(characterX - remaining, getCharMinX());
+        }
+      }
+
+      // Animate walk frames
+      accumulatedDelta += Math.abs(deltaPx);
+      if (accumulatedDelta >= FRAME_STEP) {
+        advanceWalkFrame(direction);
+        accumulatedDelta = accumulatedDelta % FRAME_STEP;
+      }
+
+      applyPositions();
+    }
+
+    // Use wheel event directly instead of scroll driver (since scroll-driver is pointer-events: none)
+    let zoomedIn = false;
+
+    document.addEventListener('wheel', (e) => {
+      if (zoomedIn) return;
+      e.preventDefault();
+      // Support both vertical and horizontal scrolling (trackpad sideways, shift+scroll, etc.)
+      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      moveBy(delta * SCROLL_TO_WALK);
+    }, { passive: false });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && zoomedIn) { closeZoom(); return; }
+      if (zoomedIn) return;
+      if (e.key === 'ArrowRight' || e.key === 'd') { keysHeld.right = true; e.preventDefault(); }
+      if (e.key === 'ArrowLeft' || e.key === 'a') { keysHeld.left = true; e.preventDefault(); }
+      startKeyLoop();
+    });
+    document.addEventListener('keyup', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'd') keysHeld.right = false;
+      if (e.key === 'ArrowLeft' || e.key === 'a') keysHeld.left = false;
+    });
+    function startKeyLoop() { if (!keyAnimFrame) keyLoop(); }
+    function keyLoop() {
+      let delta = 0;
+      if (keysHeld.right) delta += WALK_SPEED;
+      if (keysHeld.left) delta -= WALK_SPEED;
+      if (delta !== 0) { moveBy(delta); keyAnimFrame = requestAnimationFrame(keyLoop); }
+      else keyAnimFrame = null;
+    }
+
+    let touchLastX = 0;
+    document.addEventListener('touchstart', (e) => { if (!zoomedIn) touchLastX = e.touches[0].clientX; }, { passive: true });
+    document.addEventListener('touchmove', (e) => {
+      if (zoomedIn) return;
+      const touchX = e.touches[0].clientX;
+      moveBy((touchLastX - touchX) * 0.8);
+      touchLastX = touchX;
+    }, { passive: true });
+
+    // --- Zoom / click-on-painting logic ---
+    const zoomOverlay = document.getElementById('zoom-overlay');
+    const zoomBackdrop = document.getElementById('zoom-backdrop');
+    const zoomFrame = document.getElementById('zoom-frame');
+
+    function openZoom(frameDiv) {
+      zoomedIn = true;
+
+      // Get the painting's current screen position
+      const rect = frameDiv.getBoundingClientRect();
+      const imgSrc = frameDiv.querySelector('img').src;
+
+      // Set the zoom frame to start at the painting's current position
+      zoomFrame.innerHTML = `<img src="${imgSrc}" alt="zoomed painting" />`;
+      zoomFrame.style.left = rect.left + 'px';
+      zoomFrame.style.top = rect.top + 'px';
+      zoomFrame.style.width = rect.width + 'px';
+      zoomFrame.style.height = rect.height + 'px';
+      zoomFrame.style.transition = 'none';
+
+      // Show overlay (backdrop fades in)
+      zoomOverlay.classList.add('active');
+
+      // Force reflow then animate to center
+      zoomFrame.offsetHeight;
+
+      // Calculate centered target size (fit within viewport)
+      const frameId = parseInt(frameDiv.dataset.frameId);
+      const isLargeFrame = (frameId === 101 || frameId === 103);
+      const maxW = window.innerWidth * (isLargeFrame ? 0.92 : 0.75);
+      const maxH = window.innerHeight * (isLargeFrame ? 0.95 : 0.80);
+      const aspect = rect.width / rect.height;
+      let targetW, targetH;
+      if (aspect > maxW / maxH) {
+        targetW = maxW;
+        targetH = maxW / aspect;
+      } else {
+        targetH = maxH;
+        targetW = maxH * aspect;
+      }
+      const targetX = (window.innerWidth - targetW) / 2;
+      const targetY = (window.innerHeight - targetH) / 2;
+
+      zoomFrame.style.transition = '';
+      zoomFrame.style.left = targetX + 'px';
+      zoomFrame.style.top = targetY + 'px';
+      zoomFrame.style.width = targetW + 'px';
+      zoomFrame.style.height = targetH + 'px';
+    }
+
+    function closeZoom() {
+      if (!zoomedIn) return;
+      zoomOverlay.classList.remove('active');
+      zoomedIn = false;
+    }
+
+    // Close on backdrop click
+    zoomBackdrop.addEventListener('click', closeZoom);
+    zoomFrame.addEventListener('click', closeZoom);
+
+    // Attach click and hover handlers to wall frames
+    let lastHoveredFrame = null;
+
+    function attachFrameClicks() {
+      wallEl.querySelectorAll('.wall-frame').forEach(frame => {
+        frame.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (!zoomedIn) openZoom(frame);
+        });
+      });
+    }
+
+    // Hover: soft green glow matching index.html
+    document.addEventListener('mousemove', (e) => {
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const found = el ? el.closest('.wall-frame') : null;
+
+      if (found !== lastHoveredFrame) {
+        if (lastHoveredFrame) lastHoveredFrame.classList.remove('hovered');
+        if (found) found.classList.add('hovered');
+        lastHoveredFrame = found;
+      }
+    });
+
+    // Initialize
+    showIdle();
+    applyPositions();
+  </script>
+</body>
+</html>
