@@ -5,67 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mara Buşirku — Portfolio</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       overflow: hidden;
       background: #8ba87a;
     }
+
+    /* ====== SCROLL DRIVER ====== */
     #scroll-driver {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      overflow-y: scroll;
-      z-index: 10;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      overflow-y: scroll; z-index: 10;
+      scrollbar-width: none; -ms-overflow-style: none;
     }
-    #scroll-driver::-webkit-scrollbar {
-      display: none;
-    }
-    #scroll-content {
-      width: 100%;
-      height: 8000px;
-    }
+    #scroll-driver::-webkit-scrollbar { display: none; }
+    #scroll-content { width: 100%; height: 8000px; }
+
+    /* ====== SCENE & WALL ====== */
     #scene {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 1;
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none; z-index: 1;
     }
     #wall {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      will-change: transform;
+      position: absolute; top: 0; left: 0;
+      width: 100%; will-change: transform;
     }
-    .wall-item {
-      position: absolute;
-    }
-    .wall-item img {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
+    .wall-item { position: absolute; }
+    .wall-item img { display: block; width: 100%; height: auto; }
+
     .wall-item.clickable,
     .wall-item.flippable {
-      pointer-events: auto;
-      cursor: pointer;
-    }
-    /* ====== SOFT GLOW HOVER ====== */
-    .wall-item.clickable,
-    .wall-item.flippable {
+      pointer-events: auto; cursor: pointer;
       transition: filter 0.35s ease, transform 0.35s ease;
     }
     .wall-item.clickable.hovered,
@@ -73,261 +45,297 @@
       filter: drop-shadow(0 0 12px rgba(58, 107, 39, 0.45));
       transform: scale(1.015);
     }
-    /* ====== FLIPPABLE FRAMES ====== */
-    .wall-item.flippable {
-      perspective: 1200px;
+
+    .flip-container { position: relative; width: 100%; }
+    .flip-front { position: relative; }
+    .flip-front img { display: block; width: 100%; height: auto; }
+    .flip-back { display: none; }
+
+    /* ====== ZOOM OVERLAY ====== */
+    #zoom-overlay {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 100;
+      pointer-events: none; opacity: 0;
+      transition: opacity 0.35s ease;
     }
-    .flip-container {
+    #zoom-overlay.active { pointer-events: auto; opacity: 1; }
+
+    #zoom-backdrop {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    #zoom-frame {
+      position: absolute;
+      perspective: 1200px;
+      filter: drop-shadow(0 12px 40px rgba(0,0,0,0.5));
+      cursor: pointer;
+    }
+    #zoom-frame.animating {
+      transition: left 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                  top 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                  width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                  height 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .zoom-flip-inner {
+      width: 100%; height: 100%;
       position: relative;
-      width: 100%;
       transform-style: preserve-3d;
+    }
+    .zoom-flip-inner.can-flip {
       transition: transform 0.7s cubic-bezier(0.4, 0.0, 0.2, 1);
     }
-    .wall-item.flippable.flipped .flip-container {
+    .zoom-flip-inner.flipped {
       transform: rotateY(180deg);
     }
-    .flip-front,
-    .flip-back {
-      width: 100%;
+    .zoom-face {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
     }
-    .flip-front {
-      position: relative;
+    .zoom-face img {
+      width: 100%; height: 100%;
+      object-fit: contain; display: block;
     }
-    .flip-back {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
+    .zoom-face.back {
       transform: rotateY(180deg);
     }
-    .flip-front img,
-    .flip-back img {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
-    /* ====== RESUME OVERLAY ====== */
+
+    /* ====== RESUME OVERLAY (IMPROVED) ====== */
     #resume-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
       z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-      opacity: 0;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none; opacity: 0;
       transition: opacity 0.4s ease;
     }
-    #resume-overlay.active {
-      pointer-events: auto;
-      opacity: 1;
-    }
+    #resume-overlay.active { pointer-events: auto; opacity: 1; }
+
     #resume-backdrop {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
-    #resume-popup {
+
+    #resume-wrapper {
       position: relative;
       z-index: 101;
-      width: min(62vh, 85vw);
-      height: min(87.7vh, 120vw);
-      background: white;
-      border-radius: 6px;
-      box-shadow: 0 25px 80px rgba(0,0,0,0.5);
-      overflow: hidden;
-      transform: scale(0.3);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      transform: scale(0.92) translateY(12px);
       opacity: 0;
-      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-                  opacity 0.4s ease;
+      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
     }
-    #resume-overlay.active #resume-popup {
-      transform: scale(1);
+    #resume-overlay.active #resume-wrapper {
+      transform: scale(1) translateY(0);
       opacity: 1;
     }
-    #resume-popup embed {
-      width: 100%;
-      height: 100%;
-      display: block;
+
+    /* Top bar with close */
+    #resume-top-bar {
+      width: min(62vh, 85vw);
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
     }
+
     #resume-close {
-      position: absolute;
-      top: -18px;
-      right: -18px;
-      width: 40px;
-      height: 40px;
+      width: 36px; height: 36px;
       border-radius: 50%;
-      border: 2px solid white;
-      background: rgba(0,0,0,0.75);
-      color: white;
-      font-size: 18px;
+      border: none;
+      background: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 16px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 102;
-      transition: background 0.2s, transform 0.2s;
       line-height: 1;
+      transition: background 0.2s, color 0.2s, transform 0.2s;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
     #resume-close:hover {
-      background: rgba(0,0,0,0.95);
-      transform: scale(1.1);
+      background: rgba(255, 255, 255, 0.25);
+      color: #fff;
+      transform: scale(1.08);
     }
+
+    /* The PDF container */
+    #resume-popup {
+      width: min(62vh, 85vw);
+      height: min(82vh, 115vw);
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.45),
+                  0 0 0 1px rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+    #resume-popup embed {
+      width: 100%; height: 100%; display: block;
+    }
+
+    /* Bottom action bar */
+    #resume-bottom-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
     #resume-download {
-      position: absolute;
-      bottom: -18px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 8px 20px;
-      border-radius: 20px;
-      border: 2px solid white;
-      background: rgba(0,0,0,0.75);
-      color: white;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 24px;
+      border-radius: 999px;
+      border: none;
+      background: rgba(255, 255, 255, 0.14);
+      color: rgba(255, 255, 255, 0.9);
       font-size: 13px;
-      font-family: system-ui, sans-serif;
+      font-weight: 500;
+      font-family: system-ui, -apple-system, sans-serif;
       cursor: pointer;
       text-decoration: none;
-      z-index: 102;
-      transition: background 0.2s;
+      letter-spacing: 0.02em;
+      transition: background 0.2s, color 0.2s, transform 0.15s;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
     #resume-download:hover {
-      background: rgba(0,0,0,0.95);
+      background: rgba(255, 255, 255, 0.25);
+      color: #fff;
+      transform: translateY(-1px);
     }
-    /* ====== LADDER ====== */
+    #resume-download svg {
+      width: 14px; height: 14px;
+      fill: currentColor;
+    }
+
+    /* ====== LADDER & CHARACTER ====== */
     #ladder-wrap {
-      position: absolute;
-      right: 4vw;
-      top: -12vw;
-      width: 14vw;
-      will-change: transform;
+      position: absolute; right: 4vw; top: -8vw;
+      width: 14vw; will-change: transform;
     }
     .ladder-spacer { height: 20vw; }
-    #ladder-wrap img.ladder-img {
-      display: block;
-      width: 70%;
-      height: auto;
-    }
+    #ladder-wrap img.ladder-img { display: block; width: 70%; height: auto; }
+
     #character {
-      position: fixed;
-      right: 5vw;
-      top: 16%;
-      width: 18vw;
-      z-index: 5;
+      position: fixed; right: 5vw; top: 19%;
+      width: 18vw; z-index: 5;
     }
     #character img {
-      position: absolute;
-      top: 0; left: 25%;
-      width: 55%;
-      height: auto;
+      position: absolute; top: 0; left: 25%;
+      width: 55%; height: auto;
       transition: opacity 0.05s ease;
     }
     #character img.hidden { opacity: 0; }
     #character img.visible { opacity: 1; }
+
     #vignette {
-      position: fixed;
-      top: 0; left: 0;
+      position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
-      pointer-events: none;
-      z-index: 2;
+      pointer-events: none; z-index: 2;
       background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.12) 100%);
     }
   </style>
 </head>
 <body>
-  <div id="scroll-driver">
-    <div id="scroll-content"></div>
-  </div>
+
+  <div id="scroll-driver"><div id="scroll-content"></div></div>
+
   <div id="scene">
     <div id="wall">
-      <div class="wall-item" style="left: 5vw; top: 42vw; width: 15vw;">
+      <div class="wall-item" style="left:5vw; top:34vw; width:15vw;">
         <img src="contactdetails.svg" alt="contact details" />
       </div>
-      <div class="wall-item" style="left: 47vw; top: 30vw; width: 13vw;">
+      <div class="wall-item" style="left:49vw; top:19vw; width:12vw;">
         <img src="btwheresmyresume.svg" alt="here's my resume?" />
       </div>
-      <div class="wall-item flippable" style="left: 5vw; top: 19vw; width: 17vw;">
+      <div class="wall-item flippable" style="left:5vw; top:11vw; width:17vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="officeframe1.svg" alt="frame 1" /></div>
           <div class="flip-back"><img src="officeframe1back.svg" alt="frame 1 back" /></div>
         </div>
       </div>
-      <div class="wall-item" style="left: 27vw; top: 21vw; width: 17vw;">
+      <div class="wall-item" style="left:27vw; top:15vw; width:14vw;">
         <img src="officeframe2.svg" alt="frame 2" />
       </div>
-      <div class="wall-item" style="left: 40vw; top: -40vw; width: 20vw;">
+      <div class="wall-item" style="left:46vw; top:-33vw; width:17vw;">
         <img src="lamp.svg" alt="hanging lamp" />
       </div>
-      <!-- Frame 3: RESUME TRIGGER -->
-      <div class="wall-item clickable" id="resume-trigger" style="left: 62vw; top: 14.5vw; width: 12vw;">
+      <div class="wall-item clickable" id="resume-trigger" style="left:65vw; top:10vw; width:10vw;">
         <img src="officeframe3.svg" alt="frame 3" />
       </div>
-      <div class="wall-item" style="left: 28vw; top: 44vw; width: 38vw;">
+      <div class="wall-item" style="left:27vw; top:32vw; width:34vw;">
         <img src="officeframe4.svg" alt="frame 4" />
       </div>
-      <div class="wall-item" style="left: 15vw; top: 80vw; width: 38vw;">
+      <div class="wall-item" style="left:15vw; top:53vw; width:38vw;">
         <img src="PROJECTS.svg" alt="projects" />
       </div>
-      <div class="wall-item" style="left: 58vw; top: 77vw; width: 9vw;">
+      <div class="wall-item" style="left:58vw; top:50vw; width:9vw;">
         <img src="officestickienote.svg" alt="office sticker note" />
       </div>
-
-      <div class="wall-item flippable" style="left: 5vw; top: 96vw; width: 40vw;">
+      <div class="wall-item flippable" style="left:2vw; top:65vw; width:40vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="officeframe5.svg" alt="frame 5" /></div>
           <div class="flip-back"><img src="officeframe5back.svg" alt="frame 5 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left: 55vw; top: 94vw; width: 21vw;">
+      <div class="wall-item flippable" style="left:56vw; top:65vw; width:21vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="officeframe7.svg" alt="frame 7" /></div>
           <div class="flip-back"><img src="officeframe7back.svg" alt="frame 7 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left: 6vw; top: 125vw; width: 26vw;">
+      <div class="wall-item flippable" style="left:4vw; top:94vw; width:26vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="officeframe9.svg" alt="frame 9" /></div>
           <div class="flip-back"><img src="officeframe9back.svg" alt="frame 9 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left: 5vw; top: 165vw; width: 20vw;">
+      <div class="wall-item flippable" style="left:57vw; top:122vw; width:20vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="officeframe6.svg" alt="frame 6" /></div>
           <div class="flip-back"><img src="officeframe6back.svg" alt="frame 6 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left: 37vw; top: 120vw; width: 20vw;">
+      <div class="wall-item flippable" style="left:34vw; top:86vw; width:20vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="officeframe11.svg" alt="frame 11" /></div>
           <div class="flip-back"><img src="officeframe11back.svg" alt="frame 11 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left: 25vw; top: 150vw; width: 30vw;">
+      <div class="wall-item flippable" style="left:32vw; top:111vw; width:27vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="officeframe10.svg" alt="frame 10" /></div>
           <div class="flip-back"><img src="officeframe10back.svg" alt="frame 10 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left: 56vw; top: 163vw; width: 20vw;">
+      <div class="wall-item flippable" style="left:6vw; top:121vw; width:22vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="officeframe8.svg" alt="frame 8" /></div>
           <div class="flip-back"><img src="officeframe8back.svg" alt="frame 8 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left: 58vw; top: 135vw; width: 20vw;">
+      <div class="wall-item flippable" style="left:60vw; top:96vw; width:20vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="officeframe12.svg" alt="frame 12" /></div>
           <div class="flip-back"><img src="officeframe12back.svg" alt="frame 12 back" /></div>
         </div>
+      </div>
+      <div class="wall-item" style="left:25vw; top:154vw; width:50vw;">
+        <img src="desk.svg" alt="desk" />
       </div>
     </div>
 
@@ -341,159 +349,216 @@
       <img id="frame2" src="goingdownladder2.svg" alt="character frame 2" class="hidden" />
     </div>
   </div>
+
   <div id="vignette"></div>
 
-  <!-- ====== RESUME OVERLAY ====== -->
+  <!-- Zoom overlay -->
+  <div id="zoom-overlay">
+    <div id="zoom-backdrop"></div>
+    <div id="zoom-frame"></div>
+  </div>
+
+  <!-- Resume overlay (IMPROVED) -->
   <div id="resume-overlay">
     <div id="resume-backdrop"></div>
-    <div id="resume-popup">
-      <button id="resume-close">✕</button>
-      <embed id="resume-embed" src="" type="application/pdf" />
-      <a id="resume-download" href="Mara_Resume.pdf" download>↓ Download PDF</a>
+    <div id="resume-wrapper">
+      <div id="resume-top-bar">
+        <button id="resume-close" aria-label="Close resume">✕</button>
+      </div>
+      <div id="resume-popup">
+        <embed id="resume-embed" src="" type="application/pdf" />
+      </div>
+      <div id="resume-bottom-bar">
+        <a id="resume-download" href="Mara_Resume.pdf" download>
+          <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 12L3 7h3V1h4v6h3L8 12zM2 14v-1h12v1H2z"/>
+          </svg>
+          Download PDF
+        </a>
+      </div>
     </div>
   </div>
 
   <script>
+    /* ============================================================
+       SCROLL & CHARACTER
+       ============================================================ */
     const scrollDriver = document.getElementById('scroll-driver');
-    const wall = document.getElementById('wall');
-    const ladderWrap = document.getElementById('ladder-wrap');
-    const charFrame1 = document.getElementById('frame1');
-    const charFrame2 = document.getElementById('frame2');
-    const FRAME_TOGGLE_INTERVAL = 140;
-    let lastToggleScroll = 0;
-    let currentFrame = 1;
+    const wall         = document.getElementById('wall');
+    const ladderWrap   = document.getElementById('ladder-wrap');
+    const charFrame1   = document.getElementById('frame1');
+    const charFrame2   = document.getElementById('frame2');
+
+    let lastToggleScroll = 0, currentFrame = 1;
 
     scrollDriver.addEventListener('scroll', () => {
-      const scrollY = scrollDriver.scrollTop;
-      wall.style.transform = `translateY(${-scrollY}px)`;
-      ladderWrap.style.transform = `translateY(${-scrollY}px)`;
-      const delta = Math.abs(scrollY - lastToggleScroll);
-      if (delta >= FRAME_TOGGLE_INTERVAL) {
-        lastToggleScroll = scrollY;
-        if (currentFrame === 1) {
-          charFrame1.className = 'hidden';
-          charFrame2.className = 'visible';
-          currentFrame = 2;
-        } else {
-          charFrame1.className = 'visible';
-          charFrame2.className = 'hidden';
-          currentFrame = 1;
-        }
+      const y = scrollDriver.scrollTop;
+      wall.style.transform       = `translateY(${-y}px)`;
+      ladderWrap.style.transform = `translateY(${-y}px)`;
+
+      if (Math.abs(y - lastToggleScroll) >= 140) {
+        lastToggleScroll = y;
+        const show1 = currentFrame !== 1;
+        charFrame1.className = show1 ? 'visible' : 'hidden';
+        charFrame2.className = show1 ? 'hidden'  : 'visible';
+        currentFrame = show1 ? 1 : 2;
       }
     });
 
     const ladderImg = ladderWrap.querySelector('.ladder-img');
     function recalcHeight() {
-      if (ladderImg.naturalHeight) {
-        const vw = window.innerWidth / 100;
-        const ladderWidth = 14 * vw;
-        const ladderHeight = ladderImg.naturalHeight * (ladderWidth / ladderImg.naturalWidth);
-        const spacer = 20 * vw;
-        document.getElementById('scroll-content').style.height =
-          (spacer + ladderHeight + spacer) + 'px';
-      }
+      const vw = window.innerWidth / 100;
+      // Desk is the last element: top=154vw, width=50vw, aspect=537/570
+      const deskBottom = (154 + 50 * (537 / 570)) * vw;
+      document.getElementById('scroll-content').style.height = (deskBottom + window.innerHeight * 0.15) + 'px';
     }
-    ladderImg.addEventListener('load', recalcHeight);
     window.addEventListener('resize', recalcHeight);
+    recalcHeight();
 
     document.querySelectorAll('.wall-item.flippable').forEach(item => {
-      const frontImg = item.querySelector('.flip-front img');
-      const flipContainer = item.querySelector('.flip-container');
-      const backDiv = item.querySelector('.flip-back');
-      const setHeight = () => {
-        if (frontImg.naturalHeight) {
-          const w = item.offsetWidth;
-          const h = w * (frontImg.naturalHeight / frontImg.naturalWidth);
-          flipContainer.style.height = h + 'px';
-          backDiv.style.height = h + 'px';
-        }
-      };
-      frontImg.addEventListener('load', setHeight);
-      window.addEventListener('resize', setHeight);
-      if (frontImg.complete) setHeight();
+      const img = item.querySelector('.flip-front img');
+      const ct  = item.querySelector('.flip-container');
+      const fn  = () => { if (img.naturalHeight) ct.style.height = (item.offsetWidth * img.naturalHeight / img.naturalWidth) + 'px'; };
+      img.addEventListener('load', fn);
+      window.addEventListener('resize', fn);
+      if (img.complete) fn();
     });
 
-    /* ====== CLICK HANDLING ====== */
+    /* ============================================================
+       ZOOM + FLIP OVERLAY
+       ============================================================ */
+    const zoomOverlay  = document.getElementById('zoom-overlay');
+    const zoomBackdrop = document.getElementById('zoom-backdrop');
+    const zoomFrame    = document.getElementById('zoom-frame');
+
+    let zoomedIn = false;
+    let flipTimer = null;
+
+    function openZoom(item) {
+      if (zoomedIn) return;
+      zoomedIn = true;
+      clearTimeout(flipTimer);
+
+      const rect     = item.getBoundingClientRect();
+      const frontSrc = item.querySelector('.flip-front img').src;
+      const backSrc  = item.querySelector('.flip-back img').src;
+
+      zoomFrame.className = '';
+      zoomFrame.innerHTML =
+        '<div class="zoom-flip-inner">' +
+          '<div class="zoom-face front"><img src="' + frontSrc + '" alt="front" /></div>' +
+          '<div class="zoom-face back"><img src="' + backSrc + '" alt="back" /></div>' +
+        '</div>';
+
+      zoomFrame.style.left   = rect.left   + 'px';
+      zoomFrame.style.top    = rect.top    + 'px';
+      zoomFrame.style.width  = rect.width  + 'px';
+      zoomFrame.style.height = rect.height + 'px';
+
+      zoomOverlay.classList.add('active');
+      scrollDriver.style.overflow = 'hidden';
+
+      void zoomFrame.offsetHeight;
+
+      zoomFrame.classList.add('animating');
+
+      const maxW = window.innerWidth * 0.75;
+      const maxH = window.innerHeight * 0.80;
+      const aspect = rect.width / rect.height;
+      let tw, th;
+      if (aspect > maxW / maxH) { tw = maxW; th = maxW / aspect; }
+      else { th = maxH; tw = maxH * aspect; }
+
+      zoomFrame.style.left   = ((window.innerWidth  - tw) / 2) + 'px';
+      zoomFrame.style.top    = ((window.innerHeight - th) / 2) + 'px';
+      zoomFrame.style.width  = tw + 'px';
+      zoomFrame.style.height = th + 'px';
+
+      flipTimer = setTimeout(() => {
+        const inner = zoomFrame.querySelector('.zoom-flip-inner');
+        if (!inner) return;
+        inner.classList.add('can-flip');
+        void inner.offsetHeight;
+        inner.classList.add('flipped');
+      }, 480);
+    }
+
+    function closeZoom() {
+      if (!zoomedIn) return;
+      zoomedIn = false;
+      clearTimeout(flipTimer);
+      zoomOverlay.classList.remove('active');
+      scrollDriver.style.overflow = '';
+    }
+
+    zoomBackdrop.addEventListener('click', closeZoom);
+    zoomFrame.addEventListener('click', closeZoom);
+
+    /* ============================================================
+       CLICK DETECTION
+       ============================================================ */
     let downX = 0, downY = 0, downTime = 0;
 
     scrollDriver.addEventListener('mousedown', e => {
-      downX = e.clientX;
-      downY = e.clientY;
-      downTime = Date.now();
+      downX = e.clientX; downY = e.clientY; downTime = Date.now();
     });
-
     scrollDriver.addEventListener('mouseup', e => {
-      if (Math.abs(e.clientX - downX) < 6 && Math.abs(e.clientY - downY) < 6 && (Date.now() - downTime) < 400) {
-        handleClickAt(e.clientX, e.clientY);
-      }
+      if (Math.abs(e.clientX - downX) < 6 && Math.abs(e.clientY - downY) < 6 && Date.now() - downTime < 400)
+        handleClick(e.clientX, e.clientY);
     });
 
-    let tStartX = 0, tStartY = 0, tStartTime = 0;
+    let tX = 0, tY = 0, tTime = 0;
     scrollDriver.addEventListener('touchstart', e => {
-      if (e.touches.length === 1) {
-        tStartX = e.touches[0].clientX;
-        tStartY = e.touches[0].clientY;
-        tStartTime = Date.now();
-      }
+      if (e.touches.length === 1) { tX = e.touches[0].clientX; tY = e.touches[0].clientY; tTime = Date.now(); }
     }, { passive: true });
-
     scrollDriver.addEventListener('touchend', e => {
       if (e.changedTouches.length === 1) {
         const t = e.changedTouches[0];
-        if (Math.abs(t.clientX - tStartX) < 12 && Math.abs(t.clientY - tStartY) < 12 && (Date.now() - tStartTime) < 400) {
-          handleClickAt(t.clientX, t.clientY);
-        }
+        if (Math.abs(t.clientX - tX) < 12 && Math.abs(t.clientY - tY) < 12 && Date.now() - tTime < 400)
+          handleClick(t.clientX, t.clientY);
       }
     });
 
-    function handleClickAt(cx, cy) {
+    function handleClick(cx, cy) {
+      if (zoomedIn) return;
       scrollDriver.style.pointerEvents = 'none';
       const el = document.elementFromPoint(cx, cy);
       scrollDriver.style.pointerEvents = '';
       if (!el) return;
 
-      if (el.closest('#resume-trigger')) {
-        openResume();
-        return;
-      }
-
+      if (el.closest('#resume-trigger')) { openResume(); return; }
       const flippable = el.closest('.wall-item.flippable');
-      if (flippable) {
-        flippable.classList.toggle('flipped');
-      }
+      if (flippable) openZoom(flippable);
     }
 
-    /* ====== HOVER: glow + pointer cursor ====== */
+    /* ============================================================
+       HOVER GLOW
+       ============================================================ */
     let lastHovered = null;
-
     scrollDriver.addEventListener('mousemove', e => {
       scrollDriver.style.pointerEvents = 'none';
       const el = document.elementFromPoint(e.clientX, e.clientY);
       scrollDriver.style.pointerEvents = '';
-
-      const found = el
-        ? (el.closest('.wall-item.flippable') || el.closest('.wall-item.clickable'))
-        : null;
-
+      const found = el ? (el.closest('.wall-item.flippable') || el.closest('.wall-item.clickable')) : null;
       if (found !== lastHovered) {
         if (lastHovered) lastHovered.classList.remove('hovered');
         if (found) found.classList.add('hovered');
         lastHovered = found;
       }
-
       scrollDriver.style.cursor = found ? 'pointer' : '';
     });
 
-    /* ====== RESUME OVERLAY ====== */
+    /* ============================================================
+       RESUME OVERLAY
+       ============================================================ */
     const resumeOverlay = document.getElementById('resume-overlay');
-    const resumeEmbed = document.getElementById('resume-embed');
+    const resumeEmbed   = document.getElementById('resume-embed');
 
     function openResume() {
       resumeEmbed.src = 'Mara_Resume.pdf#toolbar=0&navpanes=0&view=FitH';
       resumeOverlay.classList.add('active');
       scrollDriver.style.overflow = 'hidden';
     }
-
     function closeResume() {
       resumeOverlay.classList.remove('active');
       scrollDriver.style.overflow = '';
@@ -502,8 +567,12 @@
 
     document.getElementById('resume-close').addEventListener('click', closeResume);
     document.getElementById('resume-backdrop').addEventListener('click', closeResume);
+
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && resumeOverlay.classList.contains('active')) closeResume();
+      if (e.key === 'Escape') {
+        if (zoomedIn) closeZoom();
+        else if (resumeOverlay.classList.contains('active')) closeResume();
+      }
     });
   </script>
 </body>
