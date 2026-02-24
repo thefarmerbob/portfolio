@@ -142,7 +142,6 @@
       opacity: 1;
     }
 
-    /* Top bar with close */
     #resume-top-bar {
       width: min(62vh, 85vw);
       display: flex;
@@ -172,7 +171,6 @@
       transform: scale(1.08);
     }
 
-    /* The PDF container */
     #resume-popup {
       width: min(62vh, 85vw);
       height: min(82vh, 115vw);
@@ -186,7 +184,6 @@
       width: 100%; height: 100%; display: block;
     }
 
-    /* Bottom action bar */
     #resume-bottom-bar {
       display: flex;
       gap: 10px;
@@ -231,8 +228,9 @@
     #ladder-wrap img.ladder-img { display: block; width: 70%; height: auto; }
 
     #character {
-      position: fixed; right: 5vw; top: 19%;
+      position: fixed; right: 5vw;
       width: 18vw; z-index: 5;
+      will-change: top;
     }
     #character img {
       position: absolute; top: 0; left: 25%;
@@ -347,6 +345,7 @@
     <div id="character">
       <img id="frame1" src="goingdownladder1.svg" alt="character frame 1" class="visible" />
       <img id="frame2" src="goingdownladder2.svg" alt="character frame 2" class="hidden" />
+      <img id="frameStand" src="standf.svg" alt="character standing" class="hidden" />
     </div>
   </div>
 
@@ -358,7 +357,7 @@
     <div id="zoom-frame"></div>
   </div>
 
-  <!-- Resume overlay (IMPROVED) -->
+  <!-- Resume overlay -->
   <div id="resume-overlay">
     <div id="resume-backdrop"></div>
     <div id="resume-wrapper">
@@ -381,40 +380,198 @@
 
   <script>
     /* ============================================================
-       SCROLL & CHARACTER
+       SCROLL, WALL & LADDER
        ============================================================ */
     const scrollDriver = document.getElementById('scroll-driver');
     const wall         = document.getElementById('wall');
     const ladderWrap   = document.getElementById('ladder-wrap');
+    const charEl       = document.getElementById('character');
     const charFrame1   = document.getElementById('frame1');
     const charFrame2   = document.getElementById('frame2');
+    const charFrameStand = document.getElementById('frameStand');
 
-    let lastToggleScroll = 0, currentFrame = 1;
+    /* ============================================================
+       CHARACTER CLIMBING SYSTEM
+       ============================================================ */
+    const CHAR_START_TOP_FRAC = 0.12;
+    const CHAR_SCROLL_TRIGGER_FRAC = 0.42;
+    const CHAR_MIN_TOP_FRAC = 0.18;
+    const CHAR_MAX_TOP_FRAC = 0.36;
+    const FRAME_STEP = 140;
 
-    scrollDriver.addEventListener('scroll', () => {
-      const y = scrollDriver.scrollTop;
-      wall.style.transform       = `translateY(${-y}px)`;
-      ladderWrap.style.transform = `translateY(${-y}px)`;
+    let characterScreenY = window.innerHeight * CHAR_START_TOP_FRAC;
+    let wallOffset = 0;
+    let maxWallOffset = 0;
+    let accumulatedDelta = 0;
+    let currentFrame = 1;
+    let isStanding = false;
 
-      if (Math.abs(y - lastToggleScroll) >= 140) {
-        lastToggleScroll = y;
-        const show1 = currentFrame !== 1;
-        charFrame1.className = show1 ? 'visible' : 'hidden';
-        charFrame2.className = show1 ? 'hidden'  : 'visible';
-        currentFrame = show1 ? 1 : 2;
-      }
-    });
+    function getCharTriggerDownY() { return window.innerHeight * CHAR_SCROLL_TRIGGER_FRAC; }
+    function getCharTriggerUpY()   { return window.innerHeight * 0.30; }
+    function getCharMinY()         { return window.innerHeight * CHAR_MIN_TOP_FRAC; }
+    function getCharMaxY()         { return window.innerHeight * CHAR_MAX_TOP_FRAC; }
 
-    const ladderImg = ladderWrap.querySelector('.ladder-img');
     function recalcHeight() {
       const vw = window.innerWidth / 100;
-      // Desk is the last element: top=154vw, width=50vw, aspect=537/570
       const deskBottom = (154 + 50 * (537 / 570)) * vw;
-      document.getElementById('scroll-content').style.height = (deskBottom + window.innerHeight * 0.15) + 'px';
+      const totalContentHeight = deskBottom + window.innerHeight * 0.15;
+      document.getElementById('scroll-content').style.height = totalContentHeight + 'px';
+      maxWallOffset = Math.max(0, totalContentHeight - window.innerHeight);
     }
-    window.addEventListener('resize', recalcHeight);
-    recalcHeight();
 
+    function applyPositions() {
+      wall.style.transform       = `translateY(${-wallOffset}px)`;
+      ladderWrap.style.transform = `translateY(${-wallOffset}px)`;
+      charEl.style.top           = characterScreenY + 'px';
+    }
+
+    /* --- Standing sprite management --- */
+    function showStanding() {
+      if (isStanding) return;
+      isStanding = true;
+      charFrame1.className = 'hidden';
+      charFrame2.className = 'hidden';
+      charFrameStand.className = 'visible';
+    }
+
+    function hideStanding() {
+      if (!isStanding) return;
+      isStanding = false;
+      charFrameStand.className = 'hidden';
+      // Restore whichever climb frame was last active
+      charFrame1.className = currentFrame === 1 ? 'visible' : 'hidden';
+      charFrame2.className = currentFrame === 2 ? 'visible' : 'hidden';
+    }
+
+    function advanceClimbFrame() {
+      if (isStanding) return;
+      const show1 = currentFrame !== 1;
+      charFrame1.className = show1 ? 'visible' : 'hidden';
+      charFrame2.className = show1 ? 'hidden'  : 'visible';
+      currentFrame = show1 ? 1 : 2;
+    }
+
+    /* Check if character has reached the very bottom */
+    function checkBottomState() {
+      const atMaxY = characterScreenY >= getCharMaxY() - 1;
+      const wallFullyScrolled = wallOffset >= maxWallOffset - 1;
+
+      if (atMaxY && wallFullyScrolled) {
+        showStanding();
+      } else {
+        hideStanding();
+      }
+    }
+
+    /* ============================================================
+       MOVE FUNCTION
+       ============================================================ */
+    function moveBy(delta) {
+      if (Math.abs(delta) < 0.5) return;
+
+      let remaining = delta;
+
+      if (delta > 0) {
+        if (characterScreenY < getCharTriggerDownY()) {
+          const charMove = Math.min(remaining, getCharTriggerDownY() - characterScreenY);
+          characterScreenY += charMove;
+          remaining -= charMove;
+        }
+        if (remaining > 0 && wallOffset < maxWallOffset) {
+          const wallMove = Math.min(remaining, maxWallOffset - wallOffset);
+          wallOffset += wallMove;
+          remaining -= wallMove;
+        }
+        if (remaining > 0) {
+          characterScreenY = Math.min(characterScreenY + remaining, getCharMaxY());
+        }
+      } else {
+        remaining = Math.abs(remaining);
+        if (characterScreenY > getCharTriggerUpY()) {
+          const charMove = Math.min(remaining, characterScreenY - getCharTriggerUpY());
+          characterScreenY -= charMove;
+          remaining -= charMove;
+        }
+        if (remaining > 0 && wallOffset > 0) {
+          const wallMove = Math.min(remaining, wallOffset);
+          wallOffset -= wallMove;
+          remaining -= wallMove;
+        }
+        if (remaining > 0) {
+          characterScreenY = Math.max(characterScreenY - remaining, getCharMinY());
+        }
+      }
+
+      // Animate climbing frames (skipped when standing)
+      accumulatedDelta += Math.abs(delta);
+      if (accumulatedDelta >= FRAME_STEP) {
+        advanceClimbFrame();
+        accumulatedDelta = accumulatedDelta % FRAME_STEP;
+      }
+
+      applyPositions();
+      checkBottomState();
+    }
+
+    /* ============================================================
+       INPUT: Wheel / Touch / Keyboard
+       ============================================================ */
+    scrollDriver.style.pointerEvents = 'none';
+    scrollDriver.style.overflow = 'hidden';
+
+    const SCROLL_TO_MOVE = 0.8;
+
+    document.addEventListener('wheel', (e) => {
+      if (zoomedIn || resumeOverlay.classList.contains('active')) return;
+      e.preventDefault();
+      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      moveBy(delta * SCROLL_TO_MOVE);
+    }, { passive: false });
+
+    let touchLastY = 0;
+    document.addEventListener('touchstart', (e) => {
+      if (!zoomedIn && !resumeOverlay.classList.contains('active')) {
+        touchLastY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+    document.addEventListener('touchmove', (e) => {
+      if (zoomedIn || resumeOverlay.classList.contains('active')) return;
+      const touchY = e.touches[0].clientY;
+      moveBy((touchLastY - touchY) * 0.8);
+      touchLastY = touchY;
+    }, { passive: false });
+
+    let keysHeld = { up: false, down: false };
+    let keyAnimFrame = null;
+    const KEY_SPEED = 8;
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (zoomedIn) closeZoom();
+        else if (resumeOverlay.classList.contains('active')) closeResume();
+        return;
+      }
+      if (zoomedIn || resumeOverlay.classList.contains('active')) return;
+      if (e.key === 'ArrowDown' || e.key === 's') { keysHeld.down = true; e.preventDefault(); }
+      if (e.key === 'ArrowUp' || e.key === 'w') { keysHeld.up = true; e.preventDefault(); }
+      startKeyLoop();
+    });
+    document.addEventListener('keyup', (e) => {
+      if (e.key === 'ArrowDown' || e.key === 's') keysHeld.down = false;
+      if (e.key === 'ArrowUp' || e.key === 'w') keysHeld.up = false;
+    });
+    function startKeyLoop() { if (!keyAnimFrame) keyLoop(); }
+    function keyLoop() {
+      let delta = 0;
+      if (keysHeld.down) delta += KEY_SPEED;
+      if (keysHeld.up) delta -= KEY_SPEED;
+      if (delta !== 0) { moveBy(delta); keyAnimFrame = requestAnimationFrame(keyLoop); }
+      else keyAnimFrame = null;
+    }
+
+    /* ============================================================
+       FLIP CONTAINER HEIGHT
+       ============================================================ */
     document.querySelectorAll('.wall-item.flippable').forEach(item => {
       const img = item.querySelector('.flip-front img');
       const ct  = item.querySelector('.flip-container');
@@ -456,10 +613,7 @@
       zoomFrame.style.height = rect.height + 'px';
 
       zoomOverlay.classList.add('active');
-      scrollDriver.style.overflow = 'hidden';
-
       void zoomFrame.offsetHeight;
-
       zoomFrame.classList.add('animating');
 
       const maxW = window.innerWidth * 0.75;
@@ -488,7 +642,6 @@
       zoomedIn = false;
       clearTimeout(flipTimer);
       zoomOverlay.classList.remove('active');
-      scrollDriver.style.overflow = '';
     }
 
     zoomBackdrop.addEventListener('click', closeZoom);
@@ -497,55 +650,29 @@
     /* ============================================================
        CLICK DETECTION
        ============================================================ */
-    let downX = 0, downY = 0, downTime = 0;
-
-    scrollDriver.addEventListener('mousedown', e => {
-      downX = e.clientX; downY = e.clientY; downTime = Date.now();
-    });
-    scrollDriver.addEventListener('mouseup', e => {
-      if (Math.abs(e.clientX - downX) < 6 && Math.abs(e.clientY - downY) < 6 && Date.now() - downTime < 400)
-        handleClick(e.clientX, e.clientY);
+    document.querySelectorAll('.wall-item.flippable').forEach(item => {
+      item.addEventListener('click', (e) => {
+        if (!zoomedIn) openZoom(item);
+      });
     });
 
-    let tX = 0, tY = 0, tTime = 0;
-    scrollDriver.addEventListener('touchstart', e => {
-      if (e.touches.length === 1) { tX = e.touches[0].clientX; tY = e.touches[0].clientY; tTime = Date.now(); }
-    }, { passive: true });
-    scrollDriver.addEventListener('touchend', e => {
-      if (e.changedTouches.length === 1) {
-        const t = e.changedTouches[0];
-        if (Math.abs(t.clientX - tX) < 12 && Math.abs(t.clientY - tY) < 12 && Date.now() - tTime < 400)
-          handleClick(t.clientX, t.clientY);
-      }
+    document.getElementById('resume-trigger').addEventListener('click', (e) => {
+      if (!zoomedIn) openResume();
     });
-
-    function handleClick(cx, cy) {
-      if (zoomedIn) return;
-      scrollDriver.style.pointerEvents = 'none';
-      const el = document.elementFromPoint(cx, cy);
-      scrollDriver.style.pointerEvents = '';
-      if (!el) return;
-
-      if (el.closest('#resume-trigger')) { openResume(); return; }
-      const flippable = el.closest('.wall-item.flippable');
-      if (flippable) openZoom(flippable);
-    }
 
     /* ============================================================
        HOVER GLOW
        ============================================================ */
     let lastHovered = null;
-    scrollDriver.addEventListener('mousemove', e => {
-      scrollDriver.style.pointerEvents = 'none';
+    document.addEventListener('mousemove', e => {
       const el = document.elementFromPoint(e.clientX, e.clientY);
-      scrollDriver.style.pointerEvents = '';
       const found = el ? (el.closest('.wall-item.flippable') || el.closest('.wall-item.clickable')) : null;
       if (found !== lastHovered) {
         if (lastHovered) lastHovered.classList.remove('hovered');
         if (found) found.classList.add('hovered');
         lastHovered = found;
       }
-      scrollDriver.style.cursor = found ? 'pointer' : '';
+      document.body.style.cursor = found ? 'pointer' : '';
     });
 
     /* ============================================================
@@ -557,23 +684,28 @@
     function openResume() {
       resumeEmbed.src = 'Mara_Resume.pdf#toolbar=0&navpanes=0&view=FitH';
       resumeOverlay.classList.add('active');
-      scrollDriver.style.overflow = 'hidden';
     }
     function closeResume() {
       resumeOverlay.classList.remove('active');
-      scrollDriver.style.overflow = '';
       setTimeout(() => { resumeEmbed.src = ''; }, 500);
     }
 
     document.getElementById('resume-close').addEventListener('click', closeResume);
     document.getElementById('resume-backdrop').addEventListener('click', closeResume);
 
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') {
-        if (zoomedIn) closeZoom();
-        else if (resumeOverlay.classList.contains('active')) closeResume();
-      }
+    /* ============================================================
+       INIT & RESIZE
+       ============================================================ */
+    window.addEventListener('resize', () => {
+      recalcHeight();
+      wallOffset = Math.min(wallOffset, maxWallOffset);
+      characterScreenY = Math.max(getCharMinY(), Math.min(characterScreenY, getCharMaxY()));
+      applyPositions();
+      checkBottomState();
     });
+
+    recalcHeight();
+    applyPositions();
   </script>
 </body>
 </html>
