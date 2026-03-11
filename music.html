@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Play Some Music!</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Mono:wght@300;400&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #8BAE7E;
+    height: 100vh;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    font-family: 'Playfair Display', serif;
+    overflow: hidden;
+    position: relative;
+  }
+
+  #scene {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    margin-left: 40px;
+    margin-bottom: 10vh;
+    position: relative;
+  }
+
+  /* ── Improved Input Zone ── */
+  #input-zone {
+    width: 340px;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  #input-zone .label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 300;
+    color: #5d7a4e;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    padding-left: 4px;
+  }
+
+  #input-box {
+    width: 100%;
+    border: 2px dashed #a3b893;
+    border-radius: 12px;
+    padding: 24px 20px 60px 20px;
+    background: rgba(255, 255, 255, 0.04);
+    position: relative;
+    transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
+  }
+
+  #input-box:focus-within {
+    border-color: #c8d4a8;
+    background: rgba(255, 255, 255, 0.07);
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.04);
+  }
+
+  #text-input {
+    width: 100%;
+    min-height: 80px;
+    max-height: 120px;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #f0ede4;
+    font-family: 'Playfair Display', serif;
+    font-size: 19px;
+    font-weight: 700;
+    font-style: italic;
+    line-height: 1.5;
+    padding: 0;
+    resize: none;
+    letter-spacing: 0.3px;
+  }
+
+  #text-input::placeholder {
+    color: #a3b893;
+    font-style: italic;
+    font-weight: 700;
+  }
+
+  #text-input:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  /* Bottom bar inside input box */
+  #input-footer {
+    position: absolute;
+    bottom: 14px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  #char-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: #7a9468;
+    letter-spacing: 1px;
+    transition: color 0.3s;
+  }
+
+  #char-count.has-text {
+    color: #a3b893;
+  }
+
+  #enter-hint {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: #7a9468;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.3s, transform 0.3s;
+  }
+
+  #enter-hint.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  #enter-hint kbd {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid #7a9468;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 10px;
+    color: #a3b893;
+  }
+
+  /* Music note icon next to the box */
+  #note-icon {
+    position: absolute;
+    top: -14px;
+    right: -10px;
+    font-size: 24px;
+    color: #5d7a4e;
+    opacity: 0.5;
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+  }
+
+  #input-box:focus-within ~ #note-icon,
+  #input-box:focus-within + #note-icon {
+    opacity: 0.8;
+    transform: rotate(-10deg) scale(1.1);
+  }
+
+  /* ── Flying music note ── */
+  .music-note {
+    position: fixed;
+    font-size: 28px;
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0;
+    color: #2D3A1F;
+  }
+
+  /* ── Stage ── */
+  #stage {
+    position: relative;
+    width: 280px;
+    height: 450px;
+    flex-shrink: 0;
+  }
+
+  .person-frame {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    height: min(420px, 55vh);
+    width: auto;
+    display: none;
+  }
+
+  .person-frame.active {
+    display: block;
+  }
+</style>
+</head>
+<body>
+
+  <div id="scene">
+    <div id="input-zone">
+      <div class="label">Now playing</div>
+      <div id="input-box">
+        <textarea id="text-input" placeholder="Type a song…" rows="3"></textarea>
+        <div id="input-footer">
+          <span id="char-count">0 chars</span>
+          <span id="enter-hint">press <kbd>↵</kbd> to play</span>
+        </div>
+      </div>
+      <div id="note-icon">♪</div>
+    </div>
+
+    <div id="stage">
+      <img id="person-sit" class="person-frame active" src="person_sit.svg" alt="Person sitting">
+      <img id="person-music1" class="person-frame" src="person_music1.svg" alt="Listening 1">
+      <img id="person-music2" class="person-frame" src="person_music2.svg" alt="Listening 2">
+    </div>
+  </div>
+
+<script>
+  const textInput    = document.getElementById('text-input');
+  const inputZone    = document.getElementById('input-zone');
+  const inputBox     = document.getElementById('input-box');
+  const charCount    = document.getElementById('char-count');
+  const enterHint    = document.getElementById('enter-hint');
+  const personSit    = document.getElementById('person-sit');
+  const personMusic1 = document.getElementById('person-music1');
+  const personMusic2 = document.getElementById('person-music2');
+
+  const allFrames = [personSit, personMusic1, personMusic2];
+
+  let musicTimeout = null;
+  let isAnimating = false;
+
+  function showFrame(el) {
+    allFrames.forEach(f => f.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // ── Live input feedback ──
+  textInput.addEventListener('input', () => {
+    const len = textInput.value.length;
+    charCount.textContent = len + ' char' + (len !== 1 ? 's' : '');
+    charCount.classList.toggle('has-text', len > 0);
+    enterHint.classList.toggle('visible', len > 0);
+  });
+
+  textInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      const text = textInput.value.trim();
+      if (text && !isAnimating) triggerAnimation();
+    }
+  });
+
+  function triggerAnimation() {
+    isAnimating = true;
+    textInput.disabled = true;
+    enterHint.classList.remove('visible');
+
+    const boxRect = inputBox.getBoundingClientRect();
+    const sitRect = personSit.getBoundingClientRect();
+
+    const startX = boxRect.right - 20;
+    const startY = boxRect.top + boxRect.height * 0.3;
+    const endX = sitRect.left + sitRect.width * 0.35;
+    const endY = sitRect.top + sitRect.height * 0.42;
+
+    flyMusicNote(startX, startY, endX, endY, () => {
+      startMusicBob();
+    });
+  }
+
+  function flyMusicNote(x1, y1, x2, y2, onArrive) {
+    const note = document.createElement('div');
+    note.className = 'music-note';
+    note.textContent = '♫';
+    note.style.left = x1 + 'px';
+    note.style.top = y1 + 'px';
+    document.body.appendChild(note);
+
+    const midX = (x1 + x2) / 2;
+    const midY = Math.min(y1, y2) - 60;
+
+    const anim = note.animate([
+      { left: x1 + 'px', top: y1 + 'px', opacity: 0, transform: 'scale(0.5)' },
+      { left: x1 + 'px', top: y1 + 'px', opacity: 1, transform: 'scale(1)', offset: 0.1 },
+      { left: midX + 'px', top: midY + 'px', opacity: 1, transform: 'scale(1.2) rotate(-15deg)', offset: 0.5 },
+      { left: x2 + 'px', top: y2 + 'px', opacity: 0, transform: 'scale(0.6) rotate(10deg)' }
+    ], {
+      duration: 800,
+      easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+      fill: 'forwards'
+    });
+
+    anim.onfinish = () => {
+      note.remove();
+      if (onArrive) onArrive();
+    };
+  }
+
+  function startMusicBob() {
+    showFrame(personMusic1);
+
+    let showingMusic1 = true;
+    const swapTime = 300;
+
+    function doSwap() {
+      if (!isAnimating) return;
+
+      if (showingMusic1) {
+        showFrame(personMusic2);
+      } else {
+        showFrame(personMusic1);
+      }
+      showingMusic1 = !showingMusic1;
+
+      musicTimeout = setTimeout(doSwap, swapTime);
+    }
+
+    musicTimeout = setTimeout(doSwap, swapTime);
+
+    setTimeout(() => {
+      if (musicTimeout) {
+        clearTimeout(musicTimeout);
+        musicTimeout = null;
+      }
+
+      showFrame(personSit);
+
+      isAnimating = false;
+      textInput.disabled = false;
+      textInput.value = '';
+      textInput.focus();
+
+      // Reset footer
+      charCount.textContent = '0 chars';
+      charCount.classList.remove('has-text');
+      enterHint.classList.remove('visible');
+    }, 3000);
+  }
+</script>
+</body>
+</html>

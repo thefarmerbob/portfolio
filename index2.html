@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mara Buşirku — Portfolio</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #8ba87a;
+    }
+
+    /* ====== SCENE & WALL (horizontal) ====== */
+    #scene {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: auto; z-index: 1;
+      overflow: hidden;
+    }
+    #wall {
+      position: absolute; top: 0; left: 0;
+      height: 100%;
+      will-change: transform;
+    }
+
+    /* ====== WALL ITEMS ====== */
+    .wall-item {
+      position: absolute;
+      pointer-events: none;
+    }
+    .wall-item img { display: block; width: 100%; height: auto; }
+
+    .wall-item.clickable,
+    .wall-item.flippable {
+      pointer-events: auto; cursor: pointer;
+      transition: filter 0.35s ease, transform 0.35s ease;
+    }
+    .wall-item.clickable.hovered,
+    .wall-item.flippable.hovered {
+      filter: drop-shadow(0 0 12px rgba(58, 107, 39, 0.45));
+      transform: scale(1.015);
+    }
+
+    .flip-container { position: relative; width: 100%; }
+    .flip-front { position: relative; }
+    .flip-front img { display: block; width: 100%; height: auto; }
+    .flip-back { display: none; }
+
+    /* ====== ZOOM OVERLAY ====== */
+    #zoom-overlay {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 100;
+      pointer-events: none; opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+    #zoom-overlay.active { pointer-events: auto; opacity: 1; }
+
+    #zoom-backdrop {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    #zoom-frame {
+      position: absolute;
+      perspective: 1200px;
+      filter: drop-shadow(0 12px 40px rgba(0,0,0,0.5));
+      cursor: pointer;
+    }
+    #zoom-frame.animating {
+      transition: left 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                  top 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                  width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                  height 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .zoom-flip-inner {
+      width: 100%; height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+    }
+    .zoom-flip-inner.can-flip {
+      transition: transform 0.7s cubic-bezier(0.4, 0.0, 0.2, 1);
+    }
+    .zoom-flip-inner.flipped {
+      transform: rotateY(180deg);
+    }
+    .zoom-face {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .zoom-face img {
+      width: 100%; height: 100%;
+      object-fit: contain; display: block;
+    }
+    .zoom-face.back {
+      transform: rotateY(180deg);
+    }
+
+    /* ====== RESUME OVERLAY ====== */
+    #resume-overlay {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 100;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none; opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    #resume-overlay.active { pointer-events: auto; opacity: 1; }
+
+    #resume-backdrop {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    #resume-wrapper {
+      position: relative; z-index: 101;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 16px;
+      transform: scale(0.92) translateY(12px);
+      opacity: 0;
+      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
+    }
+    #resume-overlay.active #resume-wrapper {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+
+    #resume-top-bar {
+      width: min(62vh, 85vw);
+      display: flex; justify-content: flex-end; align-items: center;
+    }
+
+    #resume-close {
+      width: 36px; height: 36px;
+      border-radius: 50%; border: none;
+      background: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      line-height: 1;
+      transition: background 0.2s, color 0.2s, transform 0.2s;
+      backdrop-filter: blur(8px);
+    }
+    #resume-close:hover {
+      background: rgba(255, 255, 255, 0.25);
+      color: #fff; transform: scale(1.08);
+    }
+
+    #resume-popup {
+      width: min(62vh, 85vw);
+      height: min(82vh, 115vw);
+      background: white; border-radius: 10px;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+    #resume-popup embed { width: 100%; height: 100%; display: block; }
+
+    #resume-bottom-bar { display: flex; gap: 10px; align-items: center; }
+
+    #resume-download {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 24px; border-radius: 999px; border: none;
+      background: rgba(255, 255, 255, 0.14);
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 13px; font-weight: 500;
+      font-family: system-ui, -apple-system, sans-serif;
+      cursor: pointer; text-decoration: none;
+      letter-spacing: 0.02em;
+      transition: background 0.2s, color 0.2s, transform 0.15s;
+      backdrop-filter: blur(8px);
+    }
+    #resume-download:hover {
+      background: rgba(255, 255, 255, 0.25);
+      color: #fff; transform: translateY(-1px);
+    }
+    #resume-download svg { width: 14px; height: 14px; fill: currentColor; }
+
+    /* ====== CHARACTER (horizontal walking) ====== */
+    #character {
+      position: fixed;
+      bottom: 8%;
+      z-index: 5;
+      will-change: left;
+    }
+    #character img {
+      position: absolute;
+      top: -100%;
+      left: 0;
+      width: 250%;
+      height: 250%;
+      object-fit: contain;
+      opacity: 0;
+    }
+    #character img.active { opacity: 1; }
+
+    /* ====== FLOOR ====== */
+    #floor {
+      position: fixed; bottom: 0; left: 0;
+      width: 100%; height: 8%;
+      background: #ffffff;
+      z-index: 0; pointer-events: none;
+    }
+    #floor-line {
+      position: fixed; bottom: 8%; left: 0;
+      width: 100%; height: 4px;
+      background: rgb(0, 0, 0);
+      z-index: 0; pointer-events: none;
+    }
+
+    #vignette {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none; z-index: 6;
+      background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.12) 100%);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="scene">
+    <div id="wall">
+      <!-- Content will be positioned absolutely with pixel coords scaled by s -->
+    </div>
+    <div id="character">
+      <img id="walkR1" src="gallery-character/walkright1.svg" alt="walk right 1" />
+      <img id="walkR2" src="gallery-character/walkright2.svg" alt="walk right 2" />
+      <img id="walkR3" src="gallery-character/walkright3.svg" alt="walk right 3" />
+      <img id="walkR4" src="gallery-character/walkright4.svg" alt="walk right 4" />
+      <img id="walkL1" src="gallery-character/walkleft1.svg" alt="walk left 1" />
+      <img id="walkL2" src="gallery-character/walkleft2.svg" alt="walk left 2" />
+      <img id="walkL3" src="gallery-character/walkleft3.svg" alt="walk left 3" />
+      <img id="walkL4" src="gallery-character/walkleft4.svg" alt="walk left 4" />
+      <img id="idleRight" src="gallery-character/idleright.svg" alt="idle facing right" class="active" />
+      <img id="idleLeft" src="gallery-character/idleleft.svg" alt="idle facing left" />
+    </div>
+  </div>
+
+  <div id="floor"></div>
+  <div id="floor-line"></div>
+  <div id="vignette"></div>
+
+  <!-- Zoom overlay (with flip) -->
+  <div id="zoom-overlay">
+    <div id="zoom-backdrop"></div>
+    <div id="zoom-frame"></div>
+  </div>
+
+  <!-- Resume overlay -->
+  <div id="resume-overlay">
+    <div id="resume-backdrop"></div>
+    <div id="resume-wrapper">
+      <div id="resume-top-bar">
+        <button id="resume-close" aria-label="Close resume">✕</button>
+      </div>
+      <div id="resume-popup">
+        <embed id="resume-embed" src="" type="application/pdf" />
+      </div>
+      <div id="resume-bottom-bar">
+        <a id="resume-download" href="Mara_Resume.pdf" download>
+          <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 12L3 7h3V1h4v6h3L8 12zM2 14v-1h12v1H2z"/>
+          </svg>
+          Download PDF
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ============================================================
+       CONFIGURATION — Layout in "base" coordinate space
+       Base viewport: 1920 x 900
+       All x, y, w values are in this base space and get scaled.
+       ============================================================ */
+    const BASE_VW = 1920;
+    const BASE_VH = 900;
+
+    /*
+      Wall items laid out horizontally.
+      type: 'static' | 'flippable' | 'clickable'
+      For flippable: frontSrc, backSrc
+      For clickable: src, action (e.g. 'resume')
+      For static: src
+      x, y (% from top for y), w = width in base px
+    */
+    const wallLayout = [
+      // === ABOUT section ===
+      { type: 'static', x: 80, y: 5, w: 280, src: 'ABOUT.svg', alt: 'about' },
+
+      // Photo frame (flippable)
+      { type: 'flippable', x: 60, y: 16, w: 300,
+        frontSrc: 'officeframe1.svg', backSrc: 'officeframe1back.svg', alt: 'frame 1' },
+
+      // Hello card
+      { type: 'static', x: 400, y: 22, w: 270,
+        src: 'officeframe2.svg', alt: 'frame 2' },
+
+      // "BTW here's my resume" text
+      { type: 'static', x: 710, y: 34, w: 180,
+        src: 'btwheresmyresume.svg', alt: "here's my resume" },
+
+      // Resume frame (clickable)
+      { type: 'clickable', action: 'resume', x: 950, y: 19, w: 140,
+        src: 'officeframe3.svg', alt: 'resume frame' },
+
+      // Contact details
+      { type: 'static', x: 120, y: 54, w: 190,
+        src: 'contactdetails.svg', alt: 'contact details' },
+
+      // Large "blah blah" frame
+      { type: 'static', x: 400, y: 54, w: 600,
+        src: 'officeframe4.svg', alt: 'frame 4' },
+
+      // Lamp (decorative, higher up)
+      { type: 'static', x: 700, y: -50, w: 270,
+        src: 'lamp.svg', alt: 'hanging lamp' },
+
+      // === PROJECTS section ===
+      { type: 'static', x: 1300, y: 5, w: 400, src: 'PROJECTS.svg', alt: 'projects' },
+
+      // Project frames (flippable)
+      { type: 'flippable', x: 1280, y: 15, w: 600,
+        frontSrc: 'officeframe5.svg', backSrc: 'officeframe5back.svg', alt: 'frame 5' },
+
+      { type: 'flippable', x: 1270, y: 48, w: 380,
+        frontSrc: 'officeframe9.svg', backSrc: 'officeframe9back.svg', alt: 'frame 9' },
+
+      { type: 'flippable', x: 1920, y: 15, w: 340,
+        frontSrc: 'officeframe7.svg', backSrc: 'officeframe7back.svg', alt: 'frame 7' },
+
+      { type: 'flippable', x: 2480, y: 55, w: 300,
+        frontSrc: 'officeframe12.svg', backSrc: 'officeframe12back.svg', alt: 'frame 12' },
+
+      // Second row of project frames
+      { type: 'flippable', x: 1680, y: 52, w: 260,
+        frontSrc: 'officeframe11.svg', backSrc: 'officeframe11back.svg', alt: 'frame 11' },
+
+      { type: 'flippable', x: 2000, y: 60, w: 420,
+        frontSrc: 'officeframe10.svg', backSrc: 'officeframe10back.svg', alt: 'frame 10' },
+
+      { type: 'flippable', x: 2640, y: 24, w: 270,
+        frontSrc: 'officeframe6.svg', backSrc: 'officeframe6back.svg', alt: 'frame 6' },
+
+      { type: 'flippable', x: 2320, y: 13, w: 300,
+        frontSrc: 'officeframe8.svg', backSrc: 'officeframe8back.svg', alt: 'frame 8' },
+
+      // === EXPERIENCE section ===
+      { type: 'static', x: 3350, y: 2, w: 380, src: 'EXPERIENCE.svg', alt: 'experience' },
+
+      // Desk at the end
+      { type: 'static', x: 3400, y: 40, w: 500,
+        src: 'desk.svg', alt: 'desk' },
+    ];
+
+    const WALL_BASE_WIDTH = 3100; // total width in base coords
+
+    /* ============================================================
+       BUILD WALL
+       ============================================================ */
+    const wallEl = document.getElementById('wall');
+
+    function buildWall() {
+      wallEl.innerHTML = '';
+      const s = Math.min(window.innerWidth / BASE_VW, window.innerHeight / BASE_VH);
+      const wallWidth = WALL_BASE_WIDTH * s;
+      wallEl.style.width = wallWidth + 'px';
+
+      wallLayout.forEach((item, idx) => {
+        if (item.type === 'header') {
+          const h = document.createElement('div');
+          h.className = 'section-header';
+          h.style.left = (item.x * s) + 'px';
+          h.style.top = item.y + '%';
+          h.style.setProperty('--scale', s);
+          h.textContent = item.text;
+          wallEl.appendChild(h);
+          return;
+        }
+
+        if (item.hidden) return; // skip hidden layout items
+
+        const div = document.createElement('div');
+        div.className = 'wall-item';
+        div.style.left = (item.x * s) + 'px';
+        div.style.top = item.y + '%';
+        div.style.width = (item.w * s) + 'px';
+        div.dataset.index = idx;
+
+        if (item.type === 'flippable') {
+          div.classList.add('flippable');
+          div.innerHTML =
+            '<div class="flip-container">' +
+              '<div class="flip-front"><img src="' + item.frontSrc + '" alt="' + item.alt + '" /></div>' +
+              '<div class="flip-back"><img src="' + item.backSrc + '" alt="' + item.alt + ' back" /></div>' +
+            '</div>';
+        } else if (item.type === 'clickable') {
+          div.classList.add('clickable');
+          if (item.action === 'resume') div.id = 'resume-trigger';
+          div.innerHTML = '<img src="' + item.src + '" alt="' + item.alt + '" />';
+        } else {
+          // static
+          div.innerHTML = '<img src="' + item.src + '" alt="' + item.alt + '" />';
+        }
+
+        wallEl.appendChild(div);
+      });
+
+      // Fix flip container heights
+      wallEl.querySelectorAll('.wall-item.flippable').forEach(item => {
+        const img = item.querySelector('.flip-front img');
+        const ct = item.querySelector('.flip-container');
+        const fn = () => { if (img.naturalHeight) ct.style.height = (item.offsetWidth * img.naturalHeight / img.naturalWidth) + 'px'; };
+        img.addEventListener('load', fn);
+        if (img.complete) fn();
+      });
+
+      return wallWidth;
+    }
+
+    let wallWidth = buildWall();
+    attachClickHandlers();
+
+    /* ============================================================
+       CHARACTER SETUP (same as gallery.html)
+       ============================================================ */
+    const charEl = document.getElementById('character');
+    let charWidth = 0;
+
+    function sizeCharacter() {
+      const s = Math.min(window.innerWidth / BASE_VW, window.innerHeight / BASE_VH);
+      charWidth = 62 * s;
+      charEl.style.width = charWidth + 'px';
+      charEl.style.height = (100 * s) + 'px';
+    }
+    sizeCharacter();
+
+    const walkRightFrames = [
+      document.getElementById('walkR1'),
+      document.getElementById('walkR2'),
+      document.getElementById('walkR3'),
+      document.getElementById('walkR4'),
+    ];
+    const walkLeftFrames = [
+      document.getElementById('walkL1'),
+      document.getElementById('walkL2'),
+      document.getElementById('walkL3'),
+      document.getElementById('walkL4'),
+    ];
+    const idleRight = document.getElementById('idleRight');
+    const idleLeft = document.getElementById('idleLeft');
+    const allFrames = [...walkRightFrames, ...walkLeftFrames, idleRight, idleLeft];
+
+    let currentFrameIndex = 0;
+    let lastDirection = 'right';
+    let idleTimeout = null;
+    let accumulatedDelta = 0;
+
+    const WALK_SPEED = 8;
+    const SCROLL_TO_WALK = 0.4;
+    const FRAME_STEP = 80;
+    const IDLE_DELAY = 250;
+
+    function showFrame(frameEl) {
+      allFrames.forEach(f => f.classList.remove('active'));
+      frameEl.classList.add('active');
+    }
+    function showIdle() {
+      showFrame(lastDirection === 'right' ? idleRight : idleLeft);
+    }
+    function advanceWalkFrame(direction) {
+      const frames = direction === 'right' ? walkRightFrames : walkLeftFrames;
+      lastDirection = direction;
+      currentFrameIndex = (currentFrameIndex + 1) % 4;
+      showFrame(frames[currentFrameIndex]);
+      clearTimeout(idleTimeout);
+      idleTimeout = setTimeout(showIdle, IDLE_DELAY);
+    }
+
+    /* ============================================================
+       MOVEMENT SYSTEM (from gallery.html)
+       ============================================================ */
+    const LEFT_EDGE = 0.05;
+    const RIGHT_EDGE = 0.70;
+
+    let characterX = window.innerWidth * 0.30;
+    let wallOffset = 0;
+    let MAX_WALL_OFFSET = Math.max(0, wallWidth - window.innerWidth);
+
+    function getCharMinX() { return window.innerWidth * LEFT_EDGE; }
+    function getCharMaxX() { return window.innerWidth - charWidth * 2.5; }
+    function getCharScrollRightX() { return window.innerWidth * RIGHT_EDGE; }
+    function getCharScrollLeftX() { return window.innerWidth * 0.30; }
+
+    function applyPositions() {
+      charEl.style.left = characterX + 'px';
+      wallEl.style.transform = `translateX(${-wallOffset}px)`;
+    }
+
+    function moveBy(deltaPx) {
+      if (Math.abs(deltaPx) < 0.5) return;
+
+      const direction = deltaPx > 0 ? 'right' : 'left';
+      let remaining = deltaPx;
+
+      if (direction === 'right') {
+        if (characterX < getCharScrollRightX()) {
+          const charMove = Math.min(remaining, getCharScrollRightX() - characterX);
+          characterX += charMove;
+          remaining -= charMove;
+        }
+        if (remaining > 0 && wallOffset < MAX_WALL_OFFSET) {
+          const wallMove = Math.min(remaining, MAX_WALL_OFFSET - wallOffset);
+          wallOffset += wallMove;
+          remaining -= wallMove;
+        }
+        if (remaining > 0) {
+          characterX = Math.min(characterX + remaining, getCharMaxX());
+        }
+      } else {
+        remaining = Math.abs(remaining);
+        if (characterX > getCharScrollLeftX()) {
+          const charMove = Math.min(remaining, characterX - getCharScrollLeftX());
+          characterX -= charMove;
+          remaining -= charMove;
+        }
+        if (remaining > 0 && wallOffset > 0) {
+          const wallMove = Math.min(remaining, wallOffset);
+          wallOffset -= wallMove;
+          remaining -= wallMove;
+        }
+        if (remaining > 0) {
+          characterX = Math.max(characterX - remaining, getCharMinX());
+        }
+      }
+
+      accumulatedDelta += Math.abs(deltaPx);
+      if (accumulatedDelta >= FRAME_STEP) {
+        advanceWalkFrame(direction);
+        accumulatedDelta = accumulatedDelta % FRAME_STEP;
+      }
+
+      applyPositions();
+    }
+
+    /* ============================================================
+       INPUT: Wheel / Touch / Keyboard
+       ============================================================ */
+    let zoomedIn = false;
+    const resumeOverlay = document.getElementById('resume-overlay');
+
+    document.addEventListener('wheel', (e) => {
+      if (zoomedIn || resumeOverlay.classList.contains('active')) return;
+      e.preventDefault();
+      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      moveBy(delta * SCROLL_TO_WALK);
+    }, { passive: false });
+
+    let touchLastX = 0;
+    document.addEventListener('touchstart', (e) => {
+      if (!zoomedIn && !resumeOverlay.classList.contains('active')) {
+        touchLastX = e.touches[0].clientX;
+      }
+    }, { passive: true });
+    document.addEventListener('touchmove', (e) => {
+      if (zoomedIn || resumeOverlay.classList.contains('active')) return;
+      const touchX = e.touches[0].clientX;
+      moveBy((touchLastX - touchX) * 0.8);
+      touchLastX = touchX;
+    }, { passive: true });
+
+    let keysHeld = { left: false, right: false };
+    let keyAnimFrame = null;
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (zoomedIn) closeZoom();
+        else if (resumeOverlay.classList.contains('active')) closeResume();
+        return;
+      }
+      if (zoomedIn || resumeOverlay.classList.contains('active')) return;
+      if (e.key === 'ArrowRight' || e.key === 'd') { keysHeld.right = true; e.preventDefault(); }
+      if (e.key === 'ArrowLeft' || e.key === 'a') { keysHeld.left = true; e.preventDefault(); }
+      startKeyLoop();
+    });
+    document.addEventListener('keyup', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'd') keysHeld.right = false;
+      if (e.key === 'ArrowLeft' || e.key === 'a') keysHeld.left = false;
+    });
+    function startKeyLoop() { if (!keyAnimFrame) keyLoop(); }
+    function keyLoop() {
+      let delta = 0;
+      if (keysHeld.right) delta += WALK_SPEED;
+      if (keysHeld.left) delta -= WALK_SPEED;
+      if (delta !== 0) { moveBy(delta); keyAnimFrame = requestAnimationFrame(keyLoop); }
+      else keyAnimFrame = null;
+    }
+
+    /* ============================================================
+       ZOOM + FLIP OVERLAY (from original index.html)
+       ============================================================ */
+    const zoomOverlay = document.getElementById('zoom-overlay');
+    const zoomBackdrop = document.getElementById('zoom-backdrop');
+    const zoomFrame = document.getElementById('zoom-frame');
+    let flipTimer = null;
+
+    function openZoom(item) {
+      if (zoomedIn) return;
+      zoomedIn = true;
+      clearTimeout(flipTimer);
+
+      const rect = item.getBoundingClientRect();
+      const frontSrc = item.querySelector('.flip-front img').src;
+      const backSrc = item.querySelector('.flip-back img').src;
+
+      zoomFrame.className = '';
+      zoomFrame.innerHTML =
+        '<div class="zoom-flip-inner">' +
+          '<div class="zoom-face front"><img src="' + frontSrc + '" alt="front" /></div>' +
+          '<div class="zoom-face back"><img src="' + backSrc + '" alt="back" /></div>' +
+        '</div>';
+
+      zoomFrame.style.left = rect.left + 'px';
+      zoomFrame.style.top = rect.top + 'px';
+      zoomFrame.style.width = rect.width + 'px';
+      zoomFrame.style.height = rect.height + 'px';
+
+      zoomOverlay.classList.add('active');
+      void zoomFrame.offsetHeight;
+      zoomFrame.classList.add('animating');
+
+      const maxW = window.innerWidth * 0.75;
+      const maxH = window.innerHeight * 0.80;
+      const aspect = rect.width / rect.height;
+      let tw, th;
+      if (aspect > maxW / maxH) { tw = maxW; th = maxW / aspect; }
+      else { th = maxH; tw = maxH * aspect; }
+
+      zoomFrame.style.left = ((window.innerWidth - tw) / 2) + 'px';
+      zoomFrame.style.top = ((window.innerHeight - th) / 2) + 'px';
+      zoomFrame.style.width = tw + 'px';
+      zoomFrame.style.height = th + 'px';
+
+      flipTimer = setTimeout(() => {
+        const inner = zoomFrame.querySelector('.zoom-flip-inner');
+        if (!inner) return;
+        inner.classList.add('can-flip');
+        void inner.offsetHeight;
+        inner.classList.add('flipped');
+      }, 480);
+    }
+
+    function closeZoom() {
+      if (!zoomedIn) return;
+      zoomedIn = false;
+      clearTimeout(flipTimer);
+      zoomOverlay.classList.remove('active');
+    }
+
+    zoomBackdrop.addEventListener('click', closeZoom);
+    zoomFrame.addEventListener('click', closeZoom);
+
+    /* ============================================================
+       CLICK HANDLERS
+       ============================================================ */
+    function attachClickHandlers() {
+      wallEl.querySelectorAll('.wall-item.flippable').forEach(item => {
+        item.addEventListener('click', () => {
+          if (!zoomedIn) openZoom(item);
+        });
+      });
+
+      const resumeTrigger = document.getElementById('resume-trigger');
+      if (resumeTrigger) {
+        resumeTrigger.addEventListener('click', () => {
+          if (!zoomedIn) openResume();
+        });
+      }
+    }
+
+    /* ============================================================
+       HOVER GLOW
+       ============================================================ */
+    let lastHovered = null;
+    document.addEventListener('mousemove', e => {
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const found = el ? (el.closest('.wall-item.flippable') || el.closest('.wall-item.clickable')) : null;
+      if (found !== lastHovered) {
+        if (lastHovered) lastHovered.classList.remove('hovered');
+        if (found) found.classList.add('hovered');
+        lastHovered = found;
+      }
+      document.body.style.cursor = found ? 'pointer' : '';
+    });
+
+    /* ============================================================
+       RESUME OVERLAY
+       ============================================================ */
+    const resumeEmbed = document.getElementById('resume-embed');
+
+    function openResume() {
+      resumeEmbed.src = 'Mara_Resume.pdf#toolbar=0&navpanes=0&view=FitH';
+      resumeOverlay.classList.add('active');
+    }
+    function closeResume() {
+      resumeOverlay.classList.remove('active');
+      setTimeout(() => { resumeEmbed.src = ''; }, 500);
+    }
+
+    document.getElementById('resume-close').addEventListener('click', closeResume);
+    document.getElementById('resume-backdrop').addEventListener('click', closeResume);
+
+    /* ============================================================
+       RESIZE
+       ============================================================ */
+    window.addEventListener('resize', () => {
+      wallWidth = buildWall();
+      attachClickHandlers();
+      sizeCharacter();
+      MAX_WALL_OFFSET = Math.max(0, wallWidth - window.innerWidth);
+      wallOffset = Math.min(wallOffset, MAX_WALL_OFFSET);
+      characterX = Math.max(getCharMinX(), Math.min(characterX, getCharMaxX()));
+      applyPositions();
+    });
+
+    /* ============================================================
+       INIT
+       ============================================================ */
+    showIdle();
+    applyPositions();
+  </script>
+</body>
+</html>

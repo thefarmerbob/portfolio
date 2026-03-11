@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drop Your Pants!</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #8BAE7E;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Playfair Display', serif;
+    overflow: hidden;
+    position: relative;
+  }
+
+  #drop-zone {
+    width: 420px;
+    height: 150px;
+    border: 3px dashed #BCC9A0;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 30px;
+    position: relative;
+    z-index: 20;
+    transition: border-color 0.3s, background 0.3s, opacity 0.4s;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  #drop-zone.drag-over {
+    border-color: #E8C840;
+    background: rgba(232, 200, 64, 0.12);
+  }
+
+  #drop-zone.hidden { opacity: 0; pointer-events: none; }
+
+  #drop-zone p {
+    color: #BCC9A0;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  #drop-zone input[type="file"] { display: none; }
+
+  .hint {
+    color: #a3b893;
+    font-size: 13px;
+    margin-top: 6px;
+    font-weight: 400;
+    font-family: sans-serif;
+    flex-shrink: 0;
+    transition: opacity 0.4s;
+  }
+
+  #stage {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    flex: 1;
+    margin-top: 10px;
+  }
+
+  /*
+    KEY: All three person images are stacked.
+    person-stand is z-index 5 (bottom layer, always visible as base).
+    think1 is z-index 6, think2 is z-index 7.
+    To transition: we fade the TOP layer IN over the one below.
+    The bottom one stays at full opacity so there's never a gap.
+  */
+  #person-stand {
+    position: absolute;
+    left: 50%;
+    top: 10px;
+    transform: translateX(-50%);
+    height: min(440px, 60vh);
+    width: auto;
+    z-index: 5;
+    opacity: 1;
+  }
+
+  #person-think1 {
+    position: absolute;
+    left: 50%;
+    top: 10px;
+    transform: translateX(-50%);
+    height: min(440px, 60vh);
+    width: auto;
+    z-index: 6;
+    opacity: 0;
+  }
+
+  #person-think2 {
+    position: absolute;
+    left: 50%;
+    top: 10px;
+    transform: translateX(-50%);
+    height: min(440px, 60vh);
+    width: auto;
+    z-index: 7;
+    opacity: 0;
+  }
+
+  #pants-svg {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    top: -400px;
+    opacity: 0;
+    pointer-events: none;
+    height: auto;
+  }
+
+  #cool-text {
+    position: absolute;
+    left: 50%;
+    top: 38%;
+    transform: translate(-50%, -50%) scale(0);
+    font-size: clamp(48px, 8vw, 80px);
+    font-weight: 900;
+    color: #E8C840;
+    text-shadow: 3px 3px 0 #2D3A1F, -1px -1px 0 #2D3A1F;
+    white-space: nowrap;
+    z-index: 30;
+    opacity: 0;
+    letter-spacing: 2px;
+  }
+
+  @keyframes coolPop {
+    0%   { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+    50%  { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  }
+
+  #replay-btn {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #E8C840;
+    border: none;
+    padding: 12px 32px;
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #2D3A1F;
+    border-radius: 40px;
+    cursor: pointer;
+    z-index: 40;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s, transform 0.2s;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  }
+
+  #replay-btn:hover { transform: translateX(-50%) scale(1.06); }
+  #replay-btn.visible { opacity: 1; pointer-events: auto; }
+</style>
+</head>
+<body>
+
+  <div id="drop-zone" tabindex="0">
+    <p>Drop down your pants here !</p>
+    <input type="file" id="file-input" accept="image/*">
+  </div>
+  <p class="hint" id="hint-text">or click to upload</p>
+
+  <div id="stage">
+    <img id="person-stand" src="person_stand.svg" alt="Person standing">
+    <img id="person-think1" src="person_think1.svg" alt="Thinking 1">
+    <img id="person-think2" src="person_think2.svg" alt="Thinking 2">
+    <img id="pants-svg" src="pants.svg" alt="Pants">
+    <div id="cool-text">COOL PANTS!</div>
+  </div>
+
+  <button id="replay-btn">Try another pair</button>
+
+<script>
+  const dropZone     = document.getElementById('drop-zone');
+  const fileInput    = document.getElementById('file-input');
+  const hintText     = document.getElementById('hint-text');
+  const pantsSvg     = document.getElementById('pants-svg');
+  const personStand  = document.getElementById('person-stand');
+  const personThink1 = document.getElementById('person-think1');
+  const personThink2 = document.getElementById('person-think2');
+  const coolText     = document.getElementById('cool-text');
+  const replayBtn    = document.getElementById('replay-btn');
+
+  let thinkInterval = null;
+  let thinkRAF = null;
+
+  // ── Drop & Click ──
+  dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) triggerAnimation();
+  });
+  fileInput.addEventListener('change', (e) => { if (e.target.files[0]) triggerAnimation(); });
+
+  function triggerAnimation() {
+    resetState();
+    dropZone.classList.add('hidden');
+    hintText.style.opacity = '0';
+
+    if (pantsSvg.complete && pantsSvg.naturalWidth > 0) {
+      beginFall();
+    } else {
+      pantsSvg.onload = () => beginFall();
+    }
+  }
+
+  function beginFall() {
+    const metrics = getPersonMetrics();
+    pantsSvg.style.width = metrics.hipsWidth + 'px';
+    pantsSvg.style.height = 'auto';
+
+    requestAnimationFrame(() => {
+      const elHeight = pantsSvg.offsetHeight || 200;
+      const startY = -(elHeight + 50);
+      pantsSvg.style.top = startY + 'px';
+      pantsSvg.style.opacity = '0';
+      runAnimation(startY, metrics.waistY, window.innerHeight + 100);
+    });
+  }
+
+  function getPersonMetrics() {
+    const rect = personStand.getBoundingClientRect();
+    const stageRect = document.getElementById('stage').getBoundingClientRect();
+    return {
+      waistY: (rect.top - stageRect.top) + rect.height * 0.65,
+      hipsWidth: rect.width * 0.62,
+      fullHeight: rect.height
+    };
+  }
+
+  // ──────────────────────────────────────────
+  // Flash-free transition approach:
+  //
+  // Layers (bottom to top): stand → think1 → think2
+  // Stand always stays opacity:1 as the base.
+  //
+  // To show think1: fade think1 IN to 1 (stand is hidden behind it, no gap)
+  // To show think2: fade think2 IN to 1 (think1 is hidden behind it, no gap)
+  // To show think1 again: fade think2 OUT to 0 (think1 is still 1 behind it)
+  // To go back to stand: fade think1 OUT to 0 (stand is still 1 behind it)
+  //
+  // This way one opaque layer is ALWAYS visible. No green flash ever.
+  // ──────────────────────────────────────────
+
+  function smoothSet(el, targetOpacity, duration) {
+    // Cancel any running animations on this element first
+    el.getAnimations().forEach(a => a.cancel());
+    const current = parseFloat(getComputedStyle(el).opacity);
+    el.style.opacity = current; // lock current value
+    return el.animate(
+      [{ opacity: current }, { opacity: targetOpacity }],
+      { duration, fill: 'forwards', easing: 'ease-in-out' }
+    );
+  }
+
+  function startThinkingTap() {
+    // think1 is already faded in at this point.
+    // We alternate by fading think2 in/out ON TOP of think1.
+    let think2Visible = false;
+    const fadeDuration = 150;  // fast crossfade
+    const holdTime = 200;      // hold each pose
+
+    thinkInterval = setInterval(() => {
+      if (!think2Visible) {
+        // Show think2 on top of think1
+        smoothSet(personThink2, 1, fadeDuration);
+      } else {
+        // Hide think2, revealing think1 beneath
+        smoothSet(personThink2, 0, fadeDuration);
+      }
+      think2Visible = !think2Visible;
+    }, fadeDuration + holdTime);
+  }
+
+  function stopThinkingTap() {
+    if (thinkInterval) {
+      clearInterval(thinkInterval);
+      thinkInterval = null;
+    }
+  }
+
+  // ── Animation sequence ──
+  function runAnimation(startY, waistY, offScreenY) {
+    setTimeout(() => {
+      pantsSvg.style.opacity = '1';
+
+      // PHASE 1: Pants fall to waist
+      const fallAnim = pantsSvg.animate([
+        { top: startY + 'px', opacity: 0 },
+        { top: startY + 'px', opacity: 1, offset: 0.08 },
+        { top: waistY + 'px', opacity: 1 }
+      ], {
+        duration: 1500,
+        easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        fill: 'forwards'
+      });
+
+      fallAnim.onfinish = () => {
+        pantsSvg.style.top = waistY + 'px';
+        pantsSvg.style.opacity = '1';
+
+        // PHASE 2: Fade think1 IN on top of stand (stand stays opacity:1)
+        smoothSet(personThink1, 1, 250);
+
+        // Start tapping after think1 is fully visible
+        setTimeout(() => {
+          startThinkingTap();
+        }, 300);
+
+        // PHASE 3: After 2.5s, stop tapping and go back to stand
+        setTimeout(() => {
+          stopThinkingTap();
+
+          // Fade think2 out first (if visible), then think1
+          const t2anim = smoothSet(personThink2, 0, 200);
+          t2anim.onfinish = () => {
+            smoothSet(personThink1, 0, 250);
+          };
+
+          // PHASE 4: Pants fall off (start slightly after fade begins)
+          setTimeout(() => {
+            const dropAnim = pantsSvg.animate([
+              { top: waistY + 'px', opacity: 1 },
+              { top: offScreenY + 'px', opacity: 1 }
+            ], {
+              duration: 1200,
+              easing: 'cubic-bezier(0.55, 0.055, 0.675, 0.19)',
+              fill: 'forwards'
+            });
+
+            dropAnim.onfinish = () => { pantsSvg.style.opacity = '0'; };
+
+            // PHASE 5: COOL PANTS!
+            setTimeout(() => {
+              coolText.style.animation = 'coolPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
+              setTimeout(() => replayBtn.classList.add('visible'), 600);
+            }, 800);
+
+          }, 500);
+        }, 2500);
+      };
+    }, 300);
+  }
+
+  // ── Reset ──
+  function resetState() {
+    stopThinkingTap();
+
+    pantsSvg.getAnimations().forEach(a => a.cancel());
+    personStand.getAnimations().forEach(a => a.cancel());
+    personThink1.getAnimations().forEach(a => a.cancel());
+    personThink2.getAnimations().forEach(a => a.cancel());
+
+    pantsSvg.style.opacity = '0';
+    pantsSvg.style.top = '-400px';
+    pantsSvg.style.width = '';
+
+    personStand.style.opacity = '1';
+    personThink1.style.opacity = '0';
+    personThink2.style.opacity = '0';
+
+    coolText.style.animation = 'none';
+    coolText.style.opacity = '0';
+    coolText.style.transform = 'translate(-50%, -50%) scale(0)';
+
+    replayBtn.classList.remove('visible');
+    dropZone.classList.remove('hidden');
+    hintText.style.opacity = '1';
+    fileInput.value = '';
+  }
+
+  replayBtn.addEventListener('click', resetState);
+</script>
+</body>
+</html>

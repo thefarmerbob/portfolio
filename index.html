@@ -237,6 +237,11 @@
       width: 55%; height: auto;
       transition: opacity 0.05s ease;
     }
+    #character #frameStand {
+      width: 32%;
+      left: -20%;
+      top: 5vw;
+    }
     #character img.hidden { opacity: 0; }
     #character img.visible { opacity: 1; }
 
@@ -284,56 +289,53 @@
       <div class="wall-item" style="left:58vw; top:50vw; width:9vw;">
         <img src="officestickienote.svg" alt="office sticker note" />
       </div>
-      <div class="wall-item flippable" style="left:2vw; top:65vw; width:40vw;">
+      <div class="wall-item flippable" style="left:2vw; top:65vw; width:36vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="officeframe5.svg" alt="frame 5" /></div>
           <div class="flip-back"><img src="officeframe5back.svg" alt="frame 5 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left:56vw; top:65vw; width:21vw;">
+      <div class="wall-item flippable" style="left:60vw; top:65vw; width:18vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="officeframe7.svg" alt="frame 7" /></div>
           <div class="flip-back"><img src="officeframe7back.svg" alt="frame 7 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left:4vw; top:94vw; width:26vw;">
+      <div class="wall-item flippable" style="left:6vw; top:84vw; width:24vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="officeframe9.svg" alt="frame 9" /></div>
           <div class="flip-back"><img src="officeframe9back.svg" alt="frame 9 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left:57vw; top:122vw; width:20vw;">
+      <div class="wall-item flippable" style="left:62vw; top:108vw; width:16vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="officeframe6.svg" alt="frame 6" /></div>
           <div class="flip-back"><img src="officeframe6back.svg" alt="frame 6 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left:34vw; top:86vw; width:20vw;">
+      <div class="wall-item flippabl  e" style="left:39vw; top:78vw; width:18vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="officeframe11.svg" alt="frame 11" /></div>
           <div class="flip-back"><img src="officeframe11back.svg" alt="frame 11 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left:32vw; top:111vw; width:27vw;">
+      <div class="wall-item flippable" style="left:34vw; top:98vw; width:27vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="officeframe10.svg" alt="frame 10" /></div>
           <div class="flip-back"><img src="officeframe10back.svg" alt="frame 10 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left:6vw; top:121vw; width:22vw;">
+      <div class="wall-item flippable" style="left:12vw; top:105vw; width:18vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="officeframe8.svg" alt="frame 8" /></div>
           <div class="flip-back"><img src="officeframe8back.svg" alt="frame 8 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left:60vw; top:96vw; width:20vw;">
+      <div class="wall-item flippable" style="left:62vw; top:88vw; width:18vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="officeframe12.svg" alt="frame 12" /></div>
           <div class="flip-back"><img src="officeframe12back.svg" alt="frame 12 back" /></div>
         </div>
-      </div>
-      <div class="wall-item" style="left:25vw; top:154vw; width:50vw;">
-        <img src="desk.svg" alt="desk" />
       </div>
     </div>
 
@@ -468,6 +470,7 @@
        ============================================================ */
     function moveBy(delta) {
       if (Math.abs(delta) < 0.5) return;
+      if (isStanding && delta > 0) return;
 
       let remaining = delta;
 
