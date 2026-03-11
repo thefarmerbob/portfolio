@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chihiro</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Mono:wght@300;400&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #95B887; height: 100vh; font-family: 'Playfair Display', serif; overflow: hidden; }
+
+  /* ── Title SVG ── */
+  #title-svg { position: absolute; top: 2.8vw; left: 2.2vw; z-index: 20; height: 4.86vw; width: auto; }
+
+  /* ── Lamp SVG ── */
+  #lamp-svg { position: absolute; top: -10.4vw; left: 38%; z-index: 15; height: 27.8vw; width: auto; }
+
+  #layout { display: flex; height: 100vh; }
+
+  /* ── Left Column ── */
+  #left-col { display: flex; flex-direction: column; flex: 3; min-width: 0; padding: 6.67vw 0 3.47vw 2.2vw; z-index: 10; justify-content: flex-end; }
+
+  #song-cards { display: flex; flex-direction: column; gap: 0.56vw; flex: 1; min-height: 13.9vw; justify-content: flex-end; }
+
+  .song-card { background: #313E24; padding: 0.97vw 1.11vw 1.11vw; display: flex; gap: 0.97vw; align-items: flex-start; opacity: 0; transform: translateY(-2.08vw); border-radius: 0; flex-shrink: 0; }
+  .song-card.show { animation: slideDown 0.45s cubic-bezier(0.4,0,0.2,1) forwards; }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-2.08vw); } to { opacity: 1; transform: translateY(0); } }
+
+  .disk-wrap { width: 4.44vw; height: 4.44vw; flex-shrink: 0; }
+  .disk-wrap img { width: 100%; height: 100%; }
+  .song-card.show .disk-wrap img { animation: spin 3s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .song-info { flex: 1; min-width: 0; }
+  .song-rank { font-family: 'DM Mono', monospace; font-size: 0.63vw; color: #7a9468; letter-spacing: 0.14vw; text-transform: uppercase; margin-bottom: 0.28vw; display: flex; align-items: center; gap: 0.56vw; }
+  .song-rank .confidence { background: rgba(255,233,136,0.2); color: #FFE988; padding: 0.14vw 0.56vw; border-radius: 6.94vw; font-size: 0.63vw; }
+  .song-title-row { display: flex; align-items: center; gap: 0.69vw; }
+  .song-title { font-family: 'Playfair Display', serif; font-size: 1.11vw; font-weight: 700; color: #f0ede4; line-height: 1.2; }
+  .song-artist { font-family: 'DM Mono', monospace; font-size: 0.69vw; color: #a3b893; letter-spacing: 0.035vw; margin-bottom: 0.56vw; }
+  .song-meta { display: flex; gap: 0.35vw; flex-wrap: wrap; }
+  .song-meta span { font-family: 'DM Mono', monospace; font-size: 0.63vw; color: #7a9468; background: rgba(163,184,147,0.12); padding: 0.14vw 0.56vw; border-radius: 6.94vw; }
+
+  .play-btn { width: 2.08vw; height: 2.08vw; border-radius: 50%; background: #FFE988; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.15s, background 0.15s; }
+  .play-btn:hover { transform: scale(1.12); background: #fff3a8; }
+  .play-btn:active { transform: scale(0.95); }
+  .play-btn svg { width: 0.83vw; height: 0.83vw; fill: #313E24; }
+  .play-btn .icon-play { margin-left: 0.14vw; }
+  .play-btn .icon-pause { display: none; }
+  .play-btn.playing .icon-play { display: none; }
+  .play-btn.playing .icon-pause { display: block; }
+  .play-btn:disabled { opacity: 0.3; cursor: default; }
+  .play-btn:disabled:hover { transform: none; background: #FFE988; }
+  .play-btn.loading { animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 0.8; } }
+
+  .progress-bar { width: 100%; height: 0.21vw; background: rgba(255,255,255,0.08); margin-top: 0.69vw; border-radius: 0.14vw; overflow: hidden; display: none; }
+  .progress-bar.visible { display: block; }
+  .progress-fill { height: 100%; background: #FFE988; width: 0%; transition: width 0.3s linear; }
+
+  /* ── Input Box ── */
+  #input-box {
+    height: 26vw;
+    flex-shrink: 0;
+    margin-top: 0.69vw;
+    border: 0.17vw dashed #6d8a5c;
+    border-radius: 0;
+    padding: 1.94vw 1.67vw 3.75vw 1.67vw;
+    background: rgba(109,138,92,0.12);
+    position: relative;
+    transition: border-color 0.3s, background 0.3s;
+    display: flex;
+    flex-direction: column;
+  }
+  #input-box:focus-within { border-color: #546e42; background: rgba(109,138,92,0.18); }
+
+  #text-input { width: 100%; flex: 1; background: transparent; border: none; outline: none; color: #f0ede4; font-family: 'Playfair Display', serif; font-size: 1.39vw; font-weight: 700; font-style: italic; line-height: 1.6; padding: 0; resize: none; }
+  #text-input::placeholder { color: rgba(255,233,136,0.45); font-style: italic; font-weight: 700; }
+  #text-input:disabled { cursor: default; opacity: 0.5; }
+
+  #input-footer { position: absolute; bottom: 1.11vw; left: 1.67vw; right: 1.67vw; display: flex; align-items: center; justify-content: space-between; }
+  #char-count { font-family: 'DM Mono', monospace; font-size: 0.76vw; color: #6d8a5c; letter-spacing: 0.07vw; }
+  #char-count.has-text { color: #f0ede4; }
+  #enter-hint { font-family: 'DM Mono', monospace; font-size: 0.76vw; color: #6d8a5c; display: flex; align-items: center; gap: 0.42vw; opacity: 0; transform: translateY(0.28vw); transition: opacity 0.3s, transform 0.3s; }
+  #enter-hint.visible { opacity: 1; transform: translateY(0); }
+  #enter-hint kbd { background: rgba(255,255,255,0.08); border: 0.07vw solid #6d8a5c; border-radius: 0.28vw; padding: 0.07vw 0.42vw; font-size: 0.69vw; color: #a3b893; }
+
+  #center-col { display: flex; align-items: flex-end; justify-content: center; flex: 2; min-width: 0; height: 100%; z-index: 5; padding-bottom: 4.17vw; }
+  .person-frame { height: clamp(17.4vw, 50vh, 27.8vw); width: auto; display: none; }
+  .person-frame.active { display: block; }
+
+  #right-col { flex: 4; min-width: 0; height: 100vh; display: flex; align-items: flex-end; justify-content: flex-end; padding: 0 3.33vw 3vw 3.47vw; z-index: 2; }
+  #description-box { background: #FFE988; border-radius: 0; padding: 2.5vw; color: #313E24; width: 100%; max-width: 45vw; overflow-y: auto; max-height: 85vh; }
+  #description-box h2 { font-size: 1.94vw; font-weight: 900; margin-bottom: 1.25vw; color: #313E24; }
+  #description-box p { font-size: 0.97vw; line-height: 1.7; color: #313E24; margin-bottom: 0.97vw; }
+  #description-box .stat { font-family: 'DM Mono', monospace; font-size: 0.76vw; color: #5d7a4e; letter-spacing: 0.07vw; margin-bottom: 0.21vw; }
+  #description-box .divider { width: 2.78vw; height: 0.14vw; background: rgba(49,62,36,0.2); margin: 1.11vw 0; }
+  #description-box em { font-style: italic; color: #313E24; }
+
+  .music-note { position: fixed; font-size: 1.94vw; z-index: 50; pointer-events: none; opacity: 0; color: #313E24; }
+
+  #loading-area { display: none; padding: 0.83vw 0; text-align: center; flex-shrink: 0; }
+  #loading-area.visible { display: block; }
+  .loading-dots { display: inline-flex; gap: 0.42vw; }
+  .loading-dots span { width: 0.49vw; height: 0.49vw; background: #5d7a4e; border-radius: 50%; animation: bounce 1.2s ease-in-out infinite; }
+  .loading-dots span:nth-child(2) { animation-delay: 0.15s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce { 0%,80%,100% { transform: translateY(0); opacity: 0.4; } 40% { transform: translateY(-0.69vw); opacity: 1; } }
+  #loading-text { font-family: 'DM Mono', monospace; font-size: 0.76vw; color: #5d7a4e; margin-top: 0.56vw; }
+
+  /* ── Responsive (mobile stacking) ── */
+  @media (max-width: 900px) {
+    body { height: auto; overflow: auto; }
+    #layout { flex-direction: column; height: auto; min-height: 100vh; }
+    #title-svg { position: relative; top: 0; left: 0; height: 8vw; margin: 3vw 4vw 2vw; display: block; }
+    #lamp-svg { display: none; }
+
+    #left-col { flex: none; width: 100%; padding: 0 4vw 4vw; justify-content: flex-start; }
+    #song-cards { flex: 0; min-height: 0; justify-content: flex-start; }
+    #input-box { height: 30vw; }
+    #text-input { font-size: 3vw; }
+
+    .song-card { padding: 2vw 2.5vw 2.5vw; gap: 2vw; }
+    .disk-wrap { width: 10vw; height: 10vw; }
+    .song-title { font-size: 2.8vw; }
+    .song-artist { font-size: 1.8vw; }
+    .song-rank { font-size: 1.5vw; gap: 1.2vw; }
+    .song-rank .confidence { font-size: 1.5vw; padding: 0.3vw 1.2vw; }
+    .song-meta span { font-size: 1.5vw; padding: 0.3vw 1.2vw; }
+    .play-btn { width: 5vw; height: 5vw; }
+    .play-btn svg { width: 2vw; height: 2vw; }
+
+    #input-footer { bottom: 2vw; left: 3vw; right: 3vw; }
+    #char-count { font-size: 1.8vw; }
+    #enter-hint { font-size: 1.8vw; }
+
+    #center-col { flex: none; width: 100%; height: auto; padding: 0 4vw 4vw; justify-content: center; align-items: center; }
+    .person-frame { height: 40vw; }
+
+    #right-col { flex: none; height: auto; padding: 0 4vw 6vw; justify-content: center; }
+    #description-box { max-width: 100%; padding: 5vw; max-height: none; }
+    #description-box h2 { font-size: 4.5vw; margin-bottom: 2.5vw; }
+    #description-box p { font-size: 2.5vw; margin-bottom: 2vw; }
+    #description-box .stat { font-size: 1.8vw; margin-bottom: 0.5vw; }
+    #description-box .divider { width: 6vw; height: 0.3vw; margin: 2.5vw 0; }
+
+    .loading-dots span { width: 1.2vw; height: 1.2vw; }
+    #loading-text { font-size: 1.8vw; }
+  }
+</style>
+</head>
+<body>
+  <!-- Title SVG -->
+  <img id="title-svg" src="chihiro_text.svg" alt="Chihiro">
+
+  <!-- Lamp SVG hanging from top -->
+  <img id="lamp-svg" src="lamp.svg" alt="Lamp">
+
+  <div id="layout">
+    <div id="left-col">
+      <div id="song-cards"></div>
+      <div id="loading-area">
+        <div class="loading-dots"><span></span><span></span><span></span></div>
+        <div id="loading-text">searching your memories…</div>
+      </div>
+      <div id="input-box">
+        <textarea id="text-input" placeholder="Write a bit of what you are doing/feeling, press enter, and generate some nostalgia!" rows="3"></textarea>
+        <div id="input-footer">
+          <span id="char-count">0 chars</span>
+          <span id="enter-hint">press <kbd>↵</kbd> to feel</span>
+        </div>
+      </div>
+    </div>
+    <div id="center-col">
+      <img id="person-sit" class="person-frame active" src="person_sit.svg" alt="Sitting">
+      <img id="person-music1" class="person-frame" src="person_music1.svg" alt="Music 1">
+      <img id="person-music2" class="person-frame" src="person_music2.svg" alt="Music 2">
+    </div>
+    <div id="right-col">
+      <div id="description-box">
+        <h2>About Chihiro</h2>
+        <p>In a world full of stoners and alcoholics, my drug of choice is music. I listen to the same song over and over for an entire week, then rarely touch it again. When I play a song from an "era" of mine, it brings me the heaviest nostalgia — it's the way I remember places, people, food, and experiences.</p>
+        <div class="divider"></div>
+        <p><em>Chihiro</em> is a nostalgia-driven music recommendation system. It predicts songs that maximize my nostalgia based on semantic similarity between my current mood and past journal entries associated with my listening patterns.</p>
+        <div class="divider"></div>
+        <div class="stat">309 HANDWRITTEN JOURNAL PAGES</div>
+        <div class="stat">32,278 SPOTIFY STREAMS</div>
+        <div class="stat">324 UNIQUE SONGS</div>
+        <div class="stat">MODELS: TF-IDF · SBERT · VAE · LIME</div>
+        <div class="divider"></div>
+        <p>Built with fine-tuned Sentence-BERT, a Variational Autoencoder, and LIME interpretability. The models learned that writing about dumplings and claw machines meant the <em>Ylang Ylang</em> era, and writing about mom and bus rides meant <em>Hell N Back</em> season.</p>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const ANTHROPIC_API_KEY = '';
+
+  const SONG_ERAS = [
+    { song: "Hell N Back", artist: "Bakar", era: "spring-comfort", period: "Apr 2024 – May 2025", plays: 94 },
+    { song: "Je te laisserai des mots", artist: "Patrick Watson", era: "universal-nostalgia", period: "Mar – Dec 2024", plays: 80 },
+    { song: "Instant Crush (feat. Julian Casablancas)", artist: "Daft Punk", era: "lonely-night", period: "Mar – Dec 2024", plays: 21 },
+    { song: "Heart To Heart", artist: "Mac DeMarco", era: "coffee-study", period: "Mar 2024 – Jan 2025", plays: 50 },
+    { song: "Ylang Ylang", artist: "Slowed + Julius", era: "taiwan-summer", period: "Aug – Oct 2024", plays: 30 },
+    { song: "Moni", artist: "Moni", era: "taiwan-summer", period: "Aug – Oct 2024", plays: 25 },
+    { song: "Guess featuring Billie Eilish", artist: "Various", era: "social-energy", period: "Mid 2024", plays: 20 },
+    { song: "Parallels", artist: "Daniela Andrade", era: "reflective-calm", period: "Mid 2024", plays: 18 },
+    { song: "parents", artist: "YUNGBLUD", era: "rebellious-energy", period: "Mid 2024", plays: 15 },
+    { song: "KICK BACK", artist: "Kenshi Yonezu", era: "anime-hype", period: "Late 2024", plays: 15 },
+    { song: "(They Long To Be) Close To You", artist: "Carpenters", era: "japan-winter", period: "Dec 2024", plays: 12 },
+    { song: "Killshot", artist: "Magdalena Bay", era: "february-energy", period: "Feb 2025", plays: 15 },
+    { song: "Me quiero ir", artist: "lusillón", era: "wanderlust", period: "Mar 2024 – Jan 2025", plays: 21 },
+    { song: "Michelle - Remastered 2009", artist: "The Beatles", era: "classic-feeling", period: "Mid 2024", plays: 10 },
+    { song: "Si Me Voy (with The Marías)", artist: "Cuco", era: "latin-night", period: "Mar 2024 – Feb 2025", plays: 7 },
+    { song: "The Adults Are Talking", artist: "The Strokes", era: "indie-nostalgia", period: "Mid 2024", plays: 12 },
+    { song: "Headlock", artist: "Imogen Heap", era: "emotional-depth", period: "Mid 2024", plays: 10 },
+    { song: "blue", artist: "yung kai", era: "melancholy-night", period: "Mid 2024", plays: 12 },
+    { song: "Honeypie", artist: "JAWNY", era: "sweet-playful", period: "Mid 2024", plays: 10 },
+    { song: "Tamacun", artist: "Rodrigo y Gabriela", era: "guitar-fire", period: "Sep – Dec 2024", plays: 26 },
+    { song: "Gasolina", artist: "Daddy Yankee", era: "party-latin", period: "Mid 2024", plays: 8 },
+  ];
+
+  const textInput = document.getElementById('text-input'), inputBox = document.getElementById('input-box'),
+    charCount = document.getElementById('char-count'), enterHint = document.getElementById('enter-hint'),
+    songCards = document.getElementById('song-cards'), loadingArea = document.getElementById('loading-area'),
+    personSit = document.getElementById('person-sit'), personMusic1 = document.getElementById('person-music1'),
+    personMusic2 = document.getElementById('person-music2'), allFrames = [personSit, personMusic1, personMusic2];
+  let musicTimeout = null, isAnimating = false, currentAudio = null;
+
+  function showFrame(el) { allFrames.forEach(f => f.classList.remove('active')); el.classList.add('active'); }
+
+  textInput.addEventListener('input', () => {
+    const l = textInput.value.length;
+    charCount.textContent = l + ' char' + (l !== 1 ? 's' : '');
+    charCount.classList.toggle('has-text', l > 0);
+    enterHint.classList.toggle('visible', l > 0);
+  });
+
+  textInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); const t = textInput.value.trim(); if (t && !isAnimating) triggerAnimation(t); }
+  });
+
+  function triggerAnimation(query) {
+    isAnimating = true; textInput.disabled = true; enterHint.classList.remove('visible'); songCards.innerHTML = '';
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    const b = inputBox.getBoundingClientRect(), s = personSit.getBoundingClientRect();
+    flyMusicNote(b.right - 20, b.top + b.height * 0.3, s.left + s.width * 0.35, s.top + s.height * 0.42, () => fetchRecommendations(query));
+  }
+
+  function flyMusicNote(x1, y1, x2, y2, cb) {
+    const n = document.createElement('div'); n.className = 'music-note'; n.textContent = '♫';
+    n.style.left = x1 + 'px'; n.style.top = y1 + 'px'; document.body.appendChild(n);
+    const mx = (x1+x2)/2, my = Math.min(y1,y2) - 60;
+    n.animate([
+      { left:x1+'px', top:y1+'px', opacity:0, transform:'scale(0.5)' },
+      { left:x1+'px', top:y1+'px', opacity:1, transform:'scale(1)', offset:0.1 },
+      { left:mx+'px', top:my+'px', opacity:1, transform:'scale(1.2) rotate(-15deg)', offset:0.5 },
+      { left:x2+'px', top:y2+'px', opacity:0, transform:'scale(0.6) rotate(10deg)' }
+    ], { duration:800, easing:'cubic-bezier(0.25,0.46,0.45,0.94)', fill:'forwards' }).onfinish = () => { n.remove(); if(cb) cb(); };
+  }
+
+  function startMusicBob() {
+    showFrame(personMusic1); let s = true;
+    function swap() { if(!isAnimating) return; showFrame(s?personMusic2:personMusic1); s=!s; musicTimeout=setTimeout(swap,300); }
+    musicTimeout = setTimeout(swap, 300);
+  }
+
+  function stopBob() { if(musicTimeout){clearTimeout(musicTimeout);musicTimeout=null;} showFrame(personSit); isAnimating=false; }
+
+  async function getPreviewUrl(songName, artistName) {
+    const q = encodeURIComponent(`${songName} ${artistName}`);
+    try {
+      const r = await fetch(`https://itunes.apple.com/search?term=${q}&media=music&limit=3`);
+      if (!r.ok) return null;
+      const d = await r.json();
+      if (d.results && d.results.length > 0) {
+        const match = d.results.find(r => r.previewUrl) || null;
+        return match ? match.previewUrl : null;
+      }
+      return null;
+    } catch (e) { return null; }
+  }
+
+  function togglePlay(btn, previewUrl, progressFill, progressBar) {
+    if (!previewUrl) return;
+    if (currentAudio && currentAudio._btn !== btn) {
+      currentAudio.pause(); currentAudio._btn.classList.remove('playing');
+      if (currentAudio._progressBar) currentAudio._progressBar.classList.remove('visible');
+    }
+    if (currentAudio && currentAudio._btn === btn) {
+      if (currentAudio.paused) {
+        currentAudio.play(); btn.classList.add('playing'); progressBar.classList.add('visible');
+        isAnimating = true; startMusicBob();
+      } else {
+        currentAudio.pause(); btn.classList.remove('playing'); stopBob();
+      }
+    } else {
+      currentAudio = new Audio(previewUrl);
+      currentAudio._btn = btn; currentAudio._progressBar = progressBar;
+      currentAudio.play(); btn.classList.add('playing'); progressBar.classList.add('visible');
+      isAnimating = true; startMusicBob();
+      currentAudio.addEventListener('timeupdate', () => {
+        if (currentAudio && currentAudio.duration) progressFill.style.width = (currentAudio.currentTime / currentAudio.duration * 100) + '%';
+      });
+      currentAudio.addEventListener('ended', () => {
+        btn.classList.remove('playing'); progressFill.style.width = '0%'; progressBar.classList.remove('visible');
+        stopBob(); currentAudio = null;
+      });
+    }
+  }
+
+  async function fetchRecommendations(query) {
+    loadingArea.classList.add('visible');
+    const list = SONG_ERAS.map(s => `- "${s.song}" by ${s.artist}: era="${s.era}", period="${s.period}", plays=${s.plays}`).join('\n');
+    try {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 256,
+          messages: [{ role: 'user', content: `You are "Chihiro," a nostalgia music rec engine.\n\nSongs:\n${list}\n\nUser: "${query}"\n\nReturn ONLY a JSON array of exactly 2 objects. No markdown. Each:\n{"song":"exact name","artist":"exact artist","confidence":0.0-1.0}\n\nPick 2 best matches. Prefer variety.` }]
+        })
+      });
+      if (!r.ok) throw new Error(`API ${r.status}`);
+      const d = await r.json();
+      const t = (d.content?.[0]?.text || '').replace(/```json|```/g, '').trim();
+      loadingArea.classList.remove('visible');
+      renderResults(JSON.parse(t));
+    } catch (e) {
+      console.error(e); loadingArea.classList.remove('visible');
+      songCards.innerHTML = `<div style="font-family:'DM Mono',monospace;font-size:11px;color:#c47a6a;padding:12px;background:#313E24;">Error: ${e.message}</div>`;
+      stopBob(); textInput.disabled = false; textInput.value = ''; textInput.focus();
+    }
+  }
+
+  async function renderResults(songs) {
+    songCards.innerHTML = '';
+    stopBob(); textInput.disabled = false; textInput.value = ''; textInput.focus();
+    charCount.textContent = '0 chars'; charCount.classList.remove('has-text');
+
+    for (let i = 0; i < Math.min(songs.length, 2); i++) {
+      const item = songs[i];
+      const era = SONG_ERAS.find(s => s.song.toLowerCase() === item.song.toLowerCase());
+      const card = document.createElement('div');
+      card.className = 'song-card';
+      const conf = Math.round((item.confidence || 0) * 100);
+      const cid = 'c' + i;
+      card.innerHTML = `
+        <div class="disk-wrap"><img src="disk.svg" alt="disk"></div>
+        <div class="song-info">
+          <div class="song-rank"><span>track ${String(i+1).padStart(2,'0')}</span><span class="confidence">${conf}% match</span></div>
+          <div class="song-title-row">
+            <div class="song-title">${item.song}</div>
+            <button class="play-btn loading" id="pb-${cid}" title="Loading preview…" disabled>
+              <svg class="icon-play" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+              <svg class="icon-pause" viewBox="0 0 24 24"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>
+            </button>
+          </div>
+          <div class="song-artist">${item.artist}</div>
+          ${era ? `<div class="song-meta"><span>${era.period}</span><span>${era.plays} plays</span><span>${era.era}</span></div>` : ''}
+          <div class="progress-bar" id="bar-${cid}"><div class="progress-fill" id="fill-${cid}"></div></div>
+        </div>`;
+      songCards.appendChild(card);
+      setTimeout(() => card.classList.add('show'), i * 150);
+
+      const btn = card.querySelector(`#pb-${cid}`);
+      const pbar = card.querySelector(`#bar-${cid}`);
+      const pfill = card.querySelector(`#fill-${cid}`);
+      getPreviewUrl(item.song, item.artist).then(url => {
+        btn.classList.remove('loading');
+        if (url) { btn.disabled = false; btn.title = 'Play 30s preview'; btn.onclick = () => togglePlay(btn, url, pfill, pbar); }
+        else { btn.title = 'No preview available'; }
+      });
+    }
+  }
+</script>
+</body>
+</html>
