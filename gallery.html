@@ -172,16 +172,16 @@
   <div id="scene">
     <div id="wall"></div>
     <div id="character">
-      <img id="walkR1" src="gallery-character/walkright1.svg" alt="walk right 1" />
-      <img id="walkR2" src="gallery-character/walkright2.svg" alt="walk right 2" />
-      <img id="walkR3" src="gallery-character/walkright3.svg" alt="walk right 3" />
-      <img id="walkR4" src="gallery-character/walkright4.svg" alt="walk right 4" />
-      <img id="walkL1" src="gallery-character/walkleft1.svg" alt="walk left 1" />
-      <img id="walkL2" src="gallery-character/walkleft2.svg" alt="walk left 2" />
-      <img id="walkL3" src="gallery-character/walkleft3.svg" alt="walk left 3" />
-      <img id="walkL4" src="gallery-character/walkleft4.svg" alt="walk left 4" />
-      <img id="idleRight" src="gallery-character/idleright.svg" alt="idle facing right" class="active" />
-      <img id="idleLeft" src="gallery-character/idleleft.svg" alt="idle facing left" />
+      <img id="walkR1" src="svgs/gallery-character/walkright1.svg" alt="walk right 1" />
+      <img id="walkR2" src="svgs/gallery-character/walkright2.svg" alt="walk right 2" />
+      <img id="walkR3" src="svgs/gallery-character/walkright3.svg" alt="walk right 3" />
+      <img id="walkR4" src="svgs/gallery-character/walkright4.svg" alt="walk right 4" />
+      <img id="walkL1" src="svgs/gallery-character/walkleft1.svg" alt="walk left 1" />
+      <img id="walkL2" src="svgs/gallery-character/walkleft2.svg" alt="walk left 2" />
+      <img id="walkL3" src="svgs/gallery-character/walkleft3.svg" alt="walk left 3" />
+      <img id="walkL4" src="svgs/gallery-character/walkleft4.svg" alt="walk left 4" />
+      <img id="idleRight" src="svgs/gallery-character/idleright.svg" alt="idle facing right" class="active" />
+      <img id="idleLeft" src="svgs/gallery-character/idleleft.svg" alt="idle facing left" />
     </div>
   </div>
   <div id="floor"></div>
@@ -256,7 +256,7 @@
         div.style.top = f.y + '%';
         div.style.width = (f.w * s) + 'px';
         div.style.height = (f.h * s) + 'px';
-        div.innerHTML = `<img src="galleryframe${f.id}.svg" alt="gallery frame ${f.id}" />`;
+        div.innerHTML = `<img src="svgs/gallery-frames/galleryframe${f.id}.svg" alt="gallery frame ${f.id}" />`;
         wallEl.appendChild(div);
       });
 
@@ -266,7 +266,7 @@
       lamp.style.bottom = '3%';
       lamp.style.width = (400 * s) + 'px';
       lamp.style.height = (800 * s) + 'px';
-      lamp.innerHTML = '<img src="gallery-objects/gallerylamp.svg" alt="lamp" />';
+      lamp.innerHTML = '<img src="svgs/gallery-objects/gallerylamp.svg" alt="lamp" />';
       wallEl.appendChild(lamp);
 
       const plant = document.createElement('div');
@@ -275,7 +275,7 @@
       plant.style.bottom = '5%';
       plant.style.width = (110 * s) + 'px';
       plant.style.height = (140 * s) + 'px';
-      plant.innerHTML = '<img src="gallery-objects/galleryplant.svg" alt="plant" />';
+      plant.innerHTML = '<img src="svgs/gallery-objects/galleryplant.svg" alt="plant" />';
       wallEl.appendChild(plant);
 
       return wallWidth;

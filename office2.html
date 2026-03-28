@@ -233,16 +233,16 @@
       <!-- Content will be positioned absolutely with pixel coords scaled by s -->
     </div>
     <div id="character">
-      <img id="walkR1" src="gallery-character/walkright1.svg" alt="walk right 1" />
-      <img id="walkR2" src="gallery-character/walkright2.svg" alt="walk right 2" />
-      <img id="walkR3" src="gallery-character/walkright3.svg" alt="walk right 3" />
-      <img id="walkR4" src="gallery-character/walkright4.svg" alt="walk right 4" />
-      <img id="walkL1" src="gallery-character/walkleft1.svg" alt="walk left 1" />
-      <img id="walkL2" src="gallery-character/walkleft2.svg" alt="walk left 2" />
-      <img id="walkL3" src="gallery-character/walkleft3.svg" alt="walk left 3" />
-      <img id="walkL4" src="gallery-character/walkleft4.svg" alt="walk left 4" />
-      <img id="idleRight" src="gallery-character/idleright.svg" alt="idle facing right" class="active" />
-      <img id="idleLeft" src="gallery-character/idleleft.svg" alt="idle facing left" />
+      <img id="walkR1" src="svgs/gallery-character/walkright1.svg" alt="walk right 1" />
+      <img id="walkR2" src="svgs/gallery-character/walkright2.svg" alt="walk right 2" />
+      <img id="walkR3" src="svgs/gallery-character/walkright3.svg" alt="walk right 3" />
+      <img id="walkR4" src="svgs/gallery-character/walkright4.svg" alt="walk right 4" />
+      <img id="walkL1" src="svgs/gallery-character/walkleft1.svg" alt="walk left 1" />
+      <img id="walkL2" src="svgs/gallery-character/walkleft2.svg" alt="walk left 2" />
+      <img id="walkL3" src="svgs/gallery-character/walkleft3.svg" alt="walk left 3" />
+      <img id="walkL4" src="svgs/gallery-character/walkleft4.svg" alt="walk left 4" />
+      <img id="idleRight" src="svgs/gallery-character/idleright.svg" alt="idle facing right" class="active" />
+      <img id="idleLeft" src="svgs/gallery-character/idleleft.svg" alt="idle facing left" />
     </div>
   </div>
 
@@ -296,71 +296,71 @@
     */
     const wallLayout = [
       // === ABOUT section ===
-      { type: 'static', x: 80, y: 5, w: 280, src: 'ABOUT.svg', alt: 'about' },
+      { type: 'static', x: 80, y: 5, w: 280, src: 'svgs/office/ABOUT.svg', alt: 'about' },
 
       // Photo frame (flippable)
       { type: 'flippable', x: 60, y: 16, w: 300,
-        frontSrc: 'officeframe1.svg', backSrc: 'officeframe1back.svg', alt: 'frame 1' },
+        frontSrc: 'svgs/office/officeframe1.svg', backSrc: 'svgs/office/officeframe1back.svg', alt: 'frame 1' },
 
       // Hello card
       { type: 'static', x: 400, y: 22, w: 270,
-        src: 'officeframe2.svg', alt: 'frame 2' },
+        src: 'svgs/office/officeframe2.svg', alt: 'frame 2' },
 
       // "BTW here's my resume" text
       { type: 'static', x: 710, y: 34, w: 180,
-        src: 'btwheresmyresume.svg', alt: "here's my resume" },
+        src: 'svgs/office/btwheresmyresume.svg', alt: "here's my resume" },
 
       // Resume frame (clickable)
       { type: 'clickable', action: 'resume', x: 950, y: 19, w: 140,
-        src: 'officeframe3.svg', alt: 'resume frame' },
+        src: 'svgs/office/officeframe3.svg', alt: 'resume frame' },
 
       // Contact details
       { type: 'static', x: 120, y: 54, w: 190,
-        src: 'contactdetails.svg', alt: 'contact details' },
+        src: 'svgs/office/contactdetails.svg', alt: 'contact details' },
 
       // Large "blah blah" frame
       { type: 'static', x: 400, y: 54, w: 600,
-        src: 'officeframe4.svg', alt: 'frame 4' },
+        src: 'svgs/office/officeframe4.svg', alt: 'frame 4' },
 
       // Lamp (decorative, higher up)
       { type: 'static', x: 700, y: -50, w: 270,
-        src: 'lamp.svg', alt: 'hanging lamp' },
+        src: 'svgs/office/lamp.svg', alt: 'hanging lamp' },
 
       // === PROJECTS section ===
-      { type: 'static', x: 1300, y: 5, w: 400, src: 'PROJECTS.svg', alt: 'projects' },
+      { type: 'static', x: 1300, y: 5, w: 400, src: 'svgs/office/PROJECTS.svg', alt: 'projects' },
 
       // Project frames (flippable)
       { type: 'flippable', x: 1280, y: 15, w: 600,
-        frontSrc: 'officeframe5.svg', backSrc: 'officeframe5back.svg', alt: 'frame 5' },
+        frontSrc: 'svgs/office/officeframe5.svg', backSrc: 'svgs/office/officeframe5back.svg', alt: 'frame 5' },
 
       { type: 'flippable', x: 1270, y: 48, w: 380,
-        frontSrc: 'officeframe9.svg', backSrc: 'officeframe9back.svg', alt: 'frame 9' },
+        frontSrc: 'svgs/office/officeframe9.svg', backSrc: 'svgs/office/officeframe9back.svg', alt: 'frame 9' },
 
       { type: 'flippable', x: 1920, y: 15, w: 340,
-        frontSrc: 'officeframe7.svg', backSrc: 'officeframe7back.svg', alt: 'frame 7' },
+        frontSrc: 'svgs/office/officeframe7.svg', backSrc: 'svgs/office/officeframe7back.svg', alt: 'frame 7' },
 
       { type: 'flippable', x: 2480, y: 55, w: 300,
-        frontSrc: 'officeframe12.svg', backSrc: 'officeframe12back.svg', alt: 'frame 12' },
+        frontSrc: 'svgs/office/officeframe12.svg', backSrc: 'svgs/office/officeframe12back.svg', alt: 'frame 12' },
 
       // Second row of project frames
       { type: 'flippable', x: 1680, y: 52, w: 260,
-        frontSrc: 'officeframe11.svg', backSrc: 'officeframe11back.svg', alt: 'frame 11' },
+        frontSrc: 'svgs/office/officeframe11.svg', backSrc: 'svgs/office/officeframe11back.svg', alt: 'frame 11' },
 
       { type: 'flippable', x: 2000, y: 60, w: 420,
-        frontSrc: 'officeframe10.svg', backSrc: 'officeframe10back.svg', alt: 'frame 10' },
+        frontSrc: 'svgs/office/officeframe10.svg', backSrc: 'svgs/office/officeframe10back.svg', alt: 'frame 10' },
 
       { type: 'flippable', x: 2640, y: 24, w: 270,
-        frontSrc: 'officeframe6.svg', backSrc: 'officeframe6back.svg', alt: 'frame 6' },
+        frontSrc: 'svgs/office/officeframe6.svg', backSrc: 'svgs/office/officeframe6back.svg', alt: 'frame 6' },
 
       { type: 'flippable', x: 2320, y: 13, w: 300,
-        frontSrc: 'officeframe8.svg', backSrc: 'officeframe8back.svg', alt: 'frame 8' },
+        frontSrc: 'svgs/office/officeframe8.svg', backSrc: 'svgs/office/officeframe8back.svg', alt: 'frame 8' },
 
       // === EXPERIENCE section ===
-      { type: 'static', x: 3350, y: 2, w: 380, src: 'EXPERIENCE.svg', alt: 'experience' },
+      { type: 'static', x: 3350, y: 2, w: 380, src: 'svgs/office/EXPERIENCE.svg', alt: 'experience' },
 
       // Desk at the end
       { type: 'static', x: 3400, y: 40, w: 500,
-        src: 'desk.svg', alt: 'desk' },
+        src: 'svgs/office/desk.svg', alt: 'desk' },
     ];
 
     const WALL_BASE_WIDTH = 3100; // total width in base coords

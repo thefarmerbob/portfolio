@@ -150,10 +150,10 @@
 </head>
 <body>
   <!-- Title SVG -->
-  <img id="title-svg" src="chihiro_text.svg" alt="Chihiro">
+  <img id="title-svg" src="svgs/misc/chihiro_text.svg" alt="Chihiro">
 
   <!-- Lamp SVG hanging from top -->
-  <img id="lamp-svg" src="lamp.svg" alt="Lamp">
+  <img id="lamp-svg" src="svgs/office/lamp.svg" alt="Lamp">
 
   <div id="layout">
     <div id="left-col">
@@ -171,9 +171,9 @@
       </div>
     </div>
     <div id="center-col">
-      <img id="person-sit" class="person-frame active" src="person_sit.svg" alt="Sitting">
-      <img id="person-music1" class="person-frame" src="person_music1.svg" alt="Music 1">
-      <img id="person-music2" class="person-frame" src="person_music2.svg" alt="Music 2">
+      <img id="person-sit" class="person-frame active" src="svgs/character/person_sit.svg" alt="Sitting">
+      <img id="person-music1" class="person-frame" src="svgs/character/person_music1.svg" alt="Music 1">
+      <img id="person-music2" class="person-frame" src="svgs/character/person_music2.svg" alt="Music 2">
     </div>
     <div id="right-col">
       <div id="description-box">
@@ -344,7 +344,7 @@
       const conf = Math.round((item.confidence || 0) * 100);
       const cid = 'c' + i;
       card.innerHTML = `
-        <div class="disk-wrap"><img src="disk.svg" alt="disk"></div>
+        <div class="disk-wrap"><img src="svgs/misc/disk.svg" alt="disk"></div>
         <div class="song-info">
           <div class="song-rank"><span>track ${String(i+1).padStart(2,'0')}</span><span class="confidence">${conf}% match</span></div>
           <div class="song-title-row">

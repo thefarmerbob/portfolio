@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls /Users/maradumitru/personal-website-v3/*.svg)",
+      "Bash(ls:*)",
+      "Bash(mv officeframe*.svg ABOUT.svg EXPERIENCE.svg PROJECTS.svg lamp.svg desk.svg finalladder.svg contactdetails.svg btwheresmyresume.svg officestickienote.svg svgs/office/)",
+      "Bash(mv galleryframe*.svg svgs/gallery-frames/)",
+      "Bash(mv gallery-character/* svgs/gallery-character/)",
+      "Bash(mv gallery-objects/* svgs/gallery-objects/)",
+      "Bash(grep -n '\\\\.svg\"\"\"\"' /Users/maradumitru/personal-website-v3/*.html)",
+      "Bash(grep -n \"\\\\.svg''''\" /Users/maradumitru/personal-website-v3/*.html)",
+      "Bash(grep -oh 'svgs/[^\"\"\"\"'''']*\\\\.svg' /Users/maradumitru/personal-website-v3/*.html)"
+    ]
+  }
+}

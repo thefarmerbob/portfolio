@@ -27,6 +27,7 @@
       position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
       pointer-events: none; z-index: 1;
+      overflow: visible;
     }
     #wall {
       position: absolute; top: 0; left: 0;
@@ -227,21 +228,31 @@
     .ladder-spacer { height: 20vw; }
     #ladder-wrap img.ladder-img { display: block; width: 70%; height: auto; }
 
-    /* ====== FLOOR PLATFORM ====== */
-    #floor-platform {
+    /* ====== FLOOR (scrolls with wall, positioned by JS at ladder bottom) ====== */
+    #wall-floor-line {
       position: absolute;
-      right: 0vw;
-      width: 22vw;
-      height: auto;
+      left: 0; width: 100%;
+      height: 4px;
+      background: #000;
       pointer-events: none;
+      z-index: 10;
+    }
+    #wall-floor {
+      position: absolute;
+      left: 0; width: 100%;
+      height: 500px;
+      background: #ffffff;
+      pointer-events: none;
+      z-index: 9;
     }
 
+    /* ====== CHARACTER ====== */
     #character {
       position: fixed; right: 5vw;
       width: 18vw; z-index: 5;
       will-change: top;
     }
-    #character img {
+    #character .climb-frame {
       position: absolute; top: 0; left: 25%;
       width: 55%; height: auto;
       transition: opacity 0.05s ease;
@@ -251,8 +262,27 @@
       left: -20%;
       top: 5vw;
     }
-    #character img.hidden { opacity: 0; }
-    #character img.visible { opacity: 1; }
+    #character .climb-frame.hidden { opacity: 0; }
+    #character .climb-frame.visible { opacity: 1; }
+
+    /* Walk sprites (gallery-style sizing) */
+    #character .walk-frame {
+      position: absolute;
+      top: -100%; left: 0;
+      width: 250%; height: 250%;
+      object-fit: contain;
+      opacity: 0;
+      transition: opacity 0.05s ease;
+    }
+    #character .walk-frame.visible { opacity: 1; }
+
+    /* Walk mode overrides */
+    #character.walking {
+      right: auto;
+      top: auto !important;
+      bottom: 10%;
+    }
+    #character.walking .climb-frame { display: none; }
 
     #vignette {
       position: fixed; top: 0; left: 0;
@@ -269,109 +299,100 @@
   <div id="scene">
     <div id="wall">
       <div class="wall-item" style="left:5vw; top:34vw; width:15vw;">
-        <img src="contactdetails.svg" alt="contact details" />
+        <img src="svgs/office/contactdetails.svg" alt="contact details" />
       </div>
       <div class="wall-item" style="left:49vw; top:19vw; width:12vw;">
-        <img src="btwheresmyresume.svg" alt="here's my resume?" />
+        <img src="svgs/office/btwheresmyresume.svg" alt="here's my resume?" />
       </div>
       <div class="wall-item flippable" style="left:5vw; top:11vw; width:17vw;">
         <div class="flip-container">
-          <div class="flip-front"><img src="officeframe1.svg" alt="frame 1" /></div>
-          <div class="flip-back"><img src="officeframe1back.svg" alt="frame 1 back" /></div>
+          <div class="flip-front"><img src="svgs/office/officeframe1.svg" alt="frame 1" /></div>
+          <div class="flip-back"><img src="svgs/office/officeframe1back.svg" alt="frame 1 back" /></div>
         </div>
       </div>
       <div class="wall-item" style="left:27vw; top:15vw; width:14vw;">
-        <img src="officeframe2.svg" alt="frame 2" />
+        <img src="svgs/office/officeframe2.svg" alt="frame 2" />
       </div>
       <div class="wall-item" style="left:46vw; top:-33vw; width:17vw;">
-        <img src="lamp.svg" alt="hanging lamp" />
+        <img src="svgs/office/lamp.svg" alt="hanging lamp" />
       </div>
       <div class="wall-item clickable" id="resume-trigger" style="left:65vw; top:10vw; width:10vw;">
-        <img src="officeframe3.svg" alt="frame 3" />
+        <img src="svgs/office/officeframe3.svg" alt="frame 3" />
       </div>
       <div class="wall-item" style="left:27vw; top:32vw; width:34vw;">
-        <img src="officeframe4.svg" alt="frame 4" />
+        <img src="svgs/office/officeframe4.svg" alt="frame 4" />
       </div>
       <div class="wall-item" style="left:15vw; top:53vw; width:38vw;">
-        <img src="PROJECTS.svg" alt="projects" />
+        <img src="svgs/office/PROJECTS.svg" alt="projects" />
       </div>
       <div class="wall-item" style="left:58vw; top:50vw; width:9vw;">
-        <img src="officestickienote.svg" alt="office sticker note" />
+        <img src="svgs/office/officestickienote.svg" alt="office sticker note" />
       </div>
       <div class="wall-item flippable" style="left:2vw; top:65vw; width:36vw;">
         <div class="flip-container">
-          <div class="flip-front"><img src="officeframe5.svg" alt="frame 5" /></div>
-          <div class="flip-back"><img src="officeframe5back.svg" alt="frame 5 back" /></div>
+          <div class="flip-front"><img src="svgs/office/officeframe5.svg" alt="frame 5" /></div>
+          <div class="flip-back"><img src="svgs/office/officeframe5back.svg" alt="frame 5 back" /></div>
         </div>
       </div>
       <div class="wall-item flippable" style="left:60vw; top:65vw; width:18vw;">
         <div class="flip-container">
-          <div class="flip-front"><img src="officeframe7.svg" alt="frame 7" /></div>
-          <div class="flip-back"><img src="officeframe7back.svg" alt="frame 7 back" /></div>
+          <div class="flip-front"><img src="svgs/office/officeframe7.svg" alt="frame 7" /></div>
+          <div class="flip-back"><img src="svgs/office/officeframe7back.svg" alt="frame 7 back" /></div>
         </div>
       </div>
       <div class="wall-item flippable" style="left:6vw; top:84vw; width:24vw;">
         <div class="flip-container">
-          <div class="flip-front"><img src="officeframe9.svg" alt="frame 9" /></div>
-          <div class="flip-back"><img src="officeframe9back.svg" alt="frame 9 back" /></div>
+          <div class="flip-front"><img src="svgs/office/officeframe9.svg" alt="frame 9" /></div>
+          <div class="flip-back"><img src="svgs/office/officeframe9back.svg" alt="frame 9 back" /></div>
         </div>
       </div>
       <div class="wall-item flippable" style="left:62vw; top:108vw; width:16vw;">
         <div class="flip-container">
-          <div class="flip-front"><img src="officeframe6.svg" alt="frame 6" /></div>
-          <div class="flip-back"><img src="officeframe6back.svg" alt="frame 6 back" /></div>
+          <div class="flip-front"><img src="svgs/office/officeframe6.svg" alt="frame 6" /></div>
+          <div class="flip-back"><img src="svgs/office/officeframe6back.svg" alt="frame 6 back" /></div>
         </div>
       </div>
       <div class="wall-item flippable" style="left:39vw; top:78vw; width:18vw;">
         <div class="flip-container">
-          <div class="flip-front"><img src="officeframe11.svg" alt="frame 11" /></div>
-          <div class="flip-back"><img src="officeframe11back.svg" alt="frame 11 back" /></div>
+          <div class="flip-front"><img src="svgs/office/officeframe11.svg" alt="frame 11" /></div>
+          <div class="flip-back"><img src="svgs/office/officeframe11back.svg" alt="frame 11 back" /></div>
         </div>
       </div>
       <div class="wall-item flippable" style="left:34vw; top:98vw; width:27vw;">
         <div class="flip-container">
-          <div class="flip-front"><img src="officeframe10.svg" alt="frame 10" /></div>
-          <div class="flip-back"><img src="officeframe10back.svg" alt="frame 10 back" /></div>
+          <div class="flip-front"><img src="svgs/office/officeframe10.svg" alt="frame 10" /></div>
+          <div class="flip-back"><img src="svgs/office/officeframe10back.svg" alt="frame 10 back" /></div>
         </div>
       </div>
       <div class="wall-item flippable" style="left:12vw; top:105vw; width:18vw;">
         <div class="flip-container">
-          <div class="flip-front"><img src="officeframe8.svg" alt="frame 8" /></div>
-          <div class="flip-back"><img src="officeframe8back.svg" alt="frame 8 back" /></div>
+          <div class="flip-front"><img src="svgs/office/officeframe8.svg" alt="frame 8" /></div>
+          <div class="flip-back"><img src="svgs/office/officeframe8back.svg" alt="frame 8 back" /></div>
         </div>
       </div>
       <div class="wall-item flippable" style="left:62vw; top:88vw; width:18vw;">
         <div class="flip-container">
-          <div class="flip-front"><img src="officeframe12.svg" alt="frame 12" /></div>
-          <div class="flip-back"><img src="officeframe12back.svg" alt="frame 12 back" /></div>
+          <div class="flip-front"><img src="svgs/office/officeframe12.svg" alt="frame 12" /></div>
+          <div class="flip-back"><img src="svgs/office/officeframe12back.svg" alt="frame 12 back" /></div>
         </div>
       </div>
+      <div id="wall-floor-line"></div>
+      <div id="wall-floor"></div>
     </div>
 
     <div id="ladder-wrap">
       <div class="ladder-spacer"></div>
-      <img class="ladder-img" src="finalladder.svg" alt="ladder" />
-      <!-- Floor platform at the bottom of the ladder -->
-      <svg id="floor-platform" viewBox="0 0 300 40" xmlns="http://www.w3.org/2000/svg" style="margin-top: -2px; margin-left: -20%;">
-        <!-- Main plank -->
-        <rect x="10" y="4" width="280" height="14" rx="4" ry="4" fill="#6b5b47" stroke="#3d3228" stroke-width="2.5"/>
-        <!-- Wood grain lines -->
-        <line x1="40" y1="8" x2="120" y2="8" stroke="#5a4c3a" stroke-width="1" opacity="0.5"/>
-        <line x1="150" y1="12" x2="250" y2="12" stroke="#5a4c3a" stroke-width="1" opacity="0.5"/>
-        <line x1="60" y1="14" x2="180" y2="14" stroke="#5a4c3a" stroke-width="1" opacity="0.4"/>
-        <!-- Support bracket left -->
-        <rect x="50" y="18" width="8" height="18" rx="1" ry="1" fill="#5a4c3a" stroke="#3d3228" stroke-width="1.5"/>
-        <!-- Support bracket right -->
-        <rect x="200" y="18" width="8" height="18" rx="1" ry="1" fill="#5a4c3a" stroke="#3d3228" stroke-width="1.5"/>
-        <!-- Nails / bolts -->
-        <circle cx="54" cy="10" r="2" fill="#3d3228"/>
-        <circle cx="204" cy="10" r="2" fill="#3d3228"/>
-      </svg>
+      <img class="ladder-img" src="svgs/office/finalladder.svg" alt="ladder" />
     </div>
     <div id="character">
-      <img id="frame1" src="goingdownladder1.svg" alt="character frame 1" class="visible" />
-      <img id="frame2" src="goingdownladder2.svg" alt="character frame 2" class="hidden" />
-      <img id="frameStand" src="standf.svg" alt="character standing" class="hidden" />
+      <img id="frame1" class="climb-frame visible" src="svgs/character/goingdownladder1.svg" alt="character frame 1" />
+      <img id="frame2" class="climb-frame hidden" src="svgs/character/goingdownladder2.svg" alt="character frame 2" />
+      <img id="frameStand" class="climb-frame hidden" src="svgs/character/standf.svg" alt="character standing" />
+      <img id="walkL1" class="walk-frame" src="svgs/gallery-character/walkleft1.svg" alt="walk left 1" />
+      <img id="walkL2" class="walk-frame" src="svgs/gallery-character/walkleft2.svg" alt="walk left 2" />
+      <img id="walkL3" class="walk-frame" src="svgs/gallery-character/walkleft3.svg" alt="walk left 3" />
+      <img id="walkL4" class="walk-frame" src="svgs/gallery-character/walkleft4.svg" alt="walk left 4" />
+      <img id="idleLeft" class="walk-frame" src="svgs/gallery-character/idleleft.svg" alt="idle left" />
     </div>
   </div>
 
@@ -412,23 +433,21 @@
     const wall         = document.getElementById('wall');
     const ladderWrap   = document.getElementById('ladder-wrap');
     const charEl       = document.getElementById('character');
+    const wallFloorLine = document.getElementById('wall-floor-line');
+    const wallFloor     = document.getElementById('wall-floor');
     const charFrame1   = document.getElementById('frame1');
     const charFrame2   = document.getElementById('frame2');
     const charFrameStand = document.getElementById('frameStand');
     const ladderImg    = document.querySelector('.ladder-img');
 
     /* ============================================================
-       CHARACTER CLIMBING SYSTEM — LADDER-AWARE
+       CHARACTER CLIMBING SYSTEM — LINEAR PROGRESS
        ============================================================ */
     const CHAR_START_TOP_FRAC = 0.12;
-    const CHAR_MIN_TOP_FRAC = 0.18;
     const FRAME_STEP = 140;
 
-    // The scroll trigger points where character movement pauses
-    // and the wall starts scrolling instead
-    const CHAR_SCROLL_TRIGGER_FRAC = 0.42;
-
-    let characterScreenY = window.innerHeight * CHAR_START_TOP_FRAC;
+    let totalInput = 0;        // accumulated scroll input (0 … totalRange)
+    let characterScreenY = 0;
     let wallOffset = 0;
     let maxWallOffset = 0;
     let accumulatedDelta = 0;
@@ -436,177 +455,264 @@
     let isStanding = false;
     let hasReachedLadderBottom = false;
 
-    function getCharMinY() { return window.innerHeight * CHAR_MIN_TOP_FRAC; }
-
-    /* --- Compute the ladder bottom position in wall-space --- */
+    /* --- Ladder geometry (recomputed on load/resize) --- */
     function getLadderBottomInWallSpace() {
       const vw = window.innerWidth / 100;
-      // ladder-wrap top = -8vw, spacer = 20vw => ladder img starts at 12vw
-      const ladderStartY = (-8 + 20) * vw; // 12vw
-      // ladder image rendered width = 14vw * 0.7 = 9.8vw
-      const ladderRenderedWidth = 14 * 0.7 * vw;
+      const ladderStartY = 12 * vw;             // -8vw top + 20vw spacer
+      const ladderRenderedW = 14 * 0.7 * vw;    // 9.8vw
       let ladderH;
       if (ladderImg && ladderImg.naturalWidth > 0) {
-        ladderH = (ladderImg.naturalHeight / ladderImg.naturalWidth) * ladderRenderedWidth;
+        ladderH = (ladderImg.naturalHeight / ladderImg.naturalWidth) * ladderRenderedW;
       } else {
-        ladderH = 40 * vw; // fallback
+        ladderH = 40 * vw;
       }
       return ladderStartY + ladderH;
     }
 
-    /* --- Compute the max screen Y the character can reach (bottom of ladder on screen) --- */
-    function getCharMaxY() {
+    /* --- Standing sprite feet offset from character top --- */
+    function getStandFeetOffset() {
+      const vw = window.innerWidth / 100;
+      const spriteW = 0.32 * 18 * vw;
+      let spriteH;
+      if (charFrameStand.naturalWidth > 0) {
+        spriteH = (charFrameStand.naturalHeight / charFrameStand.naturalWidth) * spriteW;
+      } else {
+        spriteH = spriteW * 2.5;
+      }
+      return 5 * vw + spriteH;  // top:5vw + sprite height
+    }
+
+    /* --- Compute layout: start/end Y for character + maxWallOffset --- */
+    function computeLayout() {
+      const vw = window.innerWidth / 100;
+      const vh = window.innerHeight;
       const ladderBottom = getLadderBottomInWallSpace();
-      // The character's top position should stop so feet align with ladder bottom.
-      // The climbing sprites: character is roughly positioned with some offset.
-      // We use a small offset (e.g. ~2vw) so the character's feet land near the platform.
-      const vw = window.innerWidth / 100;
-      const feetOffset = 2 * vw;
-      const maxOnScreen = ladderBottom - wallOffset - feetOffset;
-      // But also never let it go above the minimum
-      return Math.max(getCharMinY(), maxOnScreen);
+      const feetOffset = getStandFeetOffset();
+      const startY = vh * CHAR_START_TOP_FRAC;
+
+      // We need enough wall scroll to show all content
+      const contentBottom = 135 * vw;  // approx lowest wall item
+      const contentWO = Math.max(0, contentBottom - vh);
+
+      // At end: ladder bottom on screen should be above the floor (floor = bottom 8%)
+      // ladderBottom - maxWO should land at ~vh * 0.95 so ladder overlaps the floor
+      const maxWO = Math.max(contentWO, ladderBottom - vh * 1.0);
+      const endY = Math.max(startY, ladderBottom - feetOffset - maxWO);
+
+      return { startY, endY, maxWO, ladderBottom, contentBottom };
     }
 
-    function getCharTriggerDownY() { return window.innerHeight * CHAR_SCROLL_TRIGGER_FRAC; }
-    function getCharTriggerUpY()   { return window.innerHeight * 0.30; }
+    function recalcAll() {
+      const layout = computeLayout();
+      maxWallOffset = layout.maxWO;
+      document.getElementById('scroll-content').style.height =
+        (maxWallOffset + window.innerHeight) + 'px';
 
-    function recalcHeight() {
-      const vw = window.innerWidth / 100;
-      const deskBottom = (154 + 50 * (537 / 570)) * vw;
-      const totalContentHeight = deskBottom + window.innerHeight * 0.15;
-      document.getElementById('scroll-content').style.height = totalContentHeight + 'px';
-      maxWallOffset = Math.max(0, totalContentHeight - window.innerHeight);
+      // Position floor at bottom of all wall content
+      // When fully scrolled (wallOffset = maxWO), floor screen Y = floorTop - maxWO
+      // We want that to be at ~vh * 0.92 (8% from bottom)
+      const vh = window.innerHeight;
+      const floorTop = layout.maxWO + vh * 0.92;
+      wallFloorLine.style.top = floorTop + 'px';
+      wallFloor.style.top = (floorTop + 4) + 'px';
     }
 
-    function applyPositions() {
+    function applyFromInput() {
+      const { startY, endY, maxWO } = computeLayout();
+      const charRange = endY - startY;
+      const totalRange = charRange + maxWO;
+      totalInput = Math.max(0, Math.min(totalRange, totalInput));
+
+      const t = totalRange > 0 ? totalInput / totalRange : 0;
+      characterScreenY = startY + charRange * t;
+      wallOffset = maxWO * t;
+
       wall.style.transform       = `translateY(${-wallOffset}px)`;
       ladderWrap.style.transform = `translateY(${-wallOffset}px)`;
       charEl.style.top           = characterScreenY + 'px';
+
+      // Check if at bottom
+      if (t >= 0.999) {
+        if (!hasReachedLadderBottom) {
+          hasReachedLadderBottom = true;
+          showStanding();
+        }
+      } else {
+        if (hasReachedLadderBottom) {
+          hasReachedLadderBottom = false;
+          hideStanding();
+        }
+      }
     }
 
     /* --- Standing sprite management --- */
     function showStanding() {
       if (isStanding) return;
       isStanding = true;
-      charFrame1.className = 'hidden';
-      charFrame2.className = 'hidden';
-      charFrameStand.className = 'visible';
+      charFrame1.className = 'climb-frame hidden';
+      charFrame2.className = 'climb-frame hidden';
+      charFrameStand.className = 'climb-frame visible';
     }
 
     function hideStanding() {
       if (!isStanding) return;
       isStanding = false;
-      charFrameStand.className = 'hidden';
-      charFrame1.className = currentFrame === 1 ? 'visible' : 'hidden';
-      charFrame2.className = currentFrame === 2 ? 'visible' : 'hidden';
+      charFrameStand.className = 'climb-frame hidden';
+      charFrame1.className = 'climb-frame ' + (currentFrame === 1 ? 'visible' : 'hidden');
+      charFrame2.className = 'climb-frame ' + (currentFrame === 2 ? 'visible' : 'hidden');
     }
 
     function advanceClimbFrame() {
       if (isStanding) return;
       const show1 = currentFrame !== 1;
-      charFrame1.className = show1 ? 'visible' : 'hidden';
-      charFrame2.className = show1 ? 'hidden'  : 'visible';
+      charFrame1.className = 'climb-frame ' + (show1 ? 'visible' : 'hidden');
+      charFrame2.className = 'climb-frame ' + (show1 ? 'hidden'  : 'visible');
       currentFrame = show1 ? 1 : 2;
     }
 
-    /* --- Check if character has reached the ladder bottom --- */
-    function checkLadderBottom() {
-      const maxY = getCharMaxY();
-      const atBottom = characterScreenY >= maxY - 1;
-
-      if (atBottom) {
-        hasReachedLadderBottom = true;
-        showStanding();
-      } else {
-        hasReachedLadderBottom = false;
-        hideStanding();
-      }
-    }
-
     /* ============================================================
-       MOVE FUNCTION — LADDER-CLAMPED
+       MOVE FUNCTION — LINEAR PROGRESS
        ============================================================ */
     function moveBy(delta) {
       if (Math.abs(delta) < 0.5) return;
 
-      // If standing at bottom and trying to scroll further down,
-      // only scroll the wall — don't move the character
-      if (hasReachedLadderBottom && delta > 0) {
-        if (wallOffset < maxWallOffset) {
-          const wallMove = Math.min(delta, maxWallOffset - wallOffset);
-          wallOffset += wallMove;
-        }
-        applyPositions();
-        // Re-check since wall moved, the ladder bottom on screen changed
-        // Character should stay pinned at ladder bottom
-        const maxY = getCharMaxY();
-        characterScreenY = Math.min(characterScreenY, maxY);
-        applyPositions();
-        checkLadderBottom();
+      if (mode === 'walk') {
+        walkMoveBy(delta);
         return;
       }
 
-      let remaining = delta;
-      const maxY = getCharMaxY();
-
-      if (delta > 0) {
-        // Scrolling DOWN — character descends ladder
-        // Phase 1: Move character down to the scroll-trigger point
-        if (characterScreenY < getCharTriggerDownY()) {
-          const charMove = Math.min(remaining, getCharTriggerDownY() - characterScreenY);
-          const clampedMove = Math.min(charMove, maxY - characterScreenY);
-          if (clampedMove > 0) {
-            characterScreenY += clampedMove;
-            remaining -= clampedMove;
-          }
-          // If we hit maxY before trigger, remaining goes to wall
-          if (characterScreenY >= maxY - 1) {
-            remaining = Math.max(0, remaining);
-          }
-        }
-        // Phase 2: Scroll the wall
-        if (remaining > 0 && wallOffset < maxWallOffset) {
-          const wallMove = Math.min(remaining, maxWallOffset - wallOffset);
-          wallOffset += wallMove;
-          remaining -= wallMove;
-        }
-        // Phase 3: If wall is fully scrolled, push character to maxY
-        if (remaining > 0) {
-          characterScreenY = Math.min(characterScreenY + remaining, maxY);
-        }
-      } else {
-        // Scrolling UP — character climbs back up
-        remaining = Math.abs(remaining);
-
-        if (characterScreenY > getCharTriggerUpY()) {
-          const charMove = Math.min(remaining, characterScreenY - getCharTriggerUpY());
-          characterScreenY -= charMove;
-          remaining -= charMove;
-        }
-        if (remaining > 0 && wallOffset > 0) {
-          const wallMove = Math.min(remaining, wallOffset);
-          wallOffset -= wallMove;
-          remaining -= wallMove;
-        }
-        if (remaining > 0) {
-          characterScreenY = Math.max(characterScreenY - remaining, getCharMinY());
-        }
+      // At bottom and scrolling down — enter walk mode
+      if (hasReachedLadderBottom && delta > 0) {
+        enterWalkMode();
+        return;
       }
 
-      // Clamp character to ladder bounds
-      characterScreenY = Math.max(getCharMinY(), Math.min(characterScreenY, maxY));
+      totalInput += delta;
+      applyFromInput();
 
-      // Animate climbing frames (skipped when standing)
+      // Animate climbing frames
       if (!hasReachedLadderBottom) {
         accumulatedDelta += Math.abs(delta);
         if (accumulatedDelta >= FRAME_STEP) {
           advanceClimbFrame();
-          accumulatedDelta = accumulatedDelta % FRAME_STEP;
+          accumulatedDelta %= FRAME_STEP;
         }
       }
+    }
 
-      applyPositions();
-      checkLadderBottom();
+    /* ============================================================
+       WALK MODE — after reaching ladder bottom
+       ============================================================ */
+    const walkLeftFrames = [
+      document.getElementById('walkL1'),
+      document.getElementById('walkL2'),
+      document.getElementById('walkL3'),
+      document.getElementById('walkL4'),
+    ];
+    const idleLeftEl = document.getElementById('idleLeft');
+    const allWalkFrames = [...walkLeftFrames, idleLeftEl];
+
+    let mode = 'climb';  // 'climb' or 'walk'
+    let walkX = 0;       // character left position in walk mode
+    let walkFrameIndex = 0;
+    let walkIdleTimeout = null;
+    const WALK_FRAME_STEP = 80;
+    const WALK_IDLE_DELAY = 250;
+    let walkAccDelta = 0;
+
+    function getWalkCharSize() {
+      const s = Math.min(window.innerWidth, window.innerHeight) / 1045;
+      return { w: 80 * s, h: 130 * s };
+    }
+
+    function getLadderLeftX() {
+      // Ladder is at right: 4vw, width: 14vw → left edge is at (100 - 4 - 14)vw = 82vw
+      return window.innerWidth * 0.82;
+    }
+
+    function enterWalkMode() {
+      mode = 'walk';
+      const sz = getWalkCharSize();
+      // Position character just to the left of the ladder
+      walkX = getLadderLeftX() - sz.w;
+
+      charEl.classList.add('walking');
+      charEl.style.width = sz.w + 'px';
+      charEl.style.height = sz.h + 'px';
+      charEl.style.left = walkX + 'px';
+      charEl.style.top = '';
+
+      // Hide climb frames, show idle left
+      charFrame1.className = 'climb-frame hidden';
+      charFrame2.className = 'climb-frame hidden';
+      charFrameStand.className = 'climb-frame hidden';
+      showWalkFrame(idleLeftEl);
+    }
+
+    function exitWalkMode() {
+      mode = 'climb';
+      charEl.classList.remove('walking');
+      charEl.style.width = '18vw';
+      charEl.style.height = '';
+      charEl.style.left = '';
+      walkAccDelta = 0;
+      clearTimeout(walkIdleTimeout);
+
+      // Hide walk frames
+      allWalkFrames.forEach(f => f.classList.remove('visible'));
+
+      // Restore standing
+      showStanding();
+      hasReachedLadderBottom = true;
+    }
+
+    function showWalkFrame(frameEl) {
+      allWalkFrames.forEach(f => f.classList.remove('visible'));
+      frameEl.classList.add('visible');
+    }
+
+    function showWalkIdle() {
+      showWalkFrame(idleLeftEl);
+    }
+
+    function advanceWalkLeftFrame() {
+      walkFrameIndex = (walkFrameIndex + 1) % 4;
+      showWalkFrame(walkLeftFrames[walkFrameIndex]);
+      clearTimeout(walkIdleTimeout);
+      walkIdleTimeout = setTimeout(showWalkIdle, WALK_IDLE_DELAY);
+    }
+
+    function walkMoveBy(delta) {
+      // delta > 0 means scroll down = walk left
+      if (delta > 0) {
+        walkX = Math.max(-getWalkCharSize().w, walkX - delta);
+        charEl.style.left = walkX + 'px';
+
+        walkAccDelta += Math.abs(delta);
+        if (walkAccDelta >= WALK_FRAME_STEP) {
+          advanceWalkLeftFrame();
+          walkAccDelta %= WALK_FRAME_STEP;
+        }
+
+        // If character walked off screen left, could transition to next page or just stop
+      } else {
+        // Scrolling up = walk right, back toward ladder
+        const sz = getWalkCharSize();
+        const maxX = getLadderLeftX() - sz.w;
+        walkX = Math.min(maxX, walkX - delta);
+        if (walkX >= maxX) {
+          walkX = maxX;
+          exitWalkMode();
+          return;
+        }
+        charEl.style.left = walkX + 'px';
+
+        walkAccDelta += Math.abs(delta);
+        if (walkAccDelta >= WALK_FRAME_STEP) {
+          advanceWalkLeftFrame();
+          walkAccDelta %= WALK_FRAME_STEP;
+        }
+      }
     }
 
     /* ============================================================
@@ -793,25 +899,23 @@
        INIT & RESIZE
        ============================================================ */
     window.addEventListener('resize', () => {
-      recalcHeight();
-      wallOffset = Math.min(wallOffset, maxWallOffset);
-      const maxY = getCharMaxY();
-      characterScreenY = Math.max(getCharMinY(), Math.min(characterScreenY, maxY));
-      applyPositions();
-      checkLadderBottom();
+      recalcAll();
+      if (mode === 'walk') {
+        const sz = getWalkCharSize();
+        charEl.style.width = sz.w + 'px';
+        charEl.style.height = sz.h + 'px';
+      }
+      applyFromInput();
     });
 
-    // Recalc once ladder image loads (so we know its real height)
+    // Recalc once ladder/standing sprite loads
     if (ladderImg) {
-      ladderImg.addEventListener('load', () => {
-        recalcHeight();
-        applyPositions();
-        checkLadderBottom();
-      });
+      ladderImg.addEventListener('load', () => { recalcAll(); applyFromInput(); });
     }
+    charFrameStand.addEventListener('load', () => { recalcAll(); applyFromInput(); });
 
-    recalcHeight();
-    applyPositions();
+    recalcAll();
+    applyFromInput();
   </script>
 </body>
 </html>
