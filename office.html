@@ -262,7 +262,19 @@
       object-fit: contain; display: block;
     }
     #wall-door #door1 { bottom: -1.5vw; }
-    #wall-door #door2 { bottom: -2.3vw; }
+    #wall-door #door2-p2 { bottom: -0.5vw; left: 6vw; width: 93.5%; height: 93.5%; }
+
+    /* Door front panel overlay — fixed, above character */
+    #door-front-overlay {
+      position: fixed;
+      z-index: 20;
+      pointer-events: none;
+      display: none;
+    }
+    #door-front-overlay img {
+      width: 100%; height: 100%;
+      object-fit: contain; display: block;
+    }
 
     /* ====== CHARACTER ====== */
     #character {
@@ -396,7 +408,7 @@
       </div>
       <div id="wall-door">
         <img id="door1" src="svgs/office/door1.svg" alt="closed door" />
-        <img id="door2" src="svgs/office/door2.svg" alt="open door" style="display:none;" />
+        <img id="door2-p2" src="svgs/office/door2-p2.svg" alt="open door back" style="display:none;" />
       </div>
       <div id="wall-floor-line"></div>
       <div id="wall-floor"></div>
@@ -418,6 +430,9 @@
     </div>
   </div>
 
+  <div id="door-front-overlay">
+    <img src="svgs/office/door2-p1.svg" alt="open door front" />
+  </div>
   <div id="vignette"></div>
 
   <!-- Zoom overlay -->
@@ -640,7 +655,8 @@
     const allWalkFrames = [...walkLeftFrames, idleLeftEl];
     const doorEl   = document.getElementById('wall-door');
     const door1Img = document.getElementById('door1');
-    const door2Img = document.getElementById('door2');
+    const door2P2  = document.getElementById('door2-p2');
+    const doorFrontOverlay = document.getElementById('door-front-overlay');
 
     let mode = 'climb';  // 'climb' or 'walk'
     let enteringDoor = false;  // true when character is walking into door
@@ -721,12 +737,31 @@
       return 8 * vw + doorEl.offsetWidth * 0.5;
     }
 
-    function triggerDoorSequence() {
-      // Open door
+    function showOpenDoor() {
       door1Img.style.display = 'none';
-      door2Img.style.display = 'block';
+      door2P2.style.display = 'block';
 
-      // Animate character walking to door center and shrinking
+      // Position front overlay to match door's screen position
+      const rect = doorEl.getBoundingClientRect();
+      const vw = window.innerWidth / 100;
+      doorFrontOverlay.style.left = (rect.left - 0.4 * vw) + 'px';
+      doorFrontOverlay.style.top = (rect.top - 0.1 * vw) + 'px';
+      doorFrontOverlay.style.width = (rect.width * 1.086) + 'px';
+      doorFrontOverlay.style.height = (rect.height * 1.086) + 'px';
+      doorFrontOverlay.style.display = 'block';
+    }
+
+    function hideOpenDoor() {
+      door2P2.style.display = 'none';
+      doorFrontOverlay.style.display = 'none';
+      door1Img.style.display = 'block';
+    }
+
+    function triggerDoorSequence() {
+      // Ensure open door is shown
+      showOpenDoor();
+
+      // Animate character walking to door center and fading
       const doorCX = getDoorCenterX();
       const sz = getWalkCharSize();
       const targetX = doorCX;
@@ -737,8 +772,7 @@
 
       // After character disappears, close door and redirect
       setTimeout(() => {
-        door2Img.style.display = 'none';
-        door1Img.style.display = 'block';
+        hideOpenDoor();
         setTimeout(() => {
           window.location.href = 'gallery.html';
         }, 150);
@@ -937,8 +971,7 @@
     doorEl.addEventListener('click', () => {
       if (enteringDoor) return;
       // Open door immediately on click
-      door1Img.style.display = 'none';
-      door2Img.style.display = 'block';
+      showOpenDoor();
 
       if (mode === 'walk') {
         autoWalkToDoor();
@@ -962,6 +995,8 @@
           return;
         }
         moveBy(climbSpeed);
+        // Update overlay position as wall scrolls
+        showOpenDoor();
         requestAnimationFrame(climbStep);
       }
       climbStep();
