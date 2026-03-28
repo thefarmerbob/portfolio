@@ -246,6 +246,24 @@
       z-index: 9;
     }
 
+    /* ====== DOOR (scrolls with wall) ====== */
+    #wall-door {
+      position: absolute;
+      left: 8vw;
+      width: 16vw;
+      z-index: 11;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+    #wall-door img {
+      position: absolute;
+      left: 0;
+      width: 100%; height: 100%;
+      object-fit: contain; display: block;
+    }
+    #wall-door #door1 { bottom: -1.5vw; }
+    #wall-door #door2 { bottom: -2.3vw; }
+
     /* ====== CHARACTER ====== */
     #character {
       position: fixed; right: 5vw;
@@ -376,6 +394,10 @@
           <div class="flip-back"><img src="svgs/office/officeframe12back.svg" alt="frame 12 back" /></div>
         </div>
       </div>
+      <div id="wall-door">
+        <img id="door1" src="svgs/office/door1.svg" alt="closed door" />
+        <img id="door2" src="svgs/office/door2.svg" alt="open door" style="display:none;" />
+      </div>
       <div id="wall-floor-line"></div>
       <div id="wall-floor"></div>
     </div>
@@ -496,7 +518,7 @@
 
       // At end: ladder bottom on screen should be above the floor (floor = bottom 8%)
       // ladderBottom - maxWO should land at ~vh * 0.95 so ladder overlaps the floor
-      const maxWO = Math.max(contentWO, ladderBottom - vh * 1.0);
+      const maxWO = Math.max(contentWO, ladderBottom - vh * 0.95);
       const endY = Math.max(startY, ladderBottom - feetOffset - maxWO);
 
       return { startY, endY, maxWO, ladderBottom, contentBottom };
@@ -515,6 +537,11 @@
       const floorTop = layout.maxWO + vh * 0.92;
       wallFloorLine.style.top = floorTop + 'px';
       wallFloor.style.top = (floorTop + 4) + 'px';
+
+      // Position door above the floor line
+      const doorH = vh * 0.5;
+      doorEl.style.height = doorH + 'px';
+      doorEl.style.top = (floorTop - doorH) + 'px';
     }
 
     function applyFromInput() {
@@ -611,9 +638,14 @@
     ];
     const idleLeftEl = document.getElementById('idleLeft');
     const allWalkFrames = [...walkLeftFrames, idleLeftEl];
+    const doorEl   = document.getElementById('wall-door');
+    const door1Img = document.getElementById('door1');
+    const door2Img = document.getElementById('door2');
 
     let mode = 'climb';  // 'climb' or 'walk'
-    let walkX = 0;       // character left position in walk mode
+    let enteringDoor = false;  // true when character is walking into door
+    let walkX = 0;       // character left position in walk mode (pixels)
+    let walkXFrac = 0;   // walkX as fraction of viewport width (for resize)
     let walkFrameIndex = 0;
     let walkIdleTimeout = null;
     const WALK_FRAME_STEP = 80;
@@ -635,6 +667,8 @@
       const sz = getWalkCharSize();
       // Position character just to the left of the ladder
       walkX = getLadderLeftX() - sz.w;
+
+      walkXFrac = walkX / window.innerWidth;
 
       charEl.classList.add('walking');
       charEl.style.width = sz.w + 'px';
@@ -682,10 +716,42 @@
       walkIdleTimeout = setTimeout(showWalkIdle, WALK_IDLE_DELAY);
     }
 
+    function getDoorCenterX() {
+      const vw = window.innerWidth / 100;
+      return 8 * vw + doorEl.offsetWidth * 0.5;
+    }
+
+    function triggerDoorSequence() {
+      // Open door
+      door1Img.style.display = 'none';
+      door2Img.style.display = 'block';
+
+      // Animate character walking to door center and shrinking
+      const doorCX = getDoorCenterX();
+      const sz = getWalkCharSize();
+      const targetX = doorCX;
+
+      charEl.style.transition = 'left 0.15s ease-in, opacity 0.1s ease-in 0.05s';
+      charEl.style.left = targetX + 'px';
+      charEl.style.opacity = '0';
+
+      // After character disappears, close door and redirect
+      setTimeout(() => {
+        door2Img.style.display = 'none';
+        door1Img.style.display = 'block';
+        setTimeout(() => {
+          window.location.href = 'gallery.html';
+        }, 150);
+      }, 200);
+    }
+
     function walkMoveBy(delta) {
+      if (enteringDoor) return;
+
       // delta > 0 means scroll down = walk left
       if (delta > 0) {
         walkX = Math.max(-getWalkCharSize().w, walkX - delta);
+        walkXFrac = walkX / window.innerWidth;
         charEl.style.left = walkX + 'px';
 
         walkAccDelta += Math.abs(delta);
@@ -694,7 +760,12 @@
           walkAccDelta %= WALK_FRAME_STEP;
         }
 
-        // If character walked off screen left, could transition to next page or just stop
+        // Check if character reached the door
+        const sz = getWalkCharSize();
+        const doorCX = getDoorCenterX();
+        if (walkX + sz.w / 2 <= doorCX + sz.w * 0.3) {
+          triggerDoorSequence();
+        }
       } else {
         // Scrolling up = walk right, back toward ladder
         const sz = getWalkCharSize();
@@ -705,6 +776,7 @@
           exitWalkMode();
           return;
         }
+        walkXFrac = walkX / window.innerWidth;
         charEl.style.left = walkX + 'px';
 
         walkAccDelta += Math.abs(delta);
@@ -862,6 +934,67 @@
       if (!zoomedIn) openResume();
     });
 
+    doorEl.addEventListener('click', () => {
+      if (enteringDoor) return;
+      // Open door immediately on click
+      door1Img.style.display = 'none';
+      door2Img.style.display = 'block';
+
+      if (mode === 'walk') {
+        autoWalkToDoor();
+      } else if (mode === 'climb') {
+        autoGoToDoor();
+      }
+    });
+
+    function autoGoToDoor() {
+      if (enteringDoor) return;
+      enteringDoor = true;
+
+      // Animate climbing down
+      const climbSpeed = 18;
+      function climbStep() {
+        if (hasReachedLadderBottom) {
+          // Now enter walk mode and walk to door
+          enteringDoor = false;
+          enterWalkMode();
+          autoWalkToDoor();
+          return;
+        }
+        moveBy(climbSpeed);
+        requestAnimationFrame(climbStep);
+      }
+      climbStep();
+    }
+
+    function autoWalkToDoor() {
+      enteringDoor = true;
+      const walkSpeed = 8;
+      const fastFrameStep = 40;  // faster frame cycling
+      const doorCX = getDoorCenterX();
+      const sz = getWalkCharSize();
+      const targetX = doorCX + sz.w * 0.3;
+      let autoWalkAcc = 0;
+
+      function walkStep() {
+        if (walkX <= targetX) {
+          triggerDoorSequence();
+          return;
+        }
+        walkX -= walkSpeed;
+        walkXFrac = walkX / window.innerWidth;
+        charEl.style.left = walkX + 'px';
+
+        autoWalkAcc += walkSpeed;
+        if (autoWalkAcc >= fastFrameStep) {
+          advanceWalkLeftFrame();
+          autoWalkAcc %= fastFrameStep;
+        }
+        requestAnimationFrame(walkStep);
+      }
+      walkStep();
+    }
+
     /* ============================================================
        HOVER GLOW
        ============================================================ */
@@ -899,11 +1032,28 @@
        INIT & RESIZE
        ============================================================ */
     window.addEventListener('resize', () => {
+      const wasAtBottom = hasReachedLadderBottom || mode === 'walk';
+
+      // Preserve progress ratio across resize
+      const oldLayout = computeLayout();
+      const oldRange = (oldLayout.endY - oldLayout.startY) + oldLayout.maxWO;
+      const t = oldRange > 0 ? totalInput / oldRange : 0;
+
       recalcAll();
+
+      const newLayout = computeLayout();
+      const newRange = (newLayout.endY - newLayout.startY) + newLayout.maxWO;
+
+      // If was at bottom, snap to max; otherwise preserve ratio
+      totalInput = wasAtBottom ? newRange : t * newRange;
+
       if (mode === 'walk') {
         const sz = getWalkCharSize();
         charEl.style.width = sz.w + 'px';
         charEl.style.height = sz.h + 'px';
+        // Recalculate walkX from stored fraction
+        walkX = walkXFrac * window.innerWidth;
+        charEl.style.left = walkX + 'px';
       }
       applyFromInput();
     });
