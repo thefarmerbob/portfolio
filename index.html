@@ -227,6 +227,15 @@
     .ladder-spacer { height: 20vw; }
     #ladder-wrap img.ladder-img { display: block; width: 70%; height: auto; }
 
+    /* ====== FLOOR PLATFORM ====== */
+    #floor-platform {
+      position: absolute;
+      right: 0vw;
+      width: 22vw;
+      height: auto;
+      pointer-events: none;
+    }
+
     #character {
       position: fixed; right: 5vw;
       width: 18vw; z-index: 5;
@@ -313,7 +322,7 @@
           <div class="flip-back"><img src="officeframe6back.svg" alt="frame 6 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippabl  e" style="left:39vw; top:78vw; width:18vw;">
+      <div class="wall-item flippable" style="left:39vw; top:78vw; width:18vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="officeframe11.svg" alt="frame 11" /></div>
           <div class="flip-back"><img src="officeframe11back.svg" alt="frame 11 back" /></div>
@@ -342,7 +351,22 @@
     <div id="ladder-wrap">
       <div class="ladder-spacer"></div>
       <img class="ladder-img" src="finalladder.svg" alt="ladder" />
-      <div class="ladder-spacer"></div>
+      <!-- Floor platform at the bottom of the ladder -->
+      <svg id="floor-platform" viewBox="0 0 300 40" xmlns="http://www.w3.org/2000/svg" style="margin-top: -2px; margin-left: -20%;">
+        <!-- Main plank -->
+        <rect x="10" y="4" width="280" height="14" rx="4" ry="4" fill="#6b5b47" stroke="#3d3228" stroke-width="2.5"/>
+        <!-- Wood grain lines -->
+        <line x1="40" y1="8" x2="120" y2="8" stroke="#5a4c3a" stroke-width="1" opacity="0.5"/>
+        <line x1="150" y1="12" x2="250" y2="12" stroke="#5a4c3a" stroke-width="1" opacity="0.5"/>
+        <line x1="60" y1="14" x2="180" y2="14" stroke="#5a4c3a" stroke-width="1" opacity="0.4"/>
+        <!-- Support bracket left -->
+        <rect x="50" y="18" width="8" height="18" rx="1" ry="1" fill="#5a4c3a" stroke="#3d3228" stroke-width="1.5"/>
+        <!-- Support bracket right -->
+        <rect x="200" y="18" width="8" height="18" rx="1" ry="1" fill="#5a4c3a" stroke="#3d3228" stroke-width="1.5"/>
+        <!-- Nails / bolts -->
+        <circle cx="54" cy="10" r="2" fill="#3d3228"/>
+        <circle cx="204" cy="10" r="2" fill="#3d3228"/>
+      </svg>
     </div>
     <div id="character">
       <img id="frame1" src="goingdownladder1.svg" alt="character frame 1" class="visible" />
@@ -391,15 +415,18 @@
     const charFrame1   = document.getElementById('frame1');
     const charFrame2   = document.getElementById('frame2');
     const charFrameStand = document.getElementById('frameStand');
+    const ladderImg    = document.querySelector('.ladder-img');
 
     /* ============================================================
-       CHARACTER CLIMBING SYSTEM
+       CHARACTER CLIMBING SYSTEM — LADDER-AWARE
        ============================================================ */
     const CHAR_START_TOP_FRAC = 0.12;
-    const CHAR_SCROLL_TRIGGER_FRAC = 0.42;
     const CHAR_MIN_TOP_FRAC = 0.18;
-    const CHAR_MAX_TOP_FRAC = 0.36;
     const FRAME_STEP = 140;
+
+    // The scroll trigger points where character movement pauses
+    // and the wall starts scrolling instead
+    const CHAR_SCROLL_TRIGGER_FRAC = 0.42;
 
     let characterScreenY = window.innerHeight * CHAR_START_TOP_FRAC;
     let wallOffset = 0;
@@ -407,11 +434,41 @@
     let accumulatedDelta = 0;
     let currentFrame = 1;
     let isStanding = false;
+    let hasReachedLadderBottom = false;
+
+    function getCharMinY() { return window.innerHeight * CHAR_MIN_TOP_FRAC; }
+
+    /* --- Compute the ladder bottom position in wall-space --- */
+    function getLadderBottomInWallSpace() {
+      const vw = window.innerWidth / 100;
+      // ladder-wrap top = -8vw, spacer = 20vw => ladder img starts at 12vw
+      const ladderStartY = (-8 + 20) * vw; // 12vw
+      // ladder image rendered width = 14vw * 0.7 = 9.8vw
+      const ladderRenderedWidth = 14 * 0.7 * vw;
+      let ladderH;
+      if (ladderImg && ladderImg.naturalWidth > 0) {
+        ladderH = (ladderImg.naturalHeight / ladderImg.naturalWidth) * ladderRenderedWidth;
+      } else {
+        ladderH = 40 * vw; // fallback
+      }
+      return ladderStartY + ladderH;
+    }
+
+    /* --- Compute the max screen Y the character can reach (bottom of ladder on screen) --- */
+    function getCharMaxY() {
+      const ladderBottom = getLadderBottomInWallSpace();
+      // The character's top position should stop so feet align with ladder bottom.
+      // The climbing sprites: character is roughly positioned with some offset.
+      // We use a small offset (e.g. ~2vw) so the character's feet land near the platform.
+      const vw = window.innerWidth / 100;
+      const feetOffset = 2 * vw;
+      const maxOnScreen = ladderBottom - wallOffset - feetOffset;
+      // But also never let it go above the minimum
+      return Math.max(getCharMinY(), maxOnScreen);
+    }
 
     function getCharTriggerDownY() { return window.innerHeight * CHAR_SCROLL_TRIGGER_FRAC; }
     function getCharTriggerUpY()   { return window.innerHeight * 0.30; }
-    function getCharMinY()         { return window.innerHeight * CHAR_MIN_TOP_FRAC; }
-    function getCharMaxY()         { return window.innerHeight * CHAR_MAX_TOP_FRAC; }
 
     function recalcHeight() {
       const vw = window.innerWidth / 100;
@@ -440,7 +497,6 @@
       if (!isStanding) return;
       isStanding = false;
       charFrameStand.className = 'hidden';
-      // Restore whichever climb frame was last active
       charFrame1.className = currentFrame === 1 ? 'visible' : 'hidden';
       charFrame2.className = currentFrame === 2 ? 'visible' : 'hidden';
     }
@@ -453,43 +509,75 @@
       currentFrame = show1 ? 1 : 2;
     }
 
-    /* Check if character has reached the very bottom */
-    function checkBottomState() {
-      const atMaxY = characterScreenY >= getCharMaxY() - 1;
-      const wallFullyScrolled = wallOffset >= maxWallOffset - 1;
+    /* --- Check if character has reached the ladder bottom --- */
+    function checkLadderBottom() {
+      const maxY = getCharMaxY();
+      const atBottom = characterScreenY >= maxY - 1;
 
-      if (atMaxY && wallFullyScrolled) {
+      if (atBottom) {
+        hasReachedLadderBottom = true;
         showStanding();
       } else {
+        hasReachedLadderBottom = false;
         hideStanding();
       }
     }
 
     /* ============================================================
-       MOVE FUNCTION
+       MOVE FUNCTION — LADDER-CLAMPED
        ============================================================ */
     function moveBy(delta) {
       if (Math.abs(delta) < 0.5) return;
-      if (isStanding && delta > 0) return;
+
+      // If standing at bottom and trying to scroll further down,
+      // only scroll the wall — don't move the character
+      if (hasReachedLadderBottom && delta > 0) {
+        if (wallOffset < maxWallOffset) {
+          const wallMove = Math.min(delta, maxWallOffset - wallOffset);
+          wallOffset += wallMove;
+        }
+        applyPositions();
+        // Re-check since wall moved, the ladder bottom on screen changed
+        // Character should stay pinned at ladder bottom
+        const maxY = getCharMaxY();
+        characterScreenY = Math.min(characterScreenY, maxY);
+        applyPositions();
+        checkLadderBottom();
+        return;
+      }
 
       let remaining = delta;
+      const maxY = getCharMaxY();
 
       if (delta > 0) {
+        // Scrolling DOWN — character descends ladder
+        // Phase 1: Move character down to the scroll-trigger point
         if (characterScreenY < getCharTriggerDownY()) {
           const charMove = Math.min(remaining, getCharTriggerDownY() - characterScreenY);
-          characterScreenY += charMove;
-          remaining -= charMove;
+          const clampedMove = Math.min(charMove, maxY - characterScreenY);
+          if (clampedMove > 0) {
+            characterScreenY += clampedMove;
+            remaining -= clampedMove;
+          }
+          // If we hit maxY before trigger, remaining goes to wall
+          if (characterScreenY >= maxY - 1) {
+            remaining = Math.max(0, remaining);
+          }
         }
+        // Phase 2: Scroll the wall
         if (remaining > 0 && wallOffset < maxWallOffset) {
           const wallMove = Math.min(remaining, maxWallOffset - wallOffset);
           wallOffset += wallMove;
           remaining -= wallMove;
         }
+        // Phase 3: If wall is fully scrolled, push character to maxY
         if (remaining > 0) {
-          characterScreenY = Math.min(characterScreenY + remaining, getCharMaxY());
+          characterScreenY = Math.min(characterScreenY + remaining, maxY);
         }
       } else {
+        // Scrolling UP — character climbs back up
         remaining = Math.abs(remaining);
+
         if (characterScreenY > getCharTriggerUpY()) {
           const charMove = Math.min(remaining, characterScreenY - getCharTriggerUpY());
           characterScreenY -= charMove;
@@ -505,15 +593,20 @@
         }
       }
 
+      // Clamp character to ladder bounds
+      characterScreenY = Math.max(getCharMinY(), Math.min(characterScreenY, maxY));
+
       // Animate climbing frames (skipped when standing)
-      accumulatedDelta += Math.abs(delta);
-      if (accumulatedDelta >= FRAME_STEP) {
-        advanceClimbFrame();
-        accumulatedDelta = accumulatedDelta % FRAME_STEP;
+      if (!hasReachedLadderBottom) {
+        accumulatedDelta += Math.abs(delta);
+        if (accumulatedDelta >= FRAME_STEP) {
+          advanceClimbFrame();
+          accumulatedDelta = accumulatedDelta % FRAME_STEP;
+        }
       }
 
       applyPositions();
-      checkBottomState();
+      checkLadderBottom();
     }
 
     /* ============================================================
@@ -702,10 +795,20 @@
     window.addEventListener('resize', () => {
       recalcHeight();
       wallOffset = Math.min(wallOffset, maxWallOffset);
-      characterScreenY = Math.max(getCharMinY(), Math.min(characterScreenY, getCharMaxY()));
+      const maxY = getCharMaxY();
+      characterScreenY = Math.max(getCharMinY(), Math.min(characterScreenY, maxY));
       applyPositions();
-      checkBottomState();
+      checkLadderBottom();
     });
+
+    // Recalc once ladder image loads (so we know its real height)
+    if (ladderImg) {
+      ladderImg.addEventListener('load', () => {
+        recalcHeight();
+        applyPositions();
+        checkLadderBottom();
+      });
+    }
 
     recalcHeight();
     applyPositions();

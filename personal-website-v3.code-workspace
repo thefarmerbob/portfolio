@@ -5,6 +5,11 @@
 			"path": "."
 		},
 		{
+			"name": "data",
+			"path": "../Desktop/Covid Vaccination Records/data"
+		},
+		{
+			"name": "chihiro2",
 			"path": "../Downloads/chihiro2"
 		}
 	],

@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drop Your Pants!</title>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Mono:wght@300;400&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #95B887;
+    height: 100vh;
+    font-family: 'Playfair Display', serif;
+    overflow: hidden;
+    display: flex;
+  }
+
+  /* ── LEFT COLUMN ── */
+  #left-col {
+    display: flex;
+    flex-direction: column;
+    flex: 3;
+    min-width: 0;
+    padding: 5vw 0 2vw 2.2vw;
+    z-index: 10;
+    justify-content: flex-start;
+    gap: 0;
+    position: relative;
+  }
+
+  /* ── Drop Zone ── */
+  #drop-zone {
+    border: 0.17vw dashed #6d8a5c;
+    border-radius: 0;
+    padding: 1.94vw 1.67vw 3.75vw 1.67vw;
+    background: rgba(109,138,92,0.12);
+    position: relative;
+    transition: border-color 0.3s, background 0.3s, opacity 0.4s;
+    display: flex;
+    flex-direction: column;
+    height: 14vw;
+    cursor: pointer;
+    flex-shrink: 0;
+    width: 28vw;
+  }
+  #drop-zone:focus { outline: none; }
+  #drop-zone.drag-over {
+    border-color: #FFE988;
+    background: rgba(255,233,136,0.1);
+  }
+  #drop-zone.hidden { opacity: 0; pointer-events: none; }
+  #drop-zone input[type="file"] { display: none; }
+
+  #drop-zone-label {
+    width: 100%;
+    flex: 1;
+    color: rgba(255,233,136,0.45);
+    font-family: 'Playfair Display', serif;
+    font-size: 1.39vw;
+    font-weight: 700;
+    font-style: italic;
+    line-height: 1.6;
+    display: flex;
+    align-items: flex-start;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  #drop-footer {
+    position: absolute;
+    bottom: 1.11vw;
+    left: 1.67vw;
+    right: 1.67vw;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  #drop-footer-left {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.76vw;
+    color: #6d8a5c;
+    letter-spacing: 0.07vw;
+  }
+  #drop-footer-right {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.76vw;
+    color: #6d8a5c;
+    display: flex;
+    align-items: center;
+    gap: 0.42vw;
+  }
+  #drop-footer-right kbd {
+    background: rgba(255,255,255,0.08);
+    border: 0.07vw solid #6d8a5c;
+    border-radius: 0.28vw;
+    padding: 0.07vw 0.42vw;
+    font-size: 0.69vw;
+    color: #a3b893;
+  }
+
+  /* ── PERSON AREA ── */
+  #person-area {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    margin-bottom: 2vw;
+    width: 28vw;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .person-frame {
+    height: clamp(20vw, 48vh, 30vw);
+    width: auto;
+    display: none;
+  }
+  .person-frame.active { display: block; }
+
+  #pants-svg {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    top: -400px;
+    opacity: 0;
+    pointer-events: none;
+    height: auto;
+  }
+
+  #inference-canvas { display: none; }
+
+  /* ── RIGHT COLUMN ── */
+  #right-col {
+    flex: 5;
+    min-width: 0;
+    height: 100vh;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 5vw 3.33vw 2vw 3.47vw;
+    z-index: 2;
+  }
+
+  #info-box {
+    background: #FFE988;
+    border-radius: 0;
+    padding: 2.8vw 3vw;
+    color: #313E24;
+    width: 100%;
+    max-width: 52vw;
+    overflow-y: auto;
+    height: 100%;
+  }
+  #info-box h2 {
+    font-size: 2.2vw;
+    font-weight: 900;
+    margin-bottom: 1.25vw;
+    color: #313E24;
+  }
+  #info-box p {
+    font-size: 1.05vw;
+    line-height: 1.7;
+    color: #313E24;
+    margin-bottom: 0.97vw;
+  }
+  #info-box .stat {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.76vw;
+    color: #5d7a4e;
+    letter-spacing: 0.07vw;
+    margin-bottom: 0.21vw;
+  }
+  #info-box .divider {
+    width: 2.78vw;
+    height: 0.14vw;
+    background: rgba(49,62,36,0.2);
+    margin: 1.11vw 0;
+  }
+  #info-box em { font-style: italic; color: #313E24; }
+
+  #result-content { display: none; }
+  #result-content.visible { display: block; }
+  #about-content { display: block; }
+  #about-content.hidden { display: none; }
+
+  #cool-text-box {
+    font-size: 2.5vw;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    margin-bottom: 1vw;
+    opacity: 0;
+    transform: translateY(0.5vw);
+    transition: opacity 0.5s, transform 0.5s;
+  }
+  #cool-text-box.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .verdict-cool { color: #2a6e1e; }
+  .verdict-notcool { color: #8b3a2a; }
+
+  #confidence-bar-wrap {
+    background: rgba(49,62,36,0.12);
+    height: 0.6vw;
+    width: 100%;
+    margin: 0.8vw 0;
+    position: relative;
+    overflow: hidden;
+  }
+  #confidence-bar {
+    height: 100%;
+    background: #313E24;
+    width: 0%;
+    transition: width 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  #replay-btn {
+    display: inline-block;
+    background: #313E24;
+    border: none;
+    padding: 0.7vw 1.8vw;
+    font-family: 'Playfair Display', serif;
+    font-size: 0.9vw;
+    font-weight: 700;
+    font-style: italic;
+    color: #FFE988;
+    border-radius: 0;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s, transform 0.2s;
+    margin-top: 0.7vw;
+    letter-spacing: 0.03em;
+  }
+  #replay-btn:hover { background: #2D3A1F; }
+  #replay-btn.visible { opacity: 1; pointer-events: auto; }
+
+  #page-title {
+    position: absolute;
+    top: 2.5vw;
+    left: 2.2vw;
+    font-size: 1.1vw;
+    font-weight: 900;
+    color: #2D3A1F;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-family: 'DM Mono', monospace;
+    z-index: 20;
+  }
+
+  #model-status {
+    position: absolute;
+    top: 2.5vw;
+    right: 3.33vw;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65vw;
+    color: #6d8a5c;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 0.35vw;
+  }
+  #model-status .dot {
+    width: 0.45vw;
+    height: 0.45vw;
+    border-radius: 50%;
+    background: #6d8a5c;
+    transition: background 0.3s;
+  }
+  #model-status.loaded .dot { background: #3a8a2c; }
+  #model-status.error .dot { background: #8b3a2a; }
+
+  #loading-area { display: none; padding: 0.83vw 0; flex-shrink: 0; }
+  #loading-area.visible { display: block; }
+  .loading-dots { display: inline-flex; gap: 0.42vw; }
+  .loading-dots span { width: 0.49vw; height: 0.49vw; background: #5d7a4e; border-radius: 50%; animation: bounce 1.2s ease-in-out infinite; }
+  .loading-dots span:nth-child(2) { animation-delay: 0.15s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce { 0%,80%,100% { transform: translateY(0); opacity: 0.4; } 40% { transform: translateY(-0.5vw); opacity: 1; } }
+  #loading-text { font-family: 'DM Mono', monospace; font-size: 0.76vw; color: #5d7a4e; margin-top: 0.56vw; }
+</style>
+</head>
+<body>
+
+  <div id="page-title">Drop Your Pants!</div>
+  <div id="model-status"><span class="dot"></span><span id="model-status-text">loading model…</span></div>
+
+  <div id="left-col">
+    <div id="loading-area">
+      <div class="loading-dots"><span></span><span></span><span></span></div>
+      <div id="loading-text">analysing your pants…</div>
+    </div>
+    <div id="drop-zone" tabindex="0">
+      <div id="drop-zone-label">Drop an image of your pants here, or click to upload.</div>
+      <input type="file" id="file-input" accept="image/*">
+      <div id="drop-footer">
+        <span id="drop-footer-left">image files only</span>
+        <span id="drop-footer-right">click or drag <kbd>↓</kbd></span>
+      </div>
+    </div>
+
+    <div id="person-area">
+      <img id="person-stand" class="person-frame active" src="person_stand.svg" alt="Person standing">
+      <img id="person-think1" class="person-frame" src="person_think1.svg" alt="Thinking 1">
+      <img id="person-think2" class="person-frame" src="person_think2.svg" alt="Thinking 2">
+    </div>
+
+    <img id="pants-svg" src="pants.svg" alt="Pants">
+  </div>
+
+  <canvas id="inference-canvas" width="224" height="224"></canvas>
+
+  <div id="right-col">
+    <div id="info-box">
+      <div id="about-content">
+        <h2>About This</h2>
+        <p>Drop an image of your pants. Watch them fall. The AI will think about them. Then it'll deliver its verdict.</p>
+        <div class="divider"></div>
+        <p><em>Drop Your Pants!</em> is a very serious fashion evaluation system powered by a convolutional neural network trained on hundreds of pants images. Upload any image — your jeans, trousers, or even a screenshot of pants you found online.</p>
+        <div class="divider"></div>
+        <div class="stat">UPLOAD AN IMAGE TO BEGIN</div>
+        <div class="stat">ANY FORMAT ACCEPTED</div>
+        <div class="stat">CNN-POWERED CLASSIFICATION</div>
+      </div>
+
+      <div id="result-content">
+        <div id="cool-text-box"></div>
+        <p id="result-desc"></p>
+        <div id="confidence-bar-wrap"><div id="confidence-bar"></div></div>
+        <div class="divider"></div>
+        <div class="stat" id="stat-verdict"></div>
+        <div class="stat" id="stat-confidence"></div>
+        <div class="stat" id="stat-note"></div>
+        <div class="divider"></div>
+        <button id="replay-btn">Try another pair</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const dropZone      = document.getElementById('drop-zone');
+  const fileInput     = document.getElementById('file-input');
+  const pantsSvg      = document.getElementById('pants-svg');
+  const personStand   = document.getElementById('person-stand');
+  const personThink1  = document.getElementById('person-think1');
+  const personThink2  = document.getElementById('person-think2');
+  const replayBtn     = document.getElementById('replay-btn');
+  const coolTextBox   = document.getElementById('cool-text-box');
+  const aboutContent  = document.getElementById('about-content');
+  const resultContent = document.getElementById('result-content');
+  const loadingArea   = document.getElementById('loading-area');
+  const loadingText   = document.getElementById('loading-text');
+  const modelStatus   = document.getElementById('model-status');
+  const modelStatusTx = document.getElementById('model-status-text');
+  const canvas        = document.getElementById('inference-canvas');
+  const ctx           = canvas.getContext('2d');
+  const confidenceBar = document.getElementById('confidence-bar');
+  const statVerdict   = document.getElementById('stat-verdict');
+  const statConfidence= document.getElementById('stat-confidence');
+  const statNote      = document.getElementById('stat-note');
+  const resultDesc    = document.getElementById('result-desc');
+
+  const allFrames = [personStand, personThink1, personThink2];
+  let thinkInterval = null;
+  let pantsModel = null;
+  let currentFile = null;
+
+  /* ── MODEL ── */
+  async function loadModel() {
+    try {
+      pantsModel = await tf.loadGraphModel('tfjs_model/model.json');
+      modelStatus.classList.add('loaded');
+      modelStatusTx.textContent = 'model ready';
+      // Warm up
+      const dummy = tf.zeros([1, 224, 224, 3]);
+      pantsModel.predict(dummy).dispose();
+      dummy.dispose();
+    } catch (e) {
+      console.warn('TF.js model not found — falling back to random mode:', e.message);
+      modelStatus.classList.add('error');
+      modelStatusTx.textContent = 'no model — random mode';
+      pantsModel = null;
+    }
+  }
+  loadModel();
+
+  /* ── CLASSIFY ── */
+  async function classifyImage(imageFile) {
+    if (!pantsModel) {
+      // Random fallback when model is not deployed yet
+      return { isCool: Math.random() > 0.4, confidence: 0.6 + Math.random() * 0.35 };
+    }
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, 224, 224);
+        const tensor = tf.browser.fromPixels(canvas)
+          .toFloat().div(255.0).expandDims(0);
+        const prediction = pantsModel.predict(tensor);
+        const score = prediction.dataSync()[0];
+        tensor.dispose();
+        prediction.dispose();
+        URL.revokeObjectURL(img.src);
+        // sigmoid: >0.5 = trendy (folder alphabetically second)
+        const isCool = score > 0.5;
+        const confidence = isCool ? score : 1 - score;
+        resolve({ isCool, confidence });
+      };
+      img.src = URL.createObjectURL(imageFile);
+    });
+  }
+
+  /* ── RESULT DISPLAY ── */
+  function showResult(result) {
+    aboutContent.classList.add('hidden');
+    resultContent.classList.add('visible');
+    const pct = Math.round(result.confidence * 100);
+
+    if (result.isCool) {
+      coolTextBox.textContent = pct > 85 ? 'FIRE PANTS!' : 'COOL PANTS!';
+      coolTextBox.className = 'verdict-cool';
+      resultDesc.textContent = pct > 90
+        ? 'The neural network is extremely confident: these pants are a masterpiece. Wear them with pride.'
+        : pct > 75
+        ? 'The AI has considered them carefully and reached a strong verdict. These are genuinely excellent trousers.'
+        : 'A respectable pair. The model sees potential — not perfect, but on the right track.';
+      statVerdict.textContent = 'VERDICT: APPROVED';
+      statNote.textContent = pct > 90 ? 'ERA: ICONIC' : pct > 75 ? 'ERA: TIMELESS' : 'ERA: SOLID CHOICE';
+    } else {
+      coolTextBox.textContent = pct > 85 ? 'ABSOLUTELY NOT.' : 'NOT COOL.';
+      coolTextBox.className = 'verdict-notcool';
+      resultDesc.textContent = pct > 90
+        ? 'The neural network has spoken with conviction: these pants need to be reconsidered. Immediately.'
+        : pct > 75
+        ? 'After careful analysis, the AI recommends exploring other options. These didn\'t quite make the cut.'
+        : 'The model is on the fence, leaning no. Maybe with the right outfit they could work? Maybe.';
+      statVerdict.textContent = 'VERDICT: REJECTED';
+      statNote.textContent = pct > 90 ? 'ERA: FASHION CRIME' : pct > 75 ? 'ERA: QUESTIONABLE' : 'ERA: NEEDS WORK';
+    }
+    statConfidence.textContent = `CONFIDENCE: ${pct}%`;
+
+    setTimeout(() => {
+      coolTextBox.classList.add('visible');
+      confidenceBar.style.width = pct + '%';
+      setTimeout(() => replayBtn.classList.add('visible'), 400);
+    }, 100);
+  }
+
+  /* ── FRAMES ── */
+  function showFrame(el) {
+    allFrames.forEach(f => f.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  /* ── DROP EVENTS ── */
+  dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') fileInput.click(); });
+  dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) { currentFile = file; triggerAnimation(); }
+  });
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files[0]) { currentFile = e.target.files[0]; triggerAnimation(); }
+  });
+
+  /* ── ANIMATION ── */
+  function triggerAnimation() {
+    resetState();
+    dropZone.classList.add('hidden');
+    loadingArea.classList.add('visible');
+    if (pantsSvg.complete && pantsSvg.naturalWidth > 0) beginFall();
+    else pantsSvg.onload = () => beginFall();
+  }
+
+  function beginFall() {
+    const metrics = getPersonMetrics();
+    const dropRect = dropZone.getBoundingClientRect();
+    pantsSvg.style.width = metrics.hipsWidth + 'px';
+    pantsSvg.style.height = 'auto';
+    pantsSvg.style.left = metrics.centerX + 'px';
+    pantsSvg.style.transform = 'translateX(-50%)';
+    requestAnimationFrame(() => {
+      const startY = dropRect.bottom;
+      pantsSvg.style.top = startY + 'px';
+      pantsSvg.style.opacity = '0';
+      runAnimation(startY, metrics.waistY, window.innerHeight + 100);
+    });
+  }
+
+  function getPersonMetrics() {
+    const rect = personStand.getBoundingClientRect();
+    return {
+      waistY: rect.top + rect.height * 0.55,
+      hipsWidth: rect.width * 0.62,
+      centerX: rect.left + rect.width / 2,
+    };
+  }
+
+  function startThinkingTap() {
+    let t = true;
+    thinkInterval = setInterval(() => {
+      showFrame(t ? personThink2 : personThink1);
+      t = !t;
+    }, 350);
+  }
+  function stopThinkingTap() {
+    if (thinkInterval) { clearInterval(thinkInterval); thinkInterval = null; }
+  }
+
+  async function runAnimation(startY, waistY, offScreenY) {
+    loadingArea.classList.remove('visible');
+    const classifyPromise = currentFile
+      ? classifyImage(currentFile)
+      : Promise.resolve({ isCool: true, confidence: 0.82 });
+
+    setTimeout(() => {
+      pantsSvg.style.opacity = '1';
+      const fallAnim = pantsSvg.animate([
+        { top: startY + 'px', opacity: 0 },
+        { top: startY + 'px', opacity: 1, offset: 0.08 },
+        { top: waistY + 'px', opacity: 1 }
+      ], { duration: 1500, easing: 'cubic-bezier(0.25,0.46,0.45,0.94)', fill: 'forwards' });
+
+      fallAnim.onfinish = async () => {
+        pantsSvg.style.top = waistY + 'px';
+        pantsSvg.style.opacity = '1';
+        showFrame(personThink1);
+        loadingText.textContent = 'thinking…';
+        loadingArea.classList.add('visible');
+        setTimeout(() => startThinkingTap(), 300);
+
+        const result = await classifyPromise;
+
+        setTimeout(() => {
+          stopThinkingTap();
+          showFrame(personStand);
+          loadingArea.classList.remove('visible');
+
+          setTimeout(() => {
+            const dropAnim = pantsSvg.animate([
+              { top: waistY + 'px', opacity: 1 },
+              { top: offScreenY + 'px', opacity: 1 }
+            ], { duration: 1200, easing: 'cubic-bezier(0.55,0.055,0.675,0.19)', fill: 'forwards' });
+
+            dropAnim.onfinish = () => {
+              pantsSvg.style.opacity = '0';
+              dropZone.classList.remove('hidden');
+              fileInput.value = '';
+            };
+            setTimeout(() => showResult(result), 800);
+          }, 500);
+        }, 2500);
+      };
+    }, 300);
+  }
+
+  function resetState() {
+    stopThinkingTap();
+    pantsSvg.getAnimations().forEach(a => a.cancel());
+    pantsSvg.style.opacity = '0';
+    pantsSvg.style.top = '-400px';
+    pantsSvg.style.width = '';
+    showFrame(personStand);
+    coolTextBox.classList.remove('visible');
+    coolTextBox.className = '';
+    replayBtn.classList.remove('visible');
+    confidenceBar.style.width = '0%';
+    resultContent.classList.remove('visible');
+    aboutContent.classList.remove('hidden');
+    dropZone.classList.remove('hidden');
+    loadingArea.classList.remove('visible');
+    loadingText.textContent = 'analysing your pants…';
+    fileInput.value = '';
+    currentFile = null;
+  }
+
+  replayBtn.addEventListener('click', resetState);
+</script>
+</body>
+</html>
