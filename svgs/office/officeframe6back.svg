@@ -32,4 +32,9 @@
 <path d="M96.1903 54.9144C96.2495 54.9144 96.499 54.9144 96.9114 54.901C97.1048 54.8876 97.2661 54.8608 97.4197 54.8359C97.5733 54.811 97.7143 54.7889 97.9894 54.7324" stroke="black" stroke-linecap="round"/>
 <path d="M104.257 50.2942C103.847 50.9477 103.127 52.378 102.321 53.9524C101.36 55.7343 101.003 56.5392 100.78 57.0867C100.727 57.2244 100.679 57.3536 100.63 57.5835" stroke="black" stroke-linecap="round"/>
 <path d="M99.6993 51.0193C99.7582 51.0388 99.9342 51.1655 100.773 52.0757C104.071 55.9944 104.471 56.4946 104.812 56.9402C104.908 57.0451 105.029 57.133 105.252 57.3845" stroke="black" stroke-linecap="round"/>
+<text x="85" y="75" text-anchor="middle" font-family="'Georgia', serif" font-size="3.8" font-weight="300" fill="#444" letter-spacing="0.15">
+<tspan x="85" dy="0">A short collection of smaller projects the</tspan>
+<tspan x="85" dy="5.5">focus on data analyses using PyMC and</tspan>
+<tspan x="85" dy="5.5">algorithm projects such as Task Schedulers.</tspan>
+</text>
 </svg>

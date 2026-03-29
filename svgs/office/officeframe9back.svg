@@ -101,4 +101,14 @@
 <path d="M95.5842 41.0044C95.6794 40.8975 96.1274 40.704 96.6874 40.7111C96.9508 40.7145 97.139 40.982 97.3133 41.1649C97.6434 41.5111 97.6405 42.0947 97.5978 42.4952C97.5367 43.0689 96.6337 43.1783 96.2094 43.356C96.4833 43.8051 97.0683 44.5388 97.942 45.589C98.121 45.8073 98.1661 45.8903 98.3014 46.1522" stroke="black" stroke-width="1.05193" stroke-linecap="round"/>
 <path d="M98.8215 41.1735C99.2298 41.5907 100.039 42.5556 100.659 43.2239C100.786 43.3604 100.91 43.286 101.001 43.1806C101.407 42.4789 101.852 41.6624 102.107 41.1784C102.21 40.9921 102.261 40.926 102.313 40.7947" stroke="black" stroke-width="1.05193" stroke-linecap="round"/>
 <path d="M100.963 43.3284C100.963 43.3671 100.963 43.6836 100.975 44.2057C100.988 44.4312 101.013 44.5768 101.026 44.9028C101.039 45.2288 101.039 45.7308 101.039 46.248" stroke="black" stroke-width="1.05193" stroke-linecap="round"/>
+<text x="100" y="58" text-anchor="middle" font-family="'Georgia', serif" font-size="3.5" font-style="italic" fill="#666">MATLAB, Genetic Algorithms, Machine Learning</text>
+<text x="100" y="67" text-anchor="middle" font-family="'Georgia', serif" font-size="3.8" font-weight="300" fill="#444" letter-spacing="0.15">
+<tspan x="100" dy="0">Extending a Lab-on-a-Chip fluid mechanics</tspan>
+<tspan x="100" dy="5.5">framework with Prof. Duriez at the University of</tspan>
+<tspan x="100" dy="5.5">Buenos Aires, using ML and genetic algorithms to</tspan>
+<tspan x="100" dy="5.5">optimize multi-inlet capillary networks. Building on</tspan>
+<tspan x="100" dy="5.5">the existing model to enable more efficient tree</tspan>
+<tspan x="100" dy="5.5">generation and support looped structures — with</tspan>
+<tspan x="100" dy="5.5">applications in cell biology and bioprocessing.</tspan>
+</text>
 </svg>

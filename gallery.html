@@ -16,6 +16,13 @@
       overflow: hidden;
       background: #8ba87a;
     }
+    body.inverted {
+      filter: invert(1);
+      transition: filter 0.4s ease;
+    }
+    body {
+      transition: filter 0.4s ease;
+    }
     #scroll-driver {
       position: fixed;
       top: 0;
@@ -84,6 +91,9 @@
       pointer-events: auto;
       opacity: 1;
     }
+    body.inverted #zoom-backdrop {
+      background: rgba(255, 255, 255, 0.65);
+    }
     #zoom-backdrop {
       position: absolute;
       top: 0; left: 0;
@@ -119,7 +129,7 @@
     }
     #character {
       position: fixed;
-      bottom: 8%;
+      bottom: 6.5vw;
       z-index: 5;
       will-change: left;
     }
@@ -140,21 +150,83 @@
       bottom: 0;
       left: 0;
       width: 100%;
-      height: 3.5%;
+      height: 8vh;
       background: #ffffff;
       z-index: 0;
       pointer-events: none;
     }
     #floor-line {
       position: fixed;
-      bottom: 3.5%;
+      bottom: 8vh;
       left: 0;
       width: 100%;
-      height: 4px;
+      height: 0.6vh;
       background: rgb(0, 0, 0);
       z-index: 0;
       pointer-events: none;
     }
+    /* ====== DOOR (inside wall, flipped horizontally) ====== */
+    #wall-door {
+      position: absolute;
+      width: 16vw;
+      z-index: 11;
+      cursor: pointer;
+      pointer-events: auto;
+      transform: scaleX(-1);
+    }
+    #wall-door img {
+      position: absolute;
+      left: 0;
+      width: 100%; height: 100%;
+      object-fit: contain; display: block;
+    }
+    #wall-door #gallery-door1 { bottom: -1.5vw; }
+    #wall-door #gallery-door2-p2 { bottom: -0.9vw; left: 5vw; width: 105%; height: 94%; }
+
+    /* Door front panel overlay — fixed, above character */
+    #gallery-door-front-overlay {
+      position: fixed;
+      z-index: 20;
+      pointer-events: none;
+      display: none;
+      transform: scaleX(-1);
+    }
+    #gallery-door-front-overlay img {
+      width: 100%; height: 100%;
+      object-fit: contain; display: block;
+    }
+
+    /* Gallery polaroid above door */
+    #gallery-polaroid {
+      position: absolute;
+      z-index: 11;
+      pointer-events: auto;
+      cursor: pointer;
+      transition: filter 0.35s ease, transform 0.35s ease;
+    }
+    #gallery-polaroid.hovered {
+      filter: drop-shadow(0 0 12px rgba(58, 107, 39, 0.45));
+      transform: scale(1.015);
+    }
+    #gallery-polaroid img {
+      width: 100%; height: 100%;
+      object-fit: contain; display: block;
+    }
+
+    /* Lamp & plant overlay — fixed, above character */
+    #lamp-plant-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 6;
+      overflow: visible;
+    }
+    #lamp-plant-overlay img {
+      width: 100%; height: 100%;
+      object-fit: contain; display: block;
+    }
+
     #vignette {
       position: fixed;
       top: 0; left: 0;
@@ -184,8 +256,12 @@
       <img id="idleLeft" src="svgs/gallery-character/idleleft.svg" alt="idle facing left" />
     </div>
   </div>
+  <div id="lamp-plant-overlay"></div>
   <div id="floor"></div>
   <div id="floor-line"></div>
+  <div id="gallery-door-front-overlay">
+    <img src="svgs/office/door2-p1.svg" alt="open door front" />
+  </div>
   <div id="vignette"></div>
 
   <!-- Zoom overlay for painting close-up -->
@@ -239,7 +315,7 @@
       { id: 33, x: 9080,  y: 40,  w: 350, h: 350 },
     ];
 
-    const WALL_BASE_WIDTH = 9530;
+    const WALL_BASE_WIDTH = 10300;
     const wallEl = document.getElementById('wall');
 
     function buildWall() {
@@ -262,11 +338,12 @@
 
       const lamp = document.createElement('div');
       lamp.className = 'gallery-object';
-      lamp.style.left = (40 * s) + 'px';
-      lamp.style.bottom = '3%';
-      lamp.style.width = (400 * s) + 'px';
+      lamp.style.left = (-10 * s) + 'px';
+      lamp.style.bottom = '5%';
+      lamp.style.width = (500 * s) + 'px';
       lamp.style.height = (800 * s) + 'px';
-      lamp.innerHTML = '<img src="svgs/gallery-objects/gallerylamp.svg" alt="lamp" />';
+      lamp.style.zIndex = '6';
+      lamp.innerHTML = '<img src="svgs/gallery-objects/gallerylamp1.svg" alt="lamp" />';
       wallEl.appendChild(lamp);
 
       const plant = document.createElement('div');
@@ -275,8 +352,54 @@
       plant.style.bottom = '5%';
       plant.style.width = (110 * s) + 'px';
       plant.style.height = (140 * s) + 'px';
+      plant.style.zIndex = '6';
       plant.innerHTML = '<img src="svgs/gallery-objects/galleryplant.svg" alt="plant" />';
       wallEl.appendChild(plant);
+
+      // Intro text — below canvases, above floor, behind character
+      const introText = document.createElement('div');
+      introText.className = 'gallery-object';
+      introText.style.left = (550 * s) + 'px';
+      introText.style.bottom = '5vw';
+      introText.style.width = (1100 * s) + 'px';
+      introText.style.height = '5vw';
+      introText.style.zIndex = '1';
+      introText.innerHTML = '<img src="svgs/gallery-objects/gallery-intro-text.svg" alt="intro text" />';
+      wallEl.appendChild(introText);
+
+      // Door (at right end of wall)
+      const doorDiv = document.createElement('div');
+      doorDiv.id = 'wall-door';
+      const doorX = 9550;
+      const doorH = 500;
+      doorDiv.style.left = (doorX * s) + 'px';
+      doorDiv.style.bottom = '9.7vh';
+      doorDiv.style.height = (doorH * s) + 'px';
+      doorDiv.innerHTML = `
+        <img id="gallery-door1" src="svgs/office/door1.svg" alt="closed door" />
+        <img id="gallery-door2-p2" src="svgs/office/door2-p2.svg" alt="open door back" style="display:none;" />
+      `;
+      wallEl.appendChild(doorDiv);
+
+      // Gallery polaroid above door
+      const polaroid = document.createElement('div');
+      polaroid.id = 'gallery-polaroid';
+      polaroid.style.left = ((doorX - 30) * s) + 'px';
+      polaroid.style.bottom = 'calc(8vh + ' + (doorH * s) + 'px + 4vh)';
+      polaroid.style.width = (350 * s) + 'px';
+      polaroid.style.height = (350 * s) + 'px';
+      polaroid.innerHTML = '<img src="svgs/gallery-objects/gallery-polaroid.svg" alt="gallery polaroid" />';
+      wallEl.appendChild(polaroid);
+
+      // Gallery text to the right of door
+      const galleryText = document.createElement('div');
+      galleryText.className = 'gallery-object';
+      galleryText.style.left = ((doorX + 400) * s) + 'px';
+      galleryText.style.bottom = '20vw';
+      galleryText.style.width = (300 * s) + 'px';
+      galleryText.style.height = (300 * s) + 'px';
+      galleryText.innerHTML = '<img src="svgs/gallery-objects/gallery-home-text.svg" alt="gallery text" />';
+      wallEl.appendChild(galleryText);
 
       return wallWidth;
     }
@@ -309,7 +432,9 @@
     const RIGHT_EDGE = 0.70;   // 70% from left as fraction (where wall starts scrolling)
 
     let characterX = window.innerWidth * 0.30; // start at 30%
+    let charXFrac = 0.30;  // character position as fraction of viewport width
     let wallOffset = 0;
+    let wallOffsetFrac = 0;  // wall offset as fraction of max
     let MAX_WALL_OFFSET = Math.max(0, wallWidth - window.innerWidth);
 
     function getCharMinX() { return window.innerWidth * LEFT_EDGE; }
@@ -317,17 +442,71 @@
     function getCharScrollRightX() { return window.innerWidth * RIGHT_EDGE; } // where wall starts scrolling going right
     function getCharScrollLeftX() { return window.innerWidth * 0.30; } // where wall starts scrolling going left
 
+    const lampPlantOverlay = document.getElementById('lamp-plant-overlay');
+    let lampState = 1; // 1 or 2
+
+    function toggleLamp() {
+      lampState = lampState === 1 ? 2 : 1;
+      // Update overlay lamp
+      const oLamp = document.getElementById('overlay-lamp');
+      if (oLamp) oLamp.querySelector('img').src = 'svgs/gallery-objects/gallerylamp' + lampState + '.svg';
+      // Update wall lamp
+      const wallLamp = wallEl.querySelector('.gallery-object img[alt="lamp"]');
+      if (wallLamp) wallLamp.src = 'svgs/gallery-objects/gallerylamp' + lampState + '.svg';
+      // Invert colors when lamp is off
+      document.body.classList.toggle('inverted', lampState === 2);
+    }
+
+    function buildOverlay() {
+      const s = Math.min(window.innerWidth / BASE_VW, window.innerHeight / BASE_VH);
+      lampPlantOverlay.innerHTML = '';
+
+      const oLamp = document.createElement('div');
+      oLamp.id = 'overlay-lamp';
+      oLamp.style.cssText = 'position:absolute; pointer-events:auto; cursor:pointer;';
+      oLamp.dataset.baseLeft = (-10 * s);
+      oLamp.style.bottom = '5%';
+      oLamp.style.width = (500 * s) + 'px';
+      oLamp.style.height = (800 * s) + 'px';
+      oLamp.dataset.lampState = lampState;
+      oLamp.innerHTML = '<img src="svgs/gallery-objects/gallerylamp' + lampState + '.svg" style="width:100%;height:100%;object-fit:contain;display:block;" />';
+      oLamp.addEventListener('click', toggleLamp);
+      lampPlantOverlay.appendChild(oLamp);
+
+      const oPlant = document.createElement('div');
+      oPlant.style.cssText = 'position:absolute; pointer-events:none;';
+      oPlant.dataset.baseLeft = (400 * s);
+      oPlant.style.bottom = '5%';
+      oPlant.style.width = (110 * s) + 'px';
+      oPlant.style.height = (140 * s) + 'px';
+      oPlant.innerHTML = '<img src="svgs/gallery-objects/galleryplant.svg" style="width:100%;height:100%;object-fit:contain;display:block;" />';
+      lampPlantOverlay.appendChild(oPlant);
+    }
+    buildOverlay();
+
+    function updateOverlayPositions() {
+      lampPlantOverlay.querySelectorAll('[data-base-left]').forEach(el => {
+        el.style.left = (parseFloat(el.dataset.baseLeft) - wallOffset) + 'px';
+      });
+    }
+
     function applyPositions() {
+      charXFrac = characterX / window.innerWidth;
+      wallOffsetFrac = MAX_WALL_OFFSET > 0 ? wallOffset / MAX_WALL_OFFSET : 0;
       charEl.style.left = characterX + 'px';
       wallEl.style.transform = `translateX(${-wallOffset}px)`;
+      updateOverlayPositions();
     }
 
     window.addEventListener('resize', () => {
       wallWidth = buildWall();
+      buildOverlay();
       attachFrameClicks();
       sizeCharacter();
       MAX_WALL_OFFSET = Math.max(0, wallWidth - window.innerWidth);
-      wallOffset = Math.min(wallOffset, MAX_WALL_OFFSET);
+      // Restore positions from fractions
+      wallOffset = wallOffsetFrac * MAX_WALL_OFFSET;
+      characterX = charXFrac * window.innerWidth;
       characterX = Math.max(getCharMinX(), Math.min(characterX, getCharMaxX()));
       applyPositions();
     });
@@ -376,7 +555,10 @@
       idleTimeout = setTimeout(showIdle, IDLE_DELAY);
     }
 
-    function moveBy(deltaPx) {
+    let enteringDoor = false;
+
+    function moveBy(deltaPx, force) {
+      if (enteringDoor && !force) return;
       if (Math.abs(deltaPx) < 0.5) return;
 
       const direction = deltaPx > 0 ? 'right' : 'left';
@@ -439,7 +621,7 @@
     let zoomedIn = false;
 
     document.addEventListener('wheel', (e) => {
-      if (zoomedIn) return;
+      if (zoomedIn || enteringDoor) return;
       e.preventDefault();
       // Support both vertical and horizontal scrolling (trackpad sideways, shift+scroll, etc.)
       const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
@@ -550,13 +732,138 @@
     // Hover: soft green glow matching index.html
     document.addEventListener('mousemove', (e) => {
       const el = document.elementFromPoint(e.clientX, e.clientY);
-      const found = el ? el.closest('.wall-frame') : null;
+      const found = el ? (el.closest('.wall-frame') || el.closest('#gallery-polaroid')) : null;
 
       if (found !== lastHoveredFrame) {
         if (lastHoveredFrame) lastHoveredFrame.classList.remove('hovered');
         if (found) found.classList.add('hovered');
         lastHoveredFrame = found;
       }
+    });
+
+    // ====== DOOR LOGIC ======
+    const doorFrontOverlay = document.getElementById('gallery-door-front-overlay');
+
+    function getDoorEl() { return document.getElementById('wall-door'); }
+    function getDoor1() { return document.getElementById('gallery-door1'); }
+    function getDoor2P2() { return document.getElementById('gallery-door2-p2'); }
+
+    function getDoorCenterX() {
+      const doorEl = getDoorEl();
+      if (!doorEl) return 0;
+      const rect = doorEl.getBoundingClientRect();
+      return rect.left + rect.width / 2;
+    }
+
+    function showOpenDoor() {
+      const door1 = getDoor1();
+      const door2p2 = getDoor2P2();
+      const doorEl = getDoorEl();
+      if (!door1 || !door2p2 || !doorEl) return;
+
+      door1.style.display = 'none';
+      door2p2.style.display = 'block';
+
+      // Position front overlay to match door's screen position
+      const rect = doorEl.getBoundingClientRect();
+      const vw = window.innerWidth / 100;
+      doorFrontOverlay.style.left = (rect.left - 1 * vw) + 'px';
+      doorFrontOverlay.style.top = (rect.top + -0.4 * vw) + 'px';
+      doorFrontOverlay.style.width = (rect.width * 1.12) + 'px';
+      doorFrontOverlay.style.height = (rect.height * 1.12) + 'px';
+      doorFrontOverlay.style.display = 'block';
+    }
+
+    function hideOpenDoor() {
+      const door1 = getDoor1();
+      const door2p2 = getDoor2P2();
+      if (!door1 || !door2p2) return;
+
+      door2p2.style.display = 'none';
+      doorFrontOverlay.style.display = 'none';
+      door1.style.display = 'block';
+    }
+
+    function triggerDoorSequence() {
+      showOpenDoor();
+
+      const doorCX = getDoorCenterX();
+      charEl.style.transition = 'left 0.4s ease-in, opacity 0.3s ease-in 0.1s';
+      charEl.style.left = doorCX + 'px';
+      charEl.style.opacity = '0';
+
+      setTimeout(() => {
+        hideOpenDoor();
+        setTimeout(() => {
+          window.location.href = 'office.html';
+        }, 200);
+      }, 450);
+    }
+
+    function autoWalkToDoor() {
+      enteringDoor = true;
+      const walkSpeed = 8;
+      const fastFrameStep = 40;
+
+      // Check if character is to the right of (or past) the door — need to walk left first
+      const doorCX = getDoorCenterX();
+      const charCenter = characterX + charWidth / 2;
+      const approachX = doorCX - charWidth * 5; // target left of door to approach from
+
+      if (charCenter > doorCX - charWidth * 1.5) {
+        // Character is on/past the door — walk left first (door stays closed), then approach from left
+        hideOpenDoor();
+        function walkLeftStep() {
+          if (characterX <= approachX) {
+            // Now open door and walk right into it
+            showOpenDoor();
+            walkRightIntoDoor();
+            return;
+          }
+          moveBy(-walkSpeed, true);
+          requestAnimationFrame(walkLeftStep);
+        }
+        walkLeftStep();
+      } else {
+        walkRightIntoDoor();
+      }
+    }
+
+    function walkRightIntoDoor() {
+      const walkSpeed = 8;
+
+      function walkStep() {
+        const doorCX = getDoorCenterX();
+        const charRight = characterX + charWidth;
+
+        if (charRight >= doorCX - charWidth * 1.2) {
+          triggerDoorSequence();
+          return;
+        }
+
+        // Move character right toward door
+        moveBy(walkSpeed, true);
+        // Update open door overlay position as wall scrolls
+        showOpenDoor();
+        requestAnimationFrame(walkStep);
+      }
+      walkStep();
+    }
+
+    // Polaroid click handler (event delegation since rebuilt in buildWall)
+    wallEl.addEventListener('click', (e) => {
+      const polaroid = e.target.closest('#gallery-polaroid');
+      if (polaroid && !zoomedIn) {
+        e.stopPropagation();
+        openZoom(polaroid);
+        return;
+      }
+
+      const doorEl = e.target.closest('#wall-door');
+      if (!doorEl || enteringDoor) return;
+      e.stopPropagation();
+      showOpenDoor();
+      autoWalkToDoor();
     });
 
     // Initialize

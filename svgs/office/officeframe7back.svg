@@ -45,4 +45,20 @@
 <path d="M106.231 49.2244C106.378 49.0493 106.525 48.8742 106.939 48.398C107.353 47.9218 108.028 47.1498 108.455 46.6979C108.883 46.246 109.043 46.1376 109.283 46" stroke="black" stroke-linecap="round"/>
 <path d="M106.271 49.1184C106.497 49.4273 107.268 50.2713 107.87 50.7311C108.558 51.2556 109.176 51.6419 109.72 52.2028C109.842 52.3392 109.968 52.474 110.101 52.6134C110.235 52.7529 110.374 52.8931 110.55 53.172" stroke="black" stroke-linecap="round"/>
 <path d="M114.678 46.8694C114.284 46.8694 113.423 46.9839 112.662 47.5923C112.062 48.0714 111.787 48.5619 111.729 48.7599C111.7 48.8575 111.709 48.9579 111.746 49.0702C111.783 49.1826 111.858 49.306 112.008 49.401C112.737 49.8603 113.893 49.4043 115.018 49.2918C115.236 49.27 115.363 49.3657 115.484 49.4711C115.749 49.7011 115.909 50.1467 116.025 50.6627C116.142 51.1811 115.987 51.6448 115.83 51.9681C115.588 52.4697 115.071 52.6779 114.426 52.8937C113.576 52.9789 112.635 52.9337 112.4 52.8223C112.275 52.756 112.139 52.6699 111.837 52.3962" stroke="black" stroke-linecap="round"/>
+<text x="85" y="62" text-anchor="middle" font-family="'Georgia', serif" font-size="3.5" font-style="italic" fill="#666">Django, PostgreSQL, Javascript, CSS, HTML</text>
+<text x="85" y="72" text-anchor="middle" font-family="'Georgia', serif" font-size="4.8" font-weight="300" fill="#444" letter-spacing="0.15">
+<tspan x="85" dy="0">Full-stack CRM and booking</tspan>
+<tspan x="85" dy="5.8">platform built for a coliving space</tspan>
+<tspan x="85" dy="5.8">in Seoul, where I also lived and</tspan>
+<tspan x="85" dy="5.8">worked as project manager leading</tspan>
+<tspan x="85" dy="5.8">a team of 3. Engineered 25+</tspan>
+<tspan x="85" dy="5.8">Django models processing $70K+</tspan>
+<tspan x="85" dy="5.8">in bookings, a multi-tier pricing</tspan>
+<tspan x="85" dy="5.8">engine for 500+ day stays, and</tspan>
+<tspan x="85" dy="5.8">Python/SQL pipelines that cut</tspan>
+<tspan x="85" dy="5.8">admin workload by 50%. Also</tspan>
+<tspan x="85" dy="5.8">conducted coliver interviews and</tspan>
+<tspan x="85" dy="5.8">managed day-to-day operations</tspan>
+<tspan x="85" dy="5.8">on the ground.</tspan>
+</text>
 </svg>

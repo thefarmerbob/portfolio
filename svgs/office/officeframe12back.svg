@@ -29,4 +29,18 @@
 <path d="M113.415 45.1538C113.415 45.28 113.415 45.7938 113.456 46.7019C113.579 47.6174 113.797 48.5841 114.007 49.6256C114.085 50.1705 114.101 50.7484 114.157 51.3439" stroke="black" stroke-width="1.26" stroke-linecap="round"/>
 <path d="M113.569 45.2033C113.569 45.1277 113.755 44.8356 114.13 44.4364C114.694 43.8368 115.715 44.159 116.482 44.4798C116.943 44.6728 116.991 45.2753 117.079 45.7443C117.208 46.4366 117.024 47.036 116.755 47.3328C116.249 47.8902 115.353 47.8907 114.345 48.067C113.099 48.285 115.889 49.5418 116.466 50.1906C116.604 50.3684 116.746 50.5731 116.944 50.8117C117.141 51.0503 117.391 51.3166 117.846 51.91" stroke="black" stroke-width="1.26" stroke-linecap="round"/>
 <path d="M120.551 46.0486C120.24 46.1176 119.49 46.6417 118.982 47.4779C118.751 47.8579 118.732 48.2634 118.706 48.6632C118.671 49.2049 118.919 49.8228 119.331 50.3335C119.626 50.6981 120.054 50.8556 120.551 50.9978C121.138 51.166 121.643 50.9515 121.946 50.705C122.706 50.0864 123.065 49.1272 123.394 48.1688C123.586 47.6094 123.288 46.9456 123.006 46.4187C122.748 46.0779 122.476 45.8791 122.072 45.7675C121.814 45.7296 121.45 45.7296 120.706 45.9323" stroke="black" stroke-width="1.26" stroke-linecap="round"/>
+<text x="105" y="60" text-anchor="middle" font-family="'Georgia', serif" font-size="3.5" font-style="italic" fill="#666">PyTorch, SBERT, LIME, Spotify API, OpenAI API</text>
+<text x="105" y="69" text-anchor="middle" font-family="'Georgia', serif" font-size="3.8" font-weight="300" fill="#444" letter-spacing="0.15">
+<tspan x="105" dy="0">A nostalgia-driven music recommendation system</tspan>
+<tspan x="105" dy="5.5">that connects 309 handwritten journal entries with</tspan>
+<tspan x="105" dy="5.5">32K+ Spotify listening records to predict which song</tspan>
+<tspan x="105" dy="5.5">will transport me back to a specific moment in time.</tspan>
+<tspan x="105" dy="5.5">Fine-tuned SBERT and a custom VAE on triplet loss</tspan>
+<tspan x="105" dy="5.5">to learn "mood embeddings" that map what I was</tspan>
+<tspan x="105" dy="5.5">writing about to what I was obsessively replaying —</tspan>
+<tspan x="105" dy="5.5">achieving 77% triplet accuracy and 0.38 embedding</tspan>
+<tspan x="105" dy="5.5">separation. Uses LIME for interpretability to validate</tspan>
+<tspan x="105" dy="5.5">that the models latch onto meaningful words like</tspan>
+<tspan x="105" dy="5.5">"dumplings" and "coffee shop" rather than noise.</tspan>
+</text>
 </svg>

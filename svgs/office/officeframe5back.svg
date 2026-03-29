@@ -39,4 +39,13 @@
 <path d="M154.242 44.9469C154.262 44.9469 154.281 44.9469 154.538 44.9469C154.794 44.9469 155.287 44.9469 155.601 44.9256C155.914 44.9044 156.034 44.8618 156.221 44.818" stroke="black" stroke-linecap="round"/>
 <path d="M159.066 48.1137C159.066 48.0745 159.083 46.1612 159.19 43.0249C159.252 41.2281 159.698 40.5859 159.975 40.4182C160.149 40.3125 160.475 40.3465 160.703 40.3738C160.932 40.4011 161.075 40.4671 161.255 40.6863C161.704 41.2339 162.023 42.2826 162.303 43.7802C162.633 47.018 162.704 47.4335 162.743 47.7561C162.76 47.925 162.772 48.1046 162.785 48.2896" stroke="black" stroke-linecap="round"/>
 <path d="M159.764 44.5839H162.131" stroke="black" stroke-linecap="round"/>
+<text x="152" y="56" text-anchor="middle" font-family="'Georgia', serif" font-size="4" font-style="italic" fill="#666">Tensorflow, Pytorch, Scipy, XGBoost, Python, Matplotlib</text>
+<text x="152" y="65" text-anchor="middle" font-family="'Georgia', serif" font-size="3.8" fill="#444" letter-spacing="0.2">
+<tspan x="152" dy="0">AI/ML pipeline built in partnership with Blue Ocean Initiative that forecasts ocean</tspan>
+<tspan x="152" dy="6">microplastic concentrations using NASA CYGNSS satellite data. Combines XGBoost time-</tspan>
+<tspan x="152" dy="6">series forecasting, a spatiotemporal attention ConvLSTM for spatial prediction, and DBSCAN</tspan>
+<tspan x="152" dy="6">clustering to identify pollution hotspots — achieving 0.85+ SSIM and 0.006 MAE on 5-day</tspan>
+<tspan x="152" dy="6">Pacific forecasts across 2,490 NASA datasets. Designed to help cleanup organizations plan</tspan>
+<tspan x="152" dy="6">more efficient collection routes around Japan.</tspan>
+</text>
 </svg>

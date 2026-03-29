@@ -43,4 +43,15 @@
 <path d="M113.777 42.7473C113.779 42.7577 113.78 42.768 113.926 43.0356C114.072 43.3031 114.362 43.8275 114.607 44.2359C114.853 44.6444 115.045 44.921 115.155 45.0813C115.264 45.2416 115.285 45.2773 115.312 45.3251" stroke="black" stroke-width="0.948052" stroke-linecap="round"/>
 <path d="M115.312 45.3251C115.312 45.3149 115.388 45.2035 115.652 44.7733C115.847 44.4541 116.136 43.9106 116.333 43.5356C116.53 43.1606 116.618 42.9658 116.675 42.8447C116.733 42.7237 116.756 42.6823 116.78 42.6343" stroke="black" stroke-width="0.948052" stroke-linecap="round"/>
 <path d="M115.305 45.1887C115.305 45.1904 115.305 45.1921 115.334 45.635C115.362 46.0779 115.419 46.962 115.477 47.8728" stroke="black" stroke-width="0.948052" stroke-linecap="round"/>
+<text x="91" y="58" text-anchor="middle" font-family="'Georgia', serif" font-size="3.5" font-style="italic" fill="#666">OpenAI API, Python, Gradio, Vercel, Prompt Engineering</text>
+<text x="91" y="67" text-anchor="middle" font-family="'Georgia', serif" font-size="3.8" font-weight="300" fill="#444" letter-spacing="0.15">
+<tspan x="91" dy="0">Developed in collaboration with LATAM chapter,</tspan>
+<tspan x="91" dy="5.5">an NLP-powered system that automatically classifies</tspan>
+<tspan x="91" dy="5.5">South American legal and regulatory documents across</tspan>
+<tspan x="91" dy="5.5">10 countries. Led a team of 4 to design 26 LLM agent</tspan>
+<tspan x="91" dy="5.5">prompts that analyze document status and disposition</tspan>
+<tspan x="91" dy="5.5">— reducing analysis time from 2+ hours to 8 minutes</tspan>
+<tspan x="91" dy="5.5">per document. Includes PDF parsing, per-page evidence</tspan>
+<tspan x="91" dy="5.5">extraction, and batch spreadsheet export.</tspan>
+</text>
 </svg>

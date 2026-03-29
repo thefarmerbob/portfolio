@@ -11,6 +11,16 @@
       overflow: hidden;
       background: #8ba87a;
     }
+    body {
+      transition: filter 0.4s ease;
+    }
+    body.inverted {
+      filter: invert(1);
+    }
+    body.inverted #zoom-backdrop,
+    body.inverted #resume-backdrop {
+      background: rgba(255, 255, 255, 0.65);
+    }
 
     /* ====== SCROLL DRIVER ====== */
     #scroll-driver {
@@ -107,7 +117,33 @@
     .zoom-face.back {
       transform: rotateY(180deg);
     }
-
+    .zoom-buttons {
+      position: absolute;
+      bottom: 21%;
+      left: 50%;
+      transform: translateX(-80%);
+      display: flex;
+      gap: 1vw;
+      z-index: 10;
+      pointer-events: auto;
+    }
+    .zoom-buttons a {
+      display: block;
+      cursor: pointer;
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
+    .zoom-buttons a:hover {
+      transform: scale(1.08);
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+    }
+    .zoom-buttons a:active {
+      transform: scale(0.95);
+    }
+    .zoom-buttons a img {
+      height: 2.6vw;
+      width: auto;
+      display: block;
+    }
     /* ====== RESUME OVERLAY (IMPROVED) ====== */
     #resume-overlay {
       position: fixed; top: 0; left: 0;
@@ -343,7 +379,7 @@
       <div class="wall-item" style="left:27vw; top:15vw; width:14vw;">
         <img src="svgs/office/officeframe2.svg" alt="frame 2" />
       </div>
-      <div class="wall-item" style="left:46vw; top:-33vw; width:17vw;">
+      <div class="wall-item" id="office-lamp" style="left:46vw; top:-33vw; width:17vw; pointer-events:auto; cursor:pointer;">
         <img src="svgs/office/lamp.svg" alt="hanging lamp" />
       </div>
       <div class="wall-item clickable" id="resume-trigger" style="left:65vw; top:10vw; width:10vw;">
@@ -355,9 +391,7 @@
       <div class="wall-item" style="left:15vw; top:53vw; width:38vw;">
         <img src="svgs/office/PROJECTS.svg" alt="projects" />
       </div>
-      <div class="wall-item" style="left:58vw; top:50vw; width:9vw;">
-        <img src="svgs/office/officestickienote.svg" alt="office sticker note" />
-      </div>
+
       <div class="wall-item flippable" style="left:2vw; top:65vw; width:36vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="svgs/office/officeframe5.svg" alt="frame 5" /></div>
@@ -409,6 +443,9 @@
       <div id="wall-door">
         <img id="door1" src="svgs/office/door1.svg" alt="closed door" />
         <img id="door2-p2" src="svgs/office/door2-p2.svg" alt="open door back" style="display:none;" />
+      </div>
+      <div id="wall-door-text" style="position:absolute; left:25vw; width:14vw; z-index:11; pointer-events:none;">
+        <img src="svgs/gallery-objects/gallery-home-text.svg" alt="click to go back" style="width:100%; height:auto; display:block;" />
       </div>
       <div id="wall-floor-line"></div>
       <div id="wall-floor"></div>
@@ -557,6 +594,10 @@
       const doorH = vh * 0.5;
       doorEl.style.height = doorH + 'px';
       doorEl.style.top = (floorTop - doorH) + 'px';
+
+      // Position door text next to door
+      const doorText = document.getElementById('wall-door-text');
+      doorText.style.top = (floorTop - doorH * 0.7) + 'px';
     }
 
     function applyFromInput() {
@@ -899,6 +940,44 @@
     let zoomedIn = false;
     let flipTimer = null;
 
+    const frameButtons = {
+      'officeframe5back': {
+        project: 'https://drive.google.com/drive/folders/1vk_DT_p7rFQZBBHtEuTzWQ314RAnSs8W?usp=sharing',
+        code: 'https://github.com/thefarmerbob/Microplastic-Prediction.git',
+        buttonBottom: '25%'
+      },
+      'officeframe7back': {
+        code: 'https://github.com/thefarmerbob/sncrmt3web.git',
+        buttonBottom: '21%'
+      },
+      'officeframe8back': {
+        project: 'https://ai-taxonomy-dnyq.vercel.app/',
+        code: 'https://github.com/thefarmerbob/AI-Taxonomy.git',
+        buttonBottom: '25%'
+      },
+      'officeframe9back': {
+        code: 'https://github.com/thefarmerbob/OpenMLC-Matlab-2.git',
+        buttonBottom: '25%'
+      },
+      'officeframe10back': {
+        project: 'pants.html',
+        buttonBottom: '35%',
+        buttonTransformX: '-120%'
+      },
+      'officeframe12back': {
+        project: 'chihiro.html',
+        code: 'https://github.com/thefarmerbob/chihiro.git',
+        buttonBottom: '21%'
+      }
+    };
+
+    function getButtonsForBack(backSrc) {
+      for (const key in frameButtons) {
+        if (backSrc.includes(key)) return frameButtons[key];
+      }
+      return null;
+    }
+
     function openZoom(item) {
       if (zoomedIn) return;
       zoomedIn = true;
@@ -908,11 +987,21 @@
       const frontSrc = item.querySelector('.flip-front img').src;
       const backSrc  = item.querySelector('.flip-back img').src;
 
+      const buttons = getButtonsForBack(backSrc);
+      let buttonsHTML = '';
+      if (buttons) {
+        const btnBottom = buttons.buttonBottom || '21%';
+        buttonsHTML = '<div class="zoom-buttons" style="bottom:' + btnBottom + '">';
+        if (buttons.project) buttonsHTML += '<a href="' + buttons.project + '" target="_blank" rel="noopener"><img src="svgs/office/view-project-button.svg" alt="view project" /></a>';
+        if (buttons.code) buttonsHTML += '<a href="' + buttons.code + '" target="_blank" rel="noopener"><img src="svgs/office/view-code-button.svg" alt="view code" /></a>';
+        buttonsHTML += '</div>';
+      }
+
       zoomFrame.className = '';
       zoomFrame.innerHTML =
         '<div class="zoom-flip-inner">' +
           '<div class="zoom-face front"><img src="' + frontSrc + '" alt="front" /></div>' +
-          '<div class="zoom-face back"><img src="' + backSrc + '" alt="back" /></div>' +
+          '<div class="zoom-face back"><img src="' + backSrc + '" alt="back" />' + buttonsHTML + '</div>' +
         '</div>';
 
       zoomFrame.style.left   = rect.left   + 'px';
@@ -953,7 +1042,10 @@
     }
 
     zoomBackdrop.addEventListener('click', closeZoom);
-    zoomFrame.addEventListener('click', closeZoom);
+    zoomFrame.addEventListener('click', (e) => {
+      if (e.target.closest('.zoom-buttons')) return;
+      closeZoom();
+    });
 
     /* ============================================================
        CLICK DETECTION
@@ -966,6 +1058,10 @@
 
     document.getElementById('resume-trigger').addEventListener('click', (e) => {
       if (!zoomedIn) openResume();
+    });
+
+    document.getElementById('office-lamp').addEventListener('click', () => {
+      document.body.classList.toggle('inverted');
     });
 
     doorEl.addEventListener('click', () => {
