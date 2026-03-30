@@ -150,17 +150,17 @@
       bottom: 0;
       left: 0;
       width: 100%;
-      height: 8vh;
+      height: 5vw;
       background: #ffffff;
       z-index: 0;
       pointer-events: none;
     }
     #floor-line {
       position: fixed;
-      bottom: 8vh;
+      bottom: 5vw;
       left: 0;
       width: 100%;
-      height: 0.6vh;
+      height: 0.3vw;
       background: rgb(0, 0, 0);
       z-index: 0;
       pointer-events: none;
@@ -272,7 +272,6 @@
 
   <script>
     const BASE_VW = 1920;
-    const BASE_VH = 900;
 
     const frameLayout = [
       { id: 1,  x: 370,   y: 20,  w: 250, h: 250 },
@@ -320,7 +319,7 @@
 
     function buildWall() {
       wallEl.innerHTML = '';
-      const s = Math.min(window.innerWidth / BASE_VW, window.innerHeight / BASE_VH);
+      const s = window.innerWidth / BASE_VW;
       const wallWidth = WALL_BASE_WIDTH * s;
       wallEl.style.width = wallWidth + 'px';
 
@@ -373,23 +372,13 @@
       const doorX = 9550;
       const doorH = 500;
       doorDiv.style.left = (doorX * s) + 'px';
-      doorDiv.style.bottom = '9.7vh';
+      doorDiv.style.bottom = (115 * s) + 'px';
       doorDiv.style.height = (doorH * s) + 'px';
       doorDiv.innerHTML = `
         <img id="gallery-door1" src="svgs/office/door1.svg" alt="closed door" />
         <img id="gallery-door2-p2" src="svgs/office/door2-p2.svg" alt="open door back" style="display:none;" />
       `;
       wallEl.appendChild(doorDiv);
-
-      // Gallery polaroid above door
-      const polaroid = document.createElement('div');
-      polaroid.id = 'gallery-polaroid';
-      polaroid.style.left = ((doorX - 30) * s) + 'px';
-      polaroid.style.bottom = 'calc(8vh + ' + (doorH * s) + 'px + 4vh)';
-      polaroid.style.width = (350 * s) + 'px';
-      polaroid.style.height = (350 * s) + 'px';
-      polaroid.innerHTML = '<img src="svgs/gallery-objects/gallery-polaroid.svg" alt="gallery polaroid" />';
-      wallEl.appendChild(polaroid);
 
       // Gallery text to the right of door
       const galleryText = document.createElement('div');
@@ -411,7 +400,7 @@
     let charWidth = 0;
 
     function sizeCharacter() {
-      const s = Math.min(window.innerWidth / BASE_VW, window.innerHeight / BASE_VH);
+      const s = window.innerWidth / BASE_VW;
       charWidth = 80 * s;
       charEl.style.width = charWidth + 'px';
       charEl.style.height = (130 * s) + 'px';
@@ -458,7 +447,7 @@
     }
 
     function buildOverlay() {
-      const s = Math.min(window.innerWidth / BASE_VW, window.innerHeight / BASE_VH);
+      const s = window.innerWidth / BASE_VW;
       lampPlantOverlay.innerHTML = '';
 
       const oLamp = document.createElement('div');
@@ -795,7 +784,7 @@
       setTimeout(() => {
         hideOpenDoor();
         setTimeout(() => {
-          window.location.href = 'office.html';
+          window.location.href = 'home.html';
         }, 200);
       }, 450);
     }

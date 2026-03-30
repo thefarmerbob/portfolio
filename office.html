@@ -57,6 +57,7 @@
       transform: scale(1.015);
     }
 
+
     .flip-container { position: relative; width: 100%; }
     .flip-front { position: relative; }
     .flip-front img { display: block; width: 100%; height: auto; }
@@ -104,6 +105,9 @@
     .zoom-flip-inner.flipped {
       transform: rotateY(180deg);
     }
+    .zoom-flip-inner.flipped .zoom-face.front {
+      pointer-events: none;
+    }
     .zoom-face {
       position: absolute; top: 0; left: 0;
       width: 100%; height: 100%;
@@ -111,17 +115,20 @@
       -webkit-backface-visibility: hidden;
     }
     .zoom-face img {
+      position: relative;
+      z-index: 1;
       width: 100%; height: 100%;
       object-fit: contain; display: block;
     }
     .zoom-face.back {
       transform: rotateY(180deg);
+      pointer-events: auto;
     }
     .zoom-buttons {
       position: absolute;
       bottom: 21%;
       left: 50%;
-      transform: translateX(-80%);
+      transform: translateX(-50%);
       display: flex;
       gap: 1vw;
       z-index: 10;
@@ -144,6 +151,32 @@
       width: auto;
       display: block;
     }
+    .contact-links {
+      position: absolute;
+      top: 52%;
+      left: 50%;
+      transform: translate(-50%, 0);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5vh 3vh;
+      z-index: 9999;
+      pointer-events: auto;
+    }
+    .contact-links a {
+      color: #3d3d3d;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 2.4vh;
+      font-weight: normal;
+      text-decoration: underline;
+      text-align: center;
+      padding: 0.6vh 1.5vh;
+      transition: color 0.2s;
+      cursor: pointer;
+    }
+    .contact-links a:hover {
+      color: #8ba87a;
+    }
+
     /* ====== RESUME OVERLAY (IMPROVED) ====== */
     #resume-overlay {
       position: fixed; top: 0; left: 0;
@@ -276,7 +309,7 @@
     #wall-floor {
       position: absolute;
       left: 0; width: 100%;
-      height: 500px;
+      height: 50vw;
       background: #ffffff;
       pointer-events: none;
       z-index: 9;
@@ -297,8 +330,8 @@
       width: 100%; height: 100%;
       object-fit: contain; display: block;
     }
-    #wall-door #door1 { bottom: -1.5vw; }
-    #wall-door #door2-p2 { bottom: -0.5vw; left: 6vw; width: 93.5%; height: 93.5%; }
+    #wall-door #door1 { bottom: -2.9vw; }
+    #wall-door #door2-p2 { bottom: -0.2vw; left: 7vw; width: 83%; height: 78%; }
 
     /* Door front panel overlay — fixed, above character */
     #door-front-overlay {
@@ -321,7 +354,6 @@
     #character .climb-frame {
       position: absolute; top: 0; left: 25%;
       width: 55%; height: auto;
-      transition: opacity 0.05s ease;
     }
     #character #frameStand {
       width: 32%;
@@ -338,7 +370,6 @@
       width: 250%; height: 250%;
       object-fit: contain;
       opacity: 0;
-      transition: opacity 0.05s ease;
     }
     #character .walk-frame.visible { opacity: 1; }
 
@@ -346,7 +377,7 @@
     #character.walking {
       right: auto;
       top: auto !important;
-      bottom: 10%;
+      bottom: 11%;
     }
     #character.walking .climb-frame { display: none; }
 
@@ -359,85 +390,101 @@
   </style>
 </head>
 <body>
-
   <div id="scroll-driver"><div id="scroll-content"></div></div>
 
   <div id="scene">
     <div id="wall">
-      <div class="wall-item" style="left:5vw; top:34vw; width:15vw;">
+      <div class="wall-item" style="left:5vw; top:9vw; width:28vw;">
+        <img src="svgs/office/ABOUT.svg" alt="about" />
+      </div>
+      <div class="wall-item" style="left:5vw; top:42vw; width:13vw;">
         <img src="svgs/office/contactdetails.svg" alt="contact details" />
       </div>
-      <div class="wall-item" style="left:49vw; top:19vw; width:12vw;">
+      <div class="wall-item" style="left:52vw; top:24vw; width:12vw;">
         <img src="svgs/office/btwheresmyresume.svg" alt="here's my resume?" />
       </div>
-      <div class="wall-item flippable" style="left:5vw; top:11vw; width:17vw;">
+      <div class="wall-item flippable" style="left:5vw; top:19vw; width:17vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="svgs/office/officeframe1.svg" alt="frame 1" /></div>
-          <div class="flip-back"><img src="svgs/office/officeframe1back.svg" alt="frame 1 back" /></div>
+          <div class="flip-back">
+            <img src="svgs/office/officeframe1back.svg" alt="frame 1 back" />
+            <div class="contact-links">
+              <a href="https://www.linkedin.com/in/maraidumitru" target="_blank" rel="noopener">linkedin</a>
+              <a href="https://github.com/thefarmerbob" target="_blank" rel="noopener">github</a>
+              <a href="mailto:mara@uni.minerva.edu">email</a>
+              <a href="https://medium.com/@MaraDumitru" target="_blank" rel="noopener">medium</a>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="wall-item" style="left:27vw; top:15vw; width:14vw;">
+      <div class="wall-item" style="left:27vw; top:23vw; width:14vw;">
         <img src="svgs/office/officeframe2.svg" alt="frame 2" />
       </div>
-      <div class="wall-item" id="office-lamp" style="left:46vw; top:-33vw; width:17vw; pointer-events:auto; cursor:pointer;">
+      <div class="wall-item" id="office-lamp" style="left:46vw; top:-32vw; width:17vw; pointer-events:auto; cursor:pointer;">
         <img src="svgs/office/lamp.svg" alt="hanging lamp" />
       </div>
-      <div class="wall-item clickable" id="resume-trigger" style="left:65vw; top:10vw; width:10vw;">
+      <div class="wall-item clickable" id="resume-trigger" style="left:65vw; top:18vw; width:10vw;">
         <img src="svgs/office/officeframe3.svg" alt="frame 3" />
       </div>
-      <div class="wall-item" style="left:27vw; top:32vw; width:34vw;">
+      <div class="wall-item" style="left:27vw; top:40vw; width:34vw;">
         <img src="svgs/office/officeframe4.svg" alt="frame 4" />
       </div>
-      <div class="wall-item" style="left:15vw; top:53vw; width:38vw;">
+      <div class="wall-item" style="left:5vw; top:61vw; width:38vw;">
         <img src="svgs/office/PROJECTS.svg" alt="projects" />
       </div>
 
-      <div class="wall-item flippable" style="left:2vw; top:65vw; width:36vw;">
+      <div class="wall-item flippable" style="left:4vw; top:73vw; width:36vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="svgs/office/officeframe5.svg" alt="frame 5" /></div>
           <div class="flip-back"><img src="svgs/office/officeframe5back.svg" alt="frame 5 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left:60vw; top:65vw; width:18vw;">
+      <div class="wall-item flippable" style="left:60vw; top:73vw; width:18vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="svgs/office/officeframe7.svg" alt="frame 7" /></div>
           <div class="flip-back"><img src="svgs/office/officeframe7back.svg" alt="frame 7 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left:6vw; top:84vw; width:24vw;">
+      <div class="wall-item flippable" style="left:6vw; top:92vw; width:24vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="svgs/office/officeframe9.svg" alt="frame 9" /></div>
           <div class="flip-back"><img src="svgs/office/officeframe9back.svg" alt="frame 9 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left:62vw; top:108vw; width:16vw;">
+      <div class="wall-item flippable" style="left:62vw; top:116vw; width:16vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="svgs/office/officeframe6.svg" alt="frame 6" /></div>
           <div class="flip-back"><img src="svgs/office/officeframe6back.svg" alt="frame 6 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left:39vw; top:78vw; width:18vw;">
+      <div class="wall-item flippable" style="left:39vw; top:86vw; width:18vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="svgs/office/officeframe11.svg" alt="frame 11" /></div>
           <div class="flip-back"><img src="svgs/office/officeframe11back.svg" alt="frame 11 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left:34vw; top:98vw; width:27vw;">
+      <div class="wall-item flippable" style="left:34vw; top:106vw; width:27vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="svgs/office/officeframe10.svg" alt="frame 10" /></div>
           <div class="flip-back"><img src="svgs/office/officeframe10back.svg" alt="frame 10 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left:12vw; top:105vw; width:18vw;">
+      <div class="wall-item flippable" style="left:12vw; top:113vw; width:18vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="svgs/office/officeframe8.svg" alt="frame 8" /></div>
           <div class="flip-back"><img src="svgs/office/officeframe8back.svg" alt="frame 8 back" /></div>
         </div>
       </div>
-      <div class="wall-item flippable" style="left:62vw; top:88vw; width:18vw;">
+      <div class="wall-item flippable" style="left:62vw; top:96vw; width:18vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="svgs/office/officeframe12.svg" alt="frame 12" /></div>
           <div class="flip-back"><img src="svgs/office/officeframe12back.svg" alt="frame 12 back" /></div>
+        </div>
+      </div>
+      <div class="wall-item flippable" style="left:37vw; top:122vw; width:22vw;">
+        <div class="flip-container">
+          <div class="flip-front"><img src="svgs/office/officeframe13.svg" alt="frame 13" /></div>
+          <div class="flip-back"><img src="svgs/office/officeframe13back.svg" alt="frame 13 back" /></div>
         </div>
       </div>
       <div id="wall-door">
@@ -464,6 +511,11 @@
       <img id="walkL3" class="walk-frame" src="svgs/gallery-character/walkleft3.svg" alt="walk left 3" />
       <img id="walkL4" class="walk-frame" src="svgs/gallery-character/walkleft4.svg" alt="walk left 4" />
       <img id="idleLeft" class="walk-frame" src="svgs/gallery-character/idleleft.svg" alt="idle left" />
+      <img id="walkR1" class="walk-frame" src="svgs/gallery-character/walkright1.svg" alt="walk right 1" />
+      <img id="walkR2" class="walk-frame" src="svgs/gallery-character/walkright2.svg" alt="walk right 2" />
+      <img id="walkR3" class="walk-frame" src="svgs/gallery-character/walkright3.svg" alt="walk right 3" />
+      <img id="walkR4" class="walk-frame" src="svgs/gallery-character/walkright4.svg" alt="walk right 4" />
+      <img id="idleRight" class="walk-frame" src="svgs/gallery-character/idleright.svg" alt="idle right" />
     </div>
   </div>
 
@@ -517,7 +569,7 @@
     /* ============================================================
        CHARACTER CLIMBING SYSTEM — LINEAR PROGRESS
        ============================================================ */
-    const CHAR_START_TOP_FRAC = 0.12;
+    const CHAR_START_TOP_FRAC = 0.16;
     const FRAME_STEP = 140;
 
     let totalInput = 0;        // accumulated scroll input (0 … totalRange)
@@ -565,7 +617,7 @@
       const startY = vh * CHAR_START_TOP_FRAC;
 
       // We need enough wall scroll to show all content
-      const contentBottom = 135 * vw;  // approx lowest wall item
+      const contentBottom = 140 * vw;  // approx lowest wall item
       const contentWO = Math.max(0, contentBottom - vh);
 
       // At end: ladder bottom on screen should be above the floor (floor = bottom 8%)
@@ -586,12 +638,13 @@
       // When fully scrolled (wallOffset = maxWO), floor screen Y = floorTop - maxWO
       // We want that to be at ~vh * 0.92 (8% from bottom)
       const vh = window.innerHeight;
-      const floorTop = layout.maxWO + vh * 0.92;
+      const floorTop = layout.maxWO + Math.min(vh * 0.92, layout.contentBottom + 10 * (window.innerWidth / 100));
       wallFloorLine.style.top = floorTop + 'px';
       wallFloor.style.top = (floorTop + 4) + 'px';
 
-      // Position door above the floor line
-      const doorH = vh * 0.5;
+      // Position door above the floor line (use vw-based height for consistency)
+      const vwPx = window.innerWidth / 100;
+      const doorH = 30 * vwPx;
       doorEl.style.height = doorH + 'px';
       doorEl.style.top = (floorTop - doorH) + 'px';
 
@@ -692,8 +745,15 @@
       document.getElementById('walkL3'),
       document.getElementById('walkL4'),
     ];
+    const walkRightFrames = [
+      document.getElementById('walkR1'),
+      document.getElementById('walkR2'),
+      document.getElementById('walkR3'),
+      document.getElementById('walkR4'),
+    ];
     const idleLeftEl = document.getElementById('idleLeft');
-    const allWalkFrames = [...walkLeftFrames, idleLeftEl];
+    const idleRightEl = document.getElementById('idleRight');
+    const allWalkFrames = [...walkLeftFrames, ...walkRightFrames, idleLeftEl, idleRightEl];
     const doorEl   = document.getElementById('wall-door');
     const door1Img = document.getElementById('door1');
     const door2P2  = document.getElementById('door2-p2');
@@ -710,8 +770,8 @@
     let walkAccDelta = 0;
 
     function getWalkCharSize() {
-      const s = Math.min(window.innerWidth, window.innerHeight) / 1045;
-      return { w: 80 * s, h: 130 * s };
+      const vw = window.innerWidth / 100;
+      return { w: 5.5 * vw, h: 9 * vw };
     }
 
     function getLadderLeftX() {
@@ -773,6 +833,13 @@
       walkIdleTimeout = setTimeout(showWalkIdle, WALK_IDLE_DELAY);
     }
 
+    function advanceWalkRightFrame() {
+      walkFrameIndex = (walkFrameIndex + 1) % 4;
+      showWalkFrame(walkRightFrames[walkFrameIndex]);
+      clearTimeout(walkIdleTimeout);
+      walkIdleTimeout = setTimeout(showWalkIdle, WALK_IDLE_DELAY);
+    }
+
     function getDoorCenterX() {
       const vw = window.innerWidth / 100;
       return 8 * vw + doorEl.offsetWidth * 0.5;
@@ -786,9 +853,8 @@
       const rect = doorEl.getBoundingClientRect();
       const vw = window.innerWidth / 100;
       doorFrontOverlay.style.left = (rect.left - 0.4 * vw) + 'px';
-      doorFrontOverlay.style.top = (rect.top - 0.1 * vw) + 'px';
-      doorFrontOverlay.style.width = (rect.width * 1.086) + 'px';
-      doorFrontOverlay.style.height = (rect.height * 1.086) + 'px';
+      doorFrontOverlay.style.top = (rect.top + 2.7 * vw) + 'px';      doorFrontOverlay.style.width = (rect.width * 1.02) + 'px';
+      doorFrontOverlay.style.height = (rect.height * 1.02) + 'px';
       doorFrontOverlay.style.display = 'block';
     }
 
@@ -815,7 +881,7 @@
       setTimeout(() => {
         hideOpenDoor();
         setTimeout(() => {
-          window.location.href = 'gallery.html';
+          window.location.href = 'home.html';
         }, 150);
       }, 200);
     }
@@ -825,7 +891,9 @@
 
       // delta > 0 means scroll down = walk left
       if (delta > 0) {
-        walkX = Math.max(-getWalkCharSize().w, walkX - delta);
+        const sz = getWalkCharSize();
+        const minX = getDoorCenterX() + sz.w * -3.8;
+        walkX = Math.max(minX, walkX - delta);
         walkXFrac = walkX / window.innerWidth;
         charEl.style.left = walkX + 'px';
 
@@ -835,12 +903,6 @@
           walkAccDelta %= WALK_FRAME_STEP;
         }
 
-        // Check if character reached the door
-        const sz = getWalkCharSize();
-        const doorCX = getDoorCenterX();
-        if (walkX + sz.w / 2 <= doorCX + sz.w * 0.3) {
-          triggerDoorSequence();
-        }
       } else {
         // Scrolling up = walk right, back toward ladder
         const sz = getWalkCharSize();
@@ -946,6 +1008,11 @@
         code: 'https://github.com/thefarmerbob/Microplastic-Prediction.git',
         buttonBottom: '25%'
       },
+      'officeframe6back': {
+        project: 'https://hermex-frontend.vercel.app/',
+        code: 'https://github.com/Ahm3dGI1/hermex.git',
+        buttonBottom: '28%'
+      },
       'officeframe7back': {
         code: 'https://github.com/thefarmerbob/sncrmt3web.git',
         buttonBottom: '21%'
@@ -962,7 +1029,7 @@
       'officeframe10back': {
         project: 'pants.html',
         buttonBottom: '35%',
-        buttonTransformX: '-120%'
+        buttonLeft: '43%'
       },
       'officeframe12back': {
         project: 'chihiro.html',
@@ -991,17 +1058,26 @@
       let buttonsHTML = '';
       if (buttons) {
         const btnBottom = buttons.buttonBottom || '21%';
-        buttonsHTML = '<div class="zoom-buttons" style="bottom:' + btnBottom + '">';
-        if (buttons.project) buttonsHTML += '<a href="' + buttons.project + '" target="_blank" rel="noopener"><img src="svgs/office/view-project-button.svg" alt="view project" /></a>';
+        const btnLeft = buttons.buttonLeft ? ';left:' + buttons.buttonLeft : '';
+        buttonsHTML = '<div class="zoom-buttons" style="bottom:' + btnBottom + btnLeft + '">';
+        if (buttons.project) {
+          const projTarget = buttons.project.endsWith('.html') ? '' : ' target="_blank" rel="noopener"';
+          buttonsHTML += '<a href="' + buttons.project + '"' + projTarget + '><img src="svgs/office/view-project-button.svg" alt="view project" /></a>';
+        }
         if (buttons.code) buttonsHTML += '<a href="' + buttons.code + '" target="_blank" rel="noopener"><img src="svgs/office/view-code-button.svg" alt="view code" /></a>';
         buttonsHTML += '</div>';
       }
+
+      // Check for extra content in the flip-back (e.g. contact links)
+      const flipBack = item.querySelector('.flip-back');
+      const extraContent = flipBack.querySelector('.contact-links');
+      const extraHTML = extraContent ? extraContent.outerHTML : '';
 
       zoomFrame.className = '';
       zoomFrame.innerHTML =
         '<div class="zoom-flip-inner">' +
           '<div class="zoom-face front"><img src="' + frontSrc + '" alt="front" /></div>' +
-          '<div class="zoom-face back"><img src="' + backSrc + '" alt="back" />' + buttonsHTML + '</div>' +
+          '<div class="zoom-face back"><img src="' + backSrc + '" alt="back" />' + extraHTML + buttonsHTML + '</div>' +
         '</div>';
 
       zoomFrame.style.left   = rect.left   + 'px';
@@ -1043,8 +1119,28 @@
 
     zoomBackdrop.addEventListener('click', closeZoom);
     zoomFrame.addEventListener('click', (e) => {
-      if (e.target.closest('.zoom-buttons')) return;
+      if (e.target.closest('.zoom-buttons') || e.target.closest('.contact-links')) return;
+      if (e.target.tagName === 'A') return;
       closeZoom();
+    });
+    // Prevent contact link clicks from bubbling up and closing zoom
+    zoomFrame.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.contact-links')) e.stopPropagation();
+    });
+
+    window.addEventListener('resize', () => {
+      if (!zoomedIn) return;
+      const maxW = window.innerWidth * 0.75;
+      const maxH = window.innerHeight * 0.80;
+      const nat = zoomFrame.querySelector('.zoom-face img');
+      if (!nat) return;
+      const r = nat.naturalWidth / nat.naturalHeight;
+      let tw = maxW, th = tw / r;
+      if (th > maxH) { th = maxH; tw = th * r; }
+      zoomFrame.style.left   = ((window.innerWidth  - tw) / 2) + 'px';
+      zoomFrame.style.top    = ((window.innerHeight - th) / 2) + 'px';
+      zoomFrame.style.width  = tw + 'px';
+      zoomFrame.style.height = th + 'px';
     });
 
     /* ============================================================
@@ -1064,14 +1160,14 @@
       document.body.classList.toggle('inverted');
     });
 
+
     doorEl.addEventListener('click', () => {
       if (enteringDoor) return;
-      // Open door immediately on click
-      showOpenDoor();
 
       if (mode === 'walk') {
         autoWalkToDoor();
       } else if (mode === 'climb') {
+        showOpenDoor();
         autoGoToDoor();
       }
     });
@@ -1101,29 +1197,59 @@
     function autoWalkToDoor() {
       enteringDoor = true;
       const walkSpeed = 8;
-      const fastFrameStep = 40;  // faster frame cycling
+      const fastFrameStep = 40;
       const doorCX = getDoorCenterX();
       const sz = getWalkCharSize();
       const targetX = doorCX + sz.w * 0.3;
       let autoWalkAcc = 0;
 
-      function walkStep() {
-        if (walkX <= targetX) {
-          triggerDoorSequence();
-          return;
-        }
-        walkX -= walkSpeed;
-        walkXFrac = walkX / window.innerWidth;
-        charEl.style.left = walkX + 'px';
+      function walkLeftIntoDoor() {
+        autoWalkAcc = 0;
+        showOpenDoor();
+        function step() {
+          if (walkX <= targetX) {
+            triggerDoorSequence();
+            return;
+          }
+          walkX -= walkSpeed;
+          walkXFrac = walkX / window.innerWidth;
+          charEl.style.left = walkX + 'px';
 
-        autoWalkAcc += walkSpeed;
-        if (autoWalkAcc >= fastFrameStep) {
-          advanceWalkLeftFrame();
-          autoWalkAcc %= fastFrameStep;
+          autoWalkAcc += walkSpeed;
+          if (autoWalkAcc >= fastFrameStep) {
+            advanceWalkLeftFrame();
+            autoWalkAcc %= fastFrameStep;
+          }
+          requestAnimationFrame(step);
         }
-        requestAnimationFrame(walkStep);
+        step();
       }
-      walkStep();
+
+      if (walkX > targetX) {
+        // Character is to the right of the door — open door, walk left in
+        walkLeftIntoDoor();
+      } else {
+        // Character is to the left — walk right past the door, then turn around
+        const overshootX = targetX + sz.w * 3;
+        function walkRightStep() {
+          if (walkX >= overshootX) {
+            // Reached overshoot — now turn around and walk left into door
+            walkLeftIntoDoor();
+            return;
+          }
+          walkX += walkSpeed;
+          walkXFrac = walkX / window.innerWidth;
+          charEl.style.left = walkX + 'px';
+
+          autoWalkAcc += walkSpeed;
+          if (autoWalkAcc >= fastFrameStep) {
+            advanceWalkRightFrame();
+            autoWalkAcc %= fastFrameStep;
+          }
+          requestAnimationFrame(walkRightStep);
+        }
+        walkRightStep();
+      }
     }
 
     /* ============================================================

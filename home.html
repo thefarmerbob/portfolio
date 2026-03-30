@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #8ba87a;
+      overflow: hidden;
+    }
+    #home-container {
+      position: relative;
+      width: 100%; height: 100%;
+    }
+    #plant-wrap {
+      position: absolute;
+      left: 65%;
+      bottom: 3.8vw;
+      transform: translateX(-30%) rotate(-1deg);
+      width: 38vw;
+      z-index: 1;
+    }
+    #home-img, .home-overlay {
+      width: 100%;
+      display: block;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+    .home-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    /* Clickable hotspots positioned relative to plant-wrap */
+    #hotspot-wrap {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+    .hotspot {
+      position: absolute;
+      cursor: pointer;
+      background: transparent;
+    }
+    /* Office hotspot — right side of the pot */
+    #hotspot-office {
+      right: 21%;
+      top: 54.5%;
+      width: 17.5%;
+      height: 19.3%;
+      clip-path: polygon(45% 0%, 100% 0%, 100% 100%, 15% 100%, 0% 80%, 0% 45%);
+    }
+    /* Gallery hotspot — bottom center of the pot */
+    #hotspot-gallery {
+      left: 37.5%;
+      bottom: 11%;
+      width: 18%;
+      height: 12.5%;
+      clip-path: polygon(0% 0%, 85% 0%, 100% 15%, 100% 100%, 0% 100%);
+    }
+
+    /* White floor */
+    #floor {
+      position: fixed;
+      bottom: 0; left: 0;
+      width: 100%;
+      height: 5vw;
+      background: #ffffff;
+      z-index: 0;
+    }
+    #floor-line {
+      position: fixed;
+      bottom: 5vw;
+      left: 0;
+      width: 100%;
+      height: 0.15vw;
+      background: rgb(0, 0, 0);
+      z-index: 0;
+    }
+
+    /* Walking character */
+    #home-char {
+      position: fixed;
+      bottom: 4.5vw;
+      z-index: 2;
+      width: 4.01vw;
+      height: 6.31vw;
+    }
+    #home-char img {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: contain;
+      opacity: 0;
+    }
+    #home-char img.active {
+      opacity: 1;
+    }
+
+    /* Circle iris wipe */
+    #iris-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      pointer-events: none;
+      z-index: 1000;
+      opacity: 0;
+    }
+    #iris-overlay.active {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="iris-overlay"></canvas>
+  <div id="home-container">
+    <div id="plant-wrap">
+      <img id="home-img" src="svgs/home/home1.svg" alt="home" />
+      <img id="overlay-office" class="home-overlay" src="svgs/home/home2.svg" alt="" />
+      <img id="overlay-gallery" class="home-overlay" src="svgs/home/home3.svg" alt="" />
+      <div id="hotspot-wrap">
+        <div class="hotspot" id="hotspot-office"></div>
+        <div class="hotspot" id="hotspot-gallery"></div>
+      </div>
+    </div>
+  </div>
+  <div id="home-char">
+    <img src="svgs/gallery-character/walkright1.svg" data-dir="right" data-frame="1" />
+    <img src="svgs/gallery-character/walkright2.svg" data-dir="right" data-frame="2" />
+    <img src="svgs/gallery-character/walkright3.svg" data-dir="right" data-frame="3" />
+    <img src="svgs/gallery-character/walkright4.svg" data-dir="right" data-frame="4" />
+    <img src="svgs/gallery-character/walkleft1.svg" data-dir="left" data-frame="1" />
+    <img src="svgs/gallery-character/walkleft2.svg" data-dir="left" data-frame="2" />
+    <img src="svgs/gallery-character/walkleft3.svg" data-dir="left" data-frame="3" />
+    <img src="svgs/gallery-character/walkleft4.svg" data-dir="left" data-frame="4" />
+    <img src="svgs/gallery-character/idleright.svg" class="active" data-idle="right" />
+    <img src="svgs/gallery-character/idleleft.svg" data-idle="left" />
+  </div>
+  <div id="floor-line"></div>
+  <div id="floor"></div>
+
+  <script>
+    const img = document.getElementById('home-img');
+    const overlayOffice = document.getElementById('overlay-office');
+    const overlayGallery = document.getElementById('overlay-gallery');
+    let transitioning = false;
+
+    const hotspotOffice = document.getElementById('hotspot-office');
+    const hotspotGallery = document.getElementById('hotspot-gallery');
+
+    hotspotOffice.addEventListener('mouseenter', () => {
+      if (!transitioning) overlayOffice.style.opacity = '0.5';
+    });
+    hotspotOffice.addEventListener('mouseleave', () => {
+      if (!transitioning) overlayOffice.style.opacity = '0';
+    });
+
+    hotspotGallery.addEventListener('mouseenter', () => {
+      if (!transitioning) overlayGallery.style.opacity = '0.5';
+    });
+    hotspotGallery.addEventListener('mouseleave', () => {
+      if (!transitioning) overlayGallery.style.opacity = '0';
+    });
+
+    const irisCanvas = document.getElementById('iris-overlay');
+    const irisCtx = irisCanvas.getContext('2d');
+
+    function irisTransition(hotspotEl, url, overlay) {
+      if (transitioning) return;
+      transitioning = true;
+      overlay.style.opacity = '1';
+
+      const rect = hotspotEl.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      irisCanvas.width = w;
+      irisCanvas.height = h;
+      irisCanvas.classList.add('active');
+
+      const maxR = Math.sqrt(Math.max(
+        cx * cx + cy * cy,
+        (w - cx) * (w - cx) + cy * cy,
+        cx * cx + (h - cy) * (h - cy),
+        (w - cx) * (w - cx) + (h - cy) * (h - cy)
+      ));
+
+      const duration = 1000;
+      const start = performance.now();
+
+      function draw(now) {
+        const t = Math.min((now - start) / duration, 1);
+        const ease = t * t;
+        const r = maxR * (1 - ease);
+        const rotation = t * Math.PI * 6;
+
+        irisCtx.clearRect(0, 0, w, h);
+
+        irisCtx.fillStyle = '#ffffff';
+        irisCtx.beginPath();
+        irisCtx.rect(0, 0, w, h);
+        irisCtx.arc(cx, cy, Math.max(r, 0), 0, Math.PI * 2, true);
+        irisCtx.fill('evenodd');
+
+        irisCtx.strokeStyle = '#000000';
+        irisCtx.lineWidth = 5;
+        const steps = 300;
+        const totalAngle = Math.PI * 20;
+        irisCtx.beginPath();
+        for (let i = 0; i <= steps; i++) {
+          const frac = i / steps;
+          const spiralR = Math.max(r, 0) + frac * (maxR * 1.3);
+          const angle = rotation + frac * totalAngle;
+          const x = cx + Math.cos(angle) * spiralR;
+          const y = cy + Math.sin(angle) * spiralR;
+          if (i === 0) irisCtx.moveTo(x, y);
+          else irisCtx.lineTo(x, y);
+        }
+        irisCtx.stroke();
+
+        irisCtx.strokeStyle = '#000000';
+        irisCtx.lineWidth = 4;
+        irisCtx.beginPath();
+        irisCtx.arc(cx, cy, Math.max(r, 0), 0, Math.PI * 2);
+        irisCtx.stroke();
+
+        if (t < 0.99) {
+          requestAnimationFrame(draw);
+        } else {
+          window.location.href = url;
+        }
+      }
+      requestAnimationFrame(draw);
+    }
+
+    // --- Scroll/key/touch-driven character (like gallery) ---
+    const charEl = document.getElementById('home-char');
+    const charImgs = charEl.querySelectorAll('img');
+    const rightFrames = charEl.querySelectorAll('[data-dir="right"]');
+    const leftFrames = charEl.querySelectorAll('[data-dir="left"]');
+    const idleRightImg = charEl.querySelector('[data-idle="right"]');
+    const idleLeftImg = charEl.querySelector('[data-idle="left"]');
+    let charX = window.innerWidth * 0.3;
+    let lastDirection = 'right';
+    let charFrame = 0;
+    let accumulatedDelta = 0;
+    let idleTimeout = null;
+
+    const WALK_SPEED = 8;
+    const SCROLL_TO_WALK = 0.4;
+    const FRAME_STEP = 35;
+    const IDLE_DELAY = 250;
+
+    function showCharFrame(dir, idx) {
+      charImgs.forEach(im => im.classList.remove('active'));
+      const frames = dir === 'right' ? rightFrames : leftFrames;
+      frames[idx].classList.add('active');
+    }
+
+    function showIdle() {
+      charImgs.forEach(im => im.classList.remove('active'));
+      (lastDirection === 'right' ? idleRightImg : idleLeftImg).classList.add('active');
+    }
+
+    function advanceWalkFrame(direction) {
+      lastDirection = direction;
+      charFrame = (charFrame + 1) % 4;
+      showCharFrame(direction, charFrame);
+      clearTimeout(idleTimeout);
+      idleTimeout = setTimeout(showIdle, IDLE_DELAY);
+    }
+
+    function moveChar(deltaPx) {
+      if (transitioning) return;
+      if (Math.abs(deltaPx) < 0.5) return;
+
+      const minX = window.innerWidth * 0.02;
+      const maxX = window.innerWidth * 0.93;
+      const direction = deltaPx > 0 ? 'right' : 'left';
+
+      charX += deltaPx;
+      charX = Math.max(minX, Math.min(charX, maxX));
+      charEl.style.left = charX + 'px';
+
+      accumulatedDelta += Math.abs(deltaPx);
+      if (accumulatedDelta >= FRAME_STEP) {
+        advanceWalkFrame(direction);
+        accumulatedDelta = accumulatedDelta % FRAME_STEP;
+      }
+    }
+
+    // Scroll (wheel) to walk
+    document.addEventListener('wheel', (e) => {
+      if (transitioning) return;
+      e.preventDefault();
+      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      moveChar(delta * SCROLL_TO_WALK);
+    }, { passive: false });
+
+    // Keyboard (arrow keys / A/D) to walk
+    let keysHeld = { left: false, right: false };
+    let keyAnimFrame = null;
+
+    document.addEventListener('keydown', (e) => {
+      if (transitioning) return;
+      if (e.key === 'ArrowRight' || e.key === 'd') { keysHeld.right = true; e.preventDefault(); }
+      if (e.key === 'ArrowLeft' || e.key === 'a') { keysHeld.left = true; e.preventDefault(); }
+      if (!keyAnimFrame) keyLoop();
+    });
+    document.addEventListener('keyup', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'd') keysHeld.right = false;
+      if (e.key === 'ArrowLeft' || e.key === 'a') keysHeld.left = false;
+    });
+    function keyLoop() {
+      let delta = 0;
+      if (keysHeld.right) delta += WALK_SPEED;
+      if (keysHeld.left) delta -= WALK_SPEED;
+      if (delta !== 0) { moveChar(delta); keyAnimFrame = requestAnimationFrame(keyLoop); }
+      else keyAnimFrame = null;
+    }
+
+    // Touch to walk
+    let touchLastX = 0;
+    document.addEventListener('touchstart', (e) => { touchLastX = e.touches[0].clientX; }, { passive: true });
+    document.addEventListener('touchmove', (e) => {
+      if (transitioning) return;
+      const touchX = e.touches[0].clientX;
+      moveChar((touchLastX - touchX) * 0.8);
+      touchLastX = touchX;
+    }, { passive: true });
+
+    charEl.style.left = charX + 'px';
+    showIdle();
+
+    hotspotOffice.addEventListener('click', () => {
+      irisTransition(hotspotOffice, 'office.html', overlayOffice);
+    });
+
+    hotspotGallery.addEventListener('click', () => {
+      irisTransition(hotspotGallery, 'gallery.html', overlayGallery);
+    });
+  </script>
+</body>
+</html>
