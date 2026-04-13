@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home</title>
+  <script>
+    (function(){
+      var D = 1100;
+      function z(){ document.documentElement.style.zoom = window.innerWidth < D ? window.innerWidth/D : 1; }
+      z(); window.addEventListener('resize', z);
+    })();
+  </script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
@@ -150,17 +157,6 @@
     }
     #home-char img.active {
       opacity: 1;
-    }
-
-    /* ── Responsive ── */
-    @media (max-width: 700px) {
-      #home-text { left: 4vw; top: 4vw; width: 55vw; }
-      #home-frame { left: 4vw; top: 22vw; width: 18vw; }
-      #profile-pic-wrap { left: 4vw; top: 22vw; width: 18vw; height: 18vw; }
-      #plant-wrap { left: 50%; bottom: 5vw; width: 60vw; transform: translateX(-50%) rotate(-1deg); }
-      #home-char { width: 7vw; height: 11vw; bottom: 5.5vw; }
-      #floor { height: 8vw; }
-      #floor-line { bottom: 8vw; }
     }
 
     /* Circle iris wipe */

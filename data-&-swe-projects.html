@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Data & SWE Projects</title>
+<script>
+  (function(){
+    var D = 1100;
+    function z(){ document.documentElement.style.zoom = window.innerWidth < D ? window.innerWidth/D : 1; }
+    z(); window.addEventListener('resize', z);
+  })();
+</script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #95B887; height: 100vh; overflow: hidden; font-family: serif; }

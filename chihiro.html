@@ -6,6 +6,13 @@
 <link rel="preload" href="svgs/chihiro/journal-cover.jpeg" as="image">
 <link rel="preload" href="svgs/misc/journalpaper1.jpeg" as="image">
 <title>Chihiro</title>
+<script>
+  (function(){
+    var D = 1100;
+    function z(){ document.documentElement.style.zoom = window.innerWidth < D ? window.innerWidth/D : 1; }
+    z(); window.addEventListener('resize', z);
+  })();
+</script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Mono:wght@300;400&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
