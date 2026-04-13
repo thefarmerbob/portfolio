@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Model Test</title>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+</head>
+<body>
+<h2>TF.js Model Load Test</h2>
+<input type="file" id="file-input" accept="image/*">
+<canvas id="inference-canvas" width="224" height="224" style="border:1px solid #ccc; display:block; margin:10px 0;"></canvas>
+<pre id="log"></pre>
+<script>
+const log = document.getElementById('log');
+const canvas = document.getElementById('inference-canvas');
+const ctx = canvas.getContext('2d');
+let model = null;
+
+function print(msg) { log.textContent += msg + '\n'; console.log(msg); }
+
+async function runTests() {
+  print('Test 1: Loading model...');
+  try {
+    model = await tf.loadLayersModel('tfjs_model/model.json');
+    print('  PASS - Model loaded');
+  } catch (e) {
+    print('  FAIL - ' + e.message);
+    console.error(e);
+    return;
+  }
+
+  print('\nTest 2: Zeros vs ones vs random (should differ)...');
+  const imgs = {
+    'zeros': tf.zeros([1, 224, 224, 3]),
+    'ones': tf.ones([1, 224, 224, 3]),
+    'random1': tf.randomUniform([1, 224, 224, 3]),
+    'random2': tf.randomUniform([1, 224, 224, 3]),
+    'red': tf.fill([1, 224, 224, 3], 0).add(tf.tensor4d([[[[ 1, 0, 0 ]]]])),
+    'blue': tf.fill([1, 224, 224, 3], 0).add(tf.tensor4d([[[[ 0, 0, 1 ]]]]))
+  };
+  const scores = {};
+  for (const [name, tensor] of Object.entries(imgs)) {
+    const pred = model.predict(tensor);
+    const score = pred.dataSync()[0];
+    scores[name] = score;
+    print('  ' + name + ': ' + score.toFixed(6));
+    pred.dispose();
+    tensor.dispose();
+  }
+  const allSame = Object.values(scores).every(s => Math.abs(s - scores.zeros) < 0.01);
+  print(allSame ? '  FAIL - All predictions are the same!' : '  PASS - Predictions vary');
+
+  print('\nTest 3: Canvas pipeline (same as pants2.html)...');
+  // Blue canvas
+  ctx.fillStyle = '#0000FF';
+  ctx.fillRect(0, 0, 224, 224);
+  let tensor = tf.browser.fromPixels(canvas).toFloat().div(255.0).expandDims(0);
+  let pred = model.predict(tensor);
+  print('  Blue canvas score: ' + pred.dataSync()[0].toFixed(6));
+  pred.dispose(); tensor.dispose();
+
+  // Green canvas
+  ctx.fillStyle = '#00FF00';
+  ctx.fillRect(0, 0, 224, 224);
+  tensor = tf.browser.fromPixels(canvas).toFloat().div(255.0).expandDims(0);
+  pred = model.predict(tensor);
+  print('  Green canvas score: ' + pred.dataSync()[0].toFixed(6));
+  pred.dispose(); tensor.dispose();
+
+  print('\nTest 4: Upload an image below to test real classification.');
+}
+
+document.getElementById('file-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file || !model) return;
+  const img = new Image();
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0, 224, 224);
+    const tensor = tf.browser.fromPixels(canvas).toFloat().div(255.0).expandDims(0);
+    print('\nImage tensor stats:');
+    print('  shape: ' + JSON.stringify(tensor.shape));
+    print('  min: ' + tensor.min().dataSync()[0].toFixed(4));
+    print('  max: ' + tensor.max().dataSync()[0].toFixed(4));
+    print('  mean: ' + tensor.mean().dataSync()[0].toFixed(4));
+    const pred = model.predict(tensor);
+    const score = pred.dataSync()[0];
+    const isCool = score > 0.5;
+    const confidence = isCool ? score : 1 - score;
+    print('  Raw score: ' + score.toFixed(6));
+    print('  isCool: ' + isCool);
+    print('  Confidence: ' + (confidence * 100).toFixed(1) + '%');
+    pred.dispose();
+    tensor.dispose();
+    URL.revokeObjectURL(img.src);
+  };
+  img.src = URL.createObjectURL(file);
+});
+
+runTests();
+</script>
+</body>
+</html>

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data & SWE Projects</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #95B887; height: 100vh; overflow: hidden; font-family: serif; }
+
+  #scene {
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-top: -2vw;
+  }
+
+  /* Title */
+  #title-img {
+    width: 45vw;
+    margin-bottom: 9vw;
+  }
+
+  /* Shelf rows */
+  .shelf-row {
+    position: relative;
+    width: 62vw;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 0;
+  }
+  .shelf-row .shelf-img {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60vw;
+  }
+
+  /* Jar containers */
+  .jar-slot {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    z-index: 2;
+    margin-bottom: 0.8vw;
+  }
+  .jar-slot .jar-text {
+    position: absolute;
+    pointer-events: none;
+  }
+  .jar-slot .jar-img {
+    transition: transform 0.2s ease, filter 0.2s ease;
+  }
+  .jar-slot:hover .jar-img {
+    transform: translateY(-0.5vw) scale(1.05);
+    filter: brightness(1.08);
+  }
+
+  /* Top shelf jars */
+  #top-shelf {
+    gap: 3.5vw;
+    margin-bottom: 0;
+  }
+  #top-shelf .jar-img { width: 10vw; }
+
+  /* jar1 text: left side */
+  #slot-jar1 .jar-text { left: -8.5vw; top: 0.5vw; width: 7.5vw; }
+  /* jar2 text: above-left */
+  #slot-jar2 .jar-text { left: -6vw; top: -8vw; width:9vw; }
+  /* jar4 text: above center */
+  #slot-jar4 .jar-text { left: 7vw; top: -6vw; width: 12vw; }
+  /* jar5 text: right side */
+  #slot-jar5 .jar-text { right: -12.5vw; top: -4vw; width: 12vw; }
+
+  /* Bottom shelf jars */
+  #bottom-shelf {
+    gap: 4.5vw;
+    margin-top: 8vw;
+    margin-bottom: 0;
+  }
+  #bottom-shelf .jar-img { width: 10vw; }
+
+  /* jar5-1 text: left side */
+  #slot-jar5-1 .jar-text { left: -7vw; top: -3vw; width: 7vw; }
+  /* jar6 text: above */
+  #slot-jar6 .jar-text { left: -4vw; top: -7vw; width: 10vw; }
+  /* jar7 text: above */
+  #slot-jar7 .jar-text { left: -1vw; top: -7vw; width: 12vw; }
+
+  /* Back link */
+  #back-link {
+    position: fixed;
+    bottom: 2.5vw;
+    left: 2.5vw;
+    width: 10vw;
+    cursor: pointer;
+    z-index: 10;
+    filter: brightness(0);
+    transition: transform 0.2s ease, filter 0.2s ease;
+  }
+  #back-link:hover {
+    transform: scale(1.05);
+    filter: brightness(1);
+  }
+
+  /* PDF overlay */
+  #pdf-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.5);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  #pdf-overlay.visible {
+    display: flex;
+    opacity: 1;
+  }
+
+  #pdf-journal {
+    width: 55vw;
+    height: 88vh;
+    display: flex;
+    box-shadow: -0.3vw 0.2vw 1.2vw rgba(0,0,0,0.25);
+    background: url('svgs/misc/journalpaper1.jpeg') center/cover no-repeat;
+    padding: 1vw;
+    position: relative;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+  }
+  #pdf-overlay.visible #pdf-journal {
+    transform: scale(1);
+  }
+  #journal-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #6d8a5c rgba(0,0,0,0.05);
+    background: #fff;
+  }
+  #journal-scroll::-webkit-scrollbar { width: 0.4vw; }
+  #journal-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
+  #journal-scroll::-webkit-scrollbar-thumb { background: #6d8a5c; border-radius: 0.2vw; }
+  #journal-scroll img {
+    width: 100%;
+    display: block;
+    border-bottom: 0.05vw solid rgba(0,0,0,0.06);
+  }
+
+  /* Close button */
+  #pdf-close {
+    position: absolute;
+    top: -1.5vw; right: -1.5vw;
+    width: 3vw; height: 3vw;
+    background: #313E24;
+    color: #f0ede4;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.4vw;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: transform 0.15s, background 0.15s;
+  }
+  #pdf-close:hover {
+    transform: scale(1.1);
+    background: #4a6638;
+  }
+</style>
+</head>
+<body>
+
+<div id="scene">
+  <img id="title-img" src="svgs/data-and-swe-projects/click-jar-to-open-project-text-outline.svg" alt="Click jar to open project">
+
+  <!-- Top shelf: 4 jars -->
+  <div class="shelf-row" id="top-shelf">
+    <div class="jar-slot" id="slot-jar1" data-jar="1" data-pages="61">
+      <img class="jar-text" src="svgs/data-and-swe-projects/jar1-text.svg" alt="">
+      <img class="jar-img" src="svgs/data-and-swe-projects/jar1.svg" alt="Task Scheduler">
+    </div>
+    <div class="jar-slot" id="slot-jar2" data-jar="2" data-pages="44">
+      <img class="jar-text" src="svgs/data-and-swe-projects/jar2-text.svg" alt="">
+      <img class="jar-img" src="svgs/data-and-swe-projects/jar2.svg" alt="Genetic Tree Reconstructor">
+    </div>
+    <div class="jar-slot" id="slot-jar4" data-jar="3" data-pages="28">
+      <img class="jar-text" src="svgs/data-and-swe-projects/jar4-text.svg" alt="">
+      <img class="jar-img" src="svgs/data-and-swe-projects/jar4.svg" alt="Fire Radiative Power Predictions">
+    </div>
+    <div class="jar-slot" id="slot-jar5" data-jar="4" data-pages="13">
+      <img class="jar-text" src="svgs/data-and-swe-projects/jar5-text.svg" alt="">
+      <img class="jar-img" src="svgs/data-and-swe-projects/jar5.svg" alt="Sports League Audience Predictions">
+    </div>
+    <img class="shelf-img" src="svgs/data-and-swe-projects/shelf.svg" alt="">
+  </div>
+
+  <!-- Bottom shelf: 3 jars -->
+  <div class="shelf-row" id="bottom-shelf">
+    <div class="jar-slot" id="slot-jar5-1" data-jar="5" data-pages="8">
+      <img class="jar-text" src="svgs/data-and-swe-projects/jar5-text-1.svg" alt="">
+      <img class="jar-img" src="svgs/data-and-swe-projects/jar5-1.svg" alt="Crop Rotation Optimization">
+    </div>
+    <div class="jar-slot" id="slot-jar6" data-jar="6" data-pages="11">
+      <img class="jar-text" src="svgs/data-and-swe-projects/jar6-text.svg" alt="">
+      <img class="jar-img" src="svgs/data-and-swe-projects/jar6.svg" alt="Airport Security Simulator">
+    </div>
+    <div class="jar-slot" id="slot-jar7" data-jar="7" data-pages="15">
+      <img class="jar-text" src="svgs/data-and-swe-projects/jar7-text.svg" alt="">
+      <img class="jar-img" src="svgs/data-and-swe-projects/jar7.svg" alt="Predator/Prey Cellular Automata">
+    </div>
+    <img class="shelf-img" src="svgs/data-and-swe-projects/shelf.svg" alt="">
+  </div>
+</div>
+
+<a id="back-link" href="office.html">
+  <img src="svgs/data-and-swe-projects/back-text.svg" alt="Go back to office" style="width:50%; display:block;">
+</a>
+
+<!-- PDF overlay -->
+<div id="pdf-overlay">
+  <div id="pdf-journal">
+    <button id="pdf-close">&times;</button>
+    <div id="journal-scroll"></div>
+  </div>
+</div>
+
+<script>
+  const overlay = document.getElementById('pdf-overlay');
+  const scroll = document.getElementById('journal-scroll');
+  const closeBtn = document.getElementById('pdf-close');
+
+  // Click jar to open PDF
+  document.querySelectorAll('.jar-slot').forEach(slot => {
+    slot.addEventListener('click', () => {
+      const jarNum = slot.dataset.jar;
+      const pages = parseInt(slot.dataset.pages);
+      openPdf(jarNum, pages);
+    });
+  });
+
+  function openPdf(jarNum, totalPages) {
+    scroll.innerHTML = '';
+    for (let i = 0; i < totalPages; i++) {
+      const img = document.createElement('img');
+      const num = String(i + 1).padStart(2, '0');
+      img.src = `svgs/jars-pdfs/pages/jar${jarNum}/page-${num}.jpg`;
+      img.alt = `page ${i + 1}`;
+      img.loading = 'lazy';
+      scroll.appendChild(img);
+    }
+    overlay.style.display = 'flex';
+    requestAnimationFrame(() => {
+      overlay.classList.add('visible');
+    });
+  }
+
+  closeBtn.addEventListener('click', closePdf);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closePdf();
+  });
+
+  function closePdf() {
+    overlay.classList.remove('visible');
+    setTimeout(() => {
+      overlay.style.display = 'none';
+      scroll.innerHTML = '';
+    }, 300);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closePdf();
+  });
+</script>
+</body>
+</html>
