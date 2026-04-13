@@ -37,6 +37,45 @@
       pointer-events: none;
     }
 
+    /* Home text & frame */
+    #home-text {
+      position: absolute;
+      left: 6vw;
+      top: 5vw;
+      width: 28vw;
+      z-index: 3;
+      pointer-events: none;
+    }
+    #home-frame {
+      position: absolute;
+      left: 20vw;
+      top: 4vw;
+      width: 18vw;
+      z-index: 3;
+      pointer-events: none;
+    }
+    #profile-pic-wrap {
+      position: absolute;
+      left: 20.7vw;
+      top: 4.7vw;
+      width: 16.6vw;
+      height: 16.6vw;
+      z-index: 2;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+    #profile-pic-wrap img {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+    #profile-pic-wrap img.active {
+      opacity: 1;
+    }
+
     /* Clickable hotspots positioned relative to plant-wrap */
     #hotspot-wrap {
       position: absolute;
@@ -120,6 +159,9 @@
 <body>
   <canvas id="iris-overlay"></canvas>
   <div id="home-container">
+    <img id="home-text" src="svgs/home/home-text.svg" alt="Hello you! I'm Mara">
+    <div id="profile-pic-wrap"></div>
+    <img id="home-frame" src="svgs/home/home-frame.svg" alt="">
     <div id="plant-wrap">
       <img id="home-img" src="svgs/home/home1.svg" alt="home" />
       <img id="overlay-office" class="home-overlay" src="svgs/home/home2.svg" alt="" />
@@ -146,6 +188,32 @@
   <div id="floor"></div>
 
   <script>
+    // Profile picture slideshow
+    (function() {
+      const picWrap = document.getElementById('profile-pic-wrap');
+      const profilePics = [
+        'FullSizeRender 3.jpeg','IMG_0126 3.jpeg','IMG_1538 2.jpeg',
+        'IMG_2455 2.jpeg','IMG_3026 3.jpeg','IMG_4296 2.jpeg',
+        'IMG_5606 2.jpeg','IMG_6924 2.jpeg','IMG_7485 2.jpeg',
+        'IMG_7499 2.jpeg','IMG_7866 2.jpeg','IMG_8120 2.jpeg',
+        'IMG_8136_Original 2.jpeg','IMG_9815 2.jpeg'
+      ];
+      let currentPic = 0;
+      profilePics.forEach((name, i) => {
+        const img = document.createElement('img');
+        img.src = 'svgs/profile-pics/' + name;
+        img.alt = 'profile ' + (i + 1);
+        if (i === 0) img.classList.add('active');
+        picWrap.appendChild(img);
+      });
+      const allPics = picWrap.querySelectorAll('img');
+      setInterval(() => {
+        allPics[currentPic].classList.remove('active');
+        currentPic = (currentPic + 1) % allPics.length;
+        allPics[currentPic].classList.add('active');
+      }, 3000);
+    })();
+
     const img = document.getElementById('home-img');
     const overlayOffice = document.getElementById('overlay-office');
     const overlayGallery = document.getElementById('overlay-gallery');
@@ -248,13 +316,13 @@
     const leftFrames = charEl.querySelectorAll('[data-dir="left"]');
     const idleRightImg = charEl.querySelector('[data-idle="right"]');
     const idleLeftImg = charEl.querySelector('[data-idle="left"]');
-    let charX = window.innerWidth * 0.3;
+    let charPct = 30;
     let lastDirection = 'right';
     let charFrame = 0;
     let accumulatedDelta = 0;
     let idleTimeout = null;
 
-    const WALK_SPEED = 8;
+    const WALK_SPEED = 0.5;
     const SCROLL_TO_WALK = 0.4;
     const FRAME_STEP = 35;
     const IDLE_DELAY = 250;
@@ -282,13 +350,12 @@
       if (transitioning) return;
       if (Math.abs(deltaPx) < 0.5) return;
 
-      const minX = window.innerWidth * 0.02;
-      const maxX = window.innerWidth * 0.93;
+      const deltaPct = (deltaPx / window.innerWidth) * 100;
       const direction = deltaPx > 0 ? 'right' : 'left';
 
-      charX += deltaPx;
-      charX = Math.max(minX, Math.min(charX, maxX));
-      charEl.style.left = charX + 'px';
+      charPct += deltaPct;
+      charPct = Math.max(2, Math.min(charPct, 93));
+      charEl.style.left = charPct + 'vw';
 
       accumulatedDelta += Math.abs(deltaPx);
       if (accumulatedDelta >= FRAME_STEP) {
@@ -321,8 +388,8 @@
     });
     function keyLoop() {
       let delta = 0;
-      if (keysHeld.right) delta += WALK_SPEED;
-      if (keysHeld.left) delta -= WALK_SPEED;
+      if (keysHeld.right) delta += WALK_SPEED * window.innerWidth / 100;
+      if (keysHeld.left) delta -= WALK_SPEED * window.innerWidth / 100;
       if (delta !== 0) { moveChar(delta); keyAnimFrame = requestAnimationFrame(keyLoop); }
       else keyAnimFrame = null;
     }
@@ -337,7 +404,7 @@
       touchLastX = touchX;
     }, { passive: true });
 
-    charEl.style.left = charX + 'px';
+    charEl.style.left = charPct + 'vw';
     showIdle();
 
     hotspotOffice.addEventListener('click', () => {

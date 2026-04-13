@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Drop Your Pants!</title>
+<title>Are Your Pants Cool?</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Mono:wght@300;400&display=swap');
 
@@ -21,9 +21,9 @@
   #left-col {
     display: flex;
     flex-direction: column;
-    flex: 3;
+    width: 55.6vw;
     min-width: 0;
-    padding: 5vw 0 2vw 2.2vw;
+    padding: 9vw 0 2vw 2.2vw;
     z-index: 10;
     justify-content: flex-start;
     gap: 0;
@@ -43,7 +43,7 @@
     height: 14vw;
     cursor: pointer;
     flex-shrink: 0;
-    width: 28vw;
+    width: 40vw;
   }
   #drop-zone:focus { outline: none; }
   #drop-zone.drag-over {
@@ -107,7 +107,7 @@
     align-items: flex-end;
     justify-content: center;
     margin-bottom: 2vw;
-    width: 28vw;
+    width: 40vw;
     flex: 1;
     min-height: 0;
   }
@@ -132,90 +132,237 @@
 
   /* ── RIGHT COLUMN ── */
   #right-col {
-    flex: 5;
-    min-width: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 44.4vw;
     height: 100vh;
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: flex-end;
-    padding: 5vw 3.33vw 2vw 3.47vw;
+    padding: 0 4vw 0 3.47vw;
     z-index: 2;
   }
 
-  #info-box {
-    background: #FFE988;
-    border-radius: 0;
-    padding: 2.8vw 3vw;
-    color: #313E24;
+  /* ── JOURNAL ── */
+  #journal-wrap {
     width: 100%;
-    max-width: 52vw;
-    overflow-y: auto;
+    position: relative;
+    overflow: visible;
+  }
+  #learn-more-text {
+    position: absolute;
+    left: -12vw;
+    top: 12vw;
+    width: 12vw;
+    z-index: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+  #learn-more-text.hidden {
+    opacity: 0;
+  }
+  #bookmarks {
+    position: absolute;
+    left: -12vw;
+    top: 1vw;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8vw;
+    z-index: 1;
+    pointer-events: auto;
+  }
+  .bookmark {
+    position: relative;
+    width: 18vw;
+    height: 4.8vw;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    transform: translateX(6vw);
+  }
+  .bookmark.active { transform: translateX(-2vw); }
+  .bookmark:hover { transform: translateX(-2vw); }
+  .bookmark img {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    transition: opacity 0.3s ease;
+  }
+  .bookmark .bm-white { opacity: 1; }
+  .bookmark .bm-yellow { opacity: 0; }
+  .bookmark.active .bm-white { opacity: 0; }
+  .bookmark.active .bm-yellow { opacity: 1; }
+  .bm-label {
+    position: absolute;
+    left: 7vw;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1vw;
+    font-weight: 900;
+    color: #313E24;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .bookmark:hover .bm-label,
+  .bookmark.active .bm-label { opacity: 1; }
+
+  #journal-viewer {
+    width: 100%;
+    height: 85vh;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    background: url('svgs/misc/journalpaper1.jpeg') center/cover no-repeat;
+    padding: 1vw 1vw 1vw 0;
+    perspective: 1500px;
+  }
+  #journal-spine {
+    width: 3vw;
+    flex-shrink: 0;
+    border-right: 0.1vw solid rgba(0,0,0,0.1);
+  }
+  #journal-content {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  #pdf-page {
+    display: flex;
+    width: 100%;
     height: 100%;
   }
-  #info-box h2 {
-    font-size: 2.2vw;
+  #pdf-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #6d8a5c rgba(0,0,0,0.05);
+    background: #fff;
+  }
+  #pdf-scroll::-webkit-scrollbar { width: 0.4vw; }
+  #pdf-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
+  #pdf-scroll::-webkit-scrollbar-thumb { background: #6d8a5c; border-radius: 0.2vw; }
+  #pdf-scroll img {
+    width: 100%;
+    display: block;
+    border-bottom: 0.05vw solid rgba(0,0,0,0.06);
+  }
+  /* Overlay pages sit on top of the journal background — no per-page bg */
+  .overlay-page {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    overflow: hidden;
+    transition: opacity 0.4s ease;
+    background: url('svgs/misc/journalpaper1.jpeg') center/cover no-repeat;
+  }
+  .overlay-page.hidden { opacity: 0; pointer-events: none; }
+  #cover-page { z-index: 12; }
+  #about-page  { z-index: 11; }
+  #cover-page img {
+    width: 100%; height: 100%;
+    display: block; object-fit: cover;
+  }
+  .page-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    padding: 4vw 3.5vw;
+    box-sizing: border-box;
+    overflow-y: auto;
+  }
+  .page-overlay h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2vw;
     font-weight: 900;
-    margin-bottom: 1.25vw;
     color: #313E24;
+    margin-bottom: 1.2vw;
   }
-  #info-box p {
-    font-size: 1.05vw;
+  .page-overlay p {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.95vw;
+    color: #313E24;
     line-height: 1.7;
-    color: #313E24;
-    margin-bottom: 0.97vw;
+    margin-bottom: 1.2vw;
   }
-  #info-box .stat {
+  .page-overlay em { font-style: italic; }
+  .page-overlay .stat {
     font-family: 'DM Mono', monospace;
-    font-size: 0.76vw;
+    font-size: 0.7vw;
     color: #5d7a4e;
-    letter-spacing: 0.07vw;
-    margin-bottom: 0.21vw;
+    letter-spacing: 0.1vw;
+    margin-bottom: 0.3vw;
   }
-  #info-box .divider {
+  .page-overlay .divider {
     width: 2.78vw;
     height: 0.14vw;
     background: rgba(49,62,36,0.2);
     margin: 1.11vw 0;
   }
-  #info-box em { font-style: italic; color: #313E24; }
 
-  /* ── Result state in info box ── */
-  #result-content { display: none; }
+  /* ── Result elements ── */
+  #result-content {
+    display: none;
+    margin-top: 1.5vw;
+    background: #FFE988;
+    padding: 1.2vw 1.5vw;
+  }
   #result-content.visible { display: block; }
-  #about-content { display: block; }
-  #about-content.hidden { display: none; }
 
   #cool-text-box {
-    font-size: 2.5vw;
+    font-size: 2.2vw;
     font-weight: 900;
     color: #313E24;
     letter-spacing: 0.05em;
-    margin-bottom: 1vw;
+    margin-bottom: 0.5vw;
     opacity: 0;
     transform: translateY(0.5vw);
     transition: opacity 0.5s, transform 0.5s;
   }
-  #cool-text-box.visible {
-    opacity: 1;
-    transform: translateY(0);
+  #cool-text-box.visible { opacity: 1; transform: translateY(0); }
+
+  #confidence-bar-wrap {
+    background: rgba(49,62,36,0.12);
+    height: 0.6vw;
+    width: 100%;
+    margin: 0.5vw 0 0.3vw 0;
+    overflow: hidden;
+  }
+  #confidence-bar {
+    height: 100%;
+    width: 0%;
+    transition: width 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  #confidence-bar.cool { background: #2a6e1e; }
+  #confidence-bar.notcool { background: #8b3a2a; }
+
+  #result-desc {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.85vw;
+    font-style: italic;
+    color: #5d7a4e;
+    margin-top: 0.5vw;
+    line-height: 1.5;
   }
 
   #replay-btn {
     display: inline-block;
     background: #313E24;
     border: none;
-    padding: 0.7vw 1.8vw;
+    padding: 0.5vw 1.4vw;
     font-family: 'Playfair Display', serif;
-    font-size: 0.9vw;
+    font-size: 0.8vw;
     font-weight: 700;
     font-style: italic;
     color: #FFE988;
-    border-radius: 0;
     cursor: pointer;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.4s, transform 0.2s;
-    margin-top: 0.7vw;
+    transition: opacity 0.4s;
+    margin-top: 0.5vw;
     letter-spacing: 0.03em;
   }
   #replay-btn:hover { background: #2D3A1F; }
@@ -226,13 +373,9 @@
     position: absolute;
     top: 2.5vw;
     left: 2.2vw;
-    font-size: 1.1vw;
-    font-weight: 900;
-    color: #2D3A1F;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    font-family: 'DM Mono', monospace;
     z-index: 20;
+    width: 40vw;
+    height: auto;
   }
 
   /* ── Loading dots ── */
@@ -248,7 +391,7 @@
 </head>
 <body>
 
-  <div id="page-title">Drop Your Pants!</div>
+  <img id="page-title" src="svgs/misc/are-your-pants-cool-text.svg" alt="Are your pants cool?">
 
   <!-- LEFT -->
   <div id="left-col">
@@ -257,7 +400,7 @@
       <div id="loading-text">dropping…</div>
     </div>
     <div id="drop-zone" tabindex="0">
-      <div id="drop-zone-label">Drop an image of your pants here, or click to upload.</div>
+      <div id="drop-zone-label">Drop down your pants here! (or click to upload an image of them)</div>
       <input type="file" id="file-input" accept="image/*">
       <div id="drop-footer">
         <span id="drop-footer-left">image files only</span>
@@ -278,34 +421,69 @@
 
   <!-- RIGHT -->
   <div id="right-col">
-    <div id="info-box">
-
-      <div id="about-content">
-        <h2>About This</h2>
-        <p>Drop an image of your pants. Watch them fall. The person will think about them. Then they'll drop off.</p>
-        <div class="divider"></div>
-        <p><em>Drop Your Pants!</em> is a very serious fashion evaluation system. Upload any image — your jeans, trousers, or even a screenshot of pants you found online.</p>
-        <div class="divider"></div>
-        <div class="stat">UPLOAD AN IMAGE TO BEGIN</div>
-        <div class="stat">ANY FORMAT ACCEPTED</div>
-        <div class="stat">VERY SCIENTIFIC PROCESS</div>
+    <div id="journal-wrap">
+      <img id="learn-more-text" src="svgs/misc/click-to-learn-more-text-pants.svg" alt="Click to learn more">
+      <div id="bookmarks">
+        <div class="bookmark" data-page="about">
+          <img class="bm-white" src="svgs/chihiro/bookmark1-white.svg" alt="">
+          <img class="bm-yellow" src="svgs/chihiro/bookmark1-yellow.svg" alt="">
+          <span class="bm-label">about</span>
+        </div>
+        <div class="bookmark" data-page="paper">
+          <img class="bm-white" src="svgs/chihiro/bookmark2-white.svg" alt="">
+          <img class="bm-yellow" src="svgs/chihiro/bookmark2-yellow.svg" alt="">
+          <span class="bm-label">deep dive</span>
+        </div>
       </div>
+      <div id="journal-viewer">
+        <!-- Cover page (top layer) -->
+        <div id="cover-page" class="overlay-page">
+          <img src="svgs/chihiro/journal-cover.jpeg" alt="Journal cover">
+        </div>
+        <!-- About page -->
+        <div id="about-page" class="overlay-page hidden">
+          <div class="page-overlay">
+            <h2>Drop Your Pants!</h2>
+            <p>Drop an image of your pants. Watch them fall. The person will think about them. Then they'll drop off.</p>
+            <div class="divider"></div>
+            <p><em>Drop Your Pants!</em> is a very serious fashion evaluation system. Upload any image — your jeans, trousers, or even a screenshot of pants you found online.</p>
+            <div class="divider"></div>
+            <div class="stat">UPLOAD AN IMAGE TO BEGIN</div>
+            <div class="stat">ANY FORMAT ACCEPTED</div>
+            <div class="stat">VERY SCIENTIFIC PROCESS</div>
 
-      <div id="result-content">
-        <div id="cool-text-box">COOL PANTS!</div>
-        <p id="result-desc">Those are some genuinely excellent trousers. The person has considered them carefully and reached a verdict.</p>
-        <div class="divider"></div>
-        <div class="stat">VERDICT: APPROVED</div>
-        <div class="stat">CONFIDENCE: VERY HIGH</div>
-        <div class="stat">ERA: TIMELESS</div>
-        <div class="divider"></div>
-        <button id="replay-btn">Try another pair</button>
+            <div id="result-content">
+              <div id="cool-text-box"></div>
+              <div id="confidence-bar-wrap"><div id="confidence-bar"></div></div>
+              <div class="stat" id="stat-confidence"></div>
+              <div class="stat" id="stat-verdict"></div>
+              <div class="stat" id="stat-note"></div>
+              <p id="result-desc"></p>
+              <button id="replay-btn">Try another pair</button>
+            </div>
+          </div>
+          <p style="position:absolute;bottom:1.2vw;left:3.5vw;right:3.5vw;font-size:0.55vw;color:#313E24;font-style:italic;margin:0;">* This visual demo uses the Claude API for classification, not the trained notebook model.</p>
+        </div>
+        <div id="journal-spine"></div>
+        <div id="journal-content">
+          <div id="pdf-page"><div id="pdf-scroll"></div></div>
+        </div>
       </div>
-
     </div>
   </div>
 
 <script>
+  const pdfScroll = document.getElementById('pdf-scroll');
+  const PANTS_PDF_PAGES = 4;
+  for (let i = 0; i < PANTS_PDF_PAGES; i++) {
+    const img = document.createElement('img');
+    img.src = `svgs/misc/pants_pages/page-${String(i + 1).padStart(2, '0')}.jpg`;
+    img.alt = `page ${i + 1}`;
+    img.loading = 'lazy';
+    pdfScroll.appendChild(img);
+  }
+
+
   const dropZone     = document.getElementById('drop-zone');
   const fileInput    = document.getElementById('file-input');
   const pantsSvg     = document.getElementById('pants-svg');
@@ -314,19 +492,131 @@
   const personThink2 = document.getElementById('person-think2');
   const replayBtn    = document.getElementById('replay-btn');
   const coolTextBox  = document.getElementById('cool-text-box');
-  const aboutContent = document.getElementById('about-content');
   const resultContent= document.getElementById('result-content');
   const loadingArea  = document.getElementById('loading-area');
-  const personArea   = document.getElementById('person-area');
+  const resultDesc   = document.getElementById('result-desc');
+  const statVerdict  = document.getElementById('stat-verdict');
+  const statConfidence = document.getElementById('stat-confidence');
+  const statNote     = document.getElementById('stat-note');
+  const coverPage    = document.getElementById('cover-page');
+  const aboutPage    = document.getElementById('about-page');
 
   const allFrames = [personStand, personThink1, personThink2];
   let thinkInterval = null;
+  let currentFile = null;
+  let currentView = 'cover';
+
+  function flipTo(target) {
+    document.getElementById('learn-more-text').classList.add('hidden');
+    coverPage.classList.add('hidden');
+    aboutPage.classList.add('hidden');
+    if (target === 'cover') coverPage.classList.remove('hidden');
+    if (target === 'about') aboutPage.classList.remove('hidden');
+    currentView = target;
+  }
+
+  /* ── BOOKMARKS ── */
+  const bookmarks = document.querySelectorAll('.bookmark');
+  bookmarks.forEach(bm => {
+    bm.addEventListener('click', () => {
+      bookmarks.forEach(b => b.classList.remove('active'));
+      bm.classList.add('active');
+      flipTo(bm.dataset.page);
+    });
+  });
 
   function showFrame(el) {
     allFrames.forEach(f => f.classList.remove('active'));
     el.classList.add('active');
   }
 
+  /* ── FILE TO BASE64 ── */
+  function fileToBase64(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /* ── CLASSIFY VIA CLAUDE ── */
+  async function classifyImage(imageFile) {
+    const base64 = await fileToBase64(imageFile);
+    const mediaType = imageFile.type || 'image/jpeg';
+    const r = await fetch('/.netlify/functions/claude-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 150,
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+          { type: 'text', text: 'You are a brutally honest, trend-obsessed fashion critic on a fun website called "Drop Your Pants!". You judge pants against current 2024-2025 fashion trends.\n\nStep 1: Is there ANY legwear in this image? (pants, jeans, trousers, shorts, joggers, leggings, skirts — anything worn on legs counts. People wearing pants counts. Product photos count. Be generous here.) Only say is_pants=false for images with truly zero legwear.\n\nStep 2: If it IS legwear, rate its coolness on a scale of 0-100. Be PICKY and opinionated. Consider: silhouette (wide leg and barrel are in, skinny is out), wash (vintage/distressed is cool, generic dark wash is boring), rise (high and mid are in, low is out), color (earth tones, cream, burgundy are in), details (cargo pockets, pleats, raw hem are trendy), brand energy (does it look like it costs $300 or $30?). Most pants should score 30-70. Only truly exceptional pants get 80+. Truly awful ones get below 20.\n\nReturn ONLY a JSON object, no markdown:\n{"is_pants": true/false, "score": 0-100, "reason": "one short punchy sentence"}' }
+        ]}]
+      })
+    });
+    if (!r.ok) throw new Error(`API ${r.status}`);
+    const d = await r.json();
+    const t = (d.content?.[0]?.text || '').replace(/```json|```/g, '').trim();
+    return JSON.parse(t);
+  }
+
+  /* ── SHOW RESULT ── */
+  function showResult(result) {
+    if (currentView === 'cover') {
+      flipTo('about');
+      bookmarks.forEach(b => b.classList.remove('active'));
+      document.querySelector('.bookmark[data-page="about"]').classList.add('active');
+    }
+    resultContent.classList.add('visible');
+    const score = result.score;
+    const bar = document.getElementById('confidence-bar');
+
+    if (!result.is_pants) {
+      coolTextBox.textContent = 'THOSE AREN\'T PANTS.';
+      coolTextBox.style.color = '#8b3a2a';
+      bar.className = 'notcool';
+      statConfidence.textContent = '';
+      statVerdict.textContent = 'VERDICT: NOT PANTS';
+      statNote.textContent = '';
+      resultDesc.textContent = result.reason;
+    } else {
+      const label = score >= 80 ? 'FIRE PANTS!' : score >= 60 ? 'COOL PANTS.' : score >= 40 ? 'MEH.' : score >= 20 ? 'NOT GREAT.' : 'BURN THEM.';
+      const isCool = score >= 50;
+      coolTextBox.textContent = label;
+      coolTextBox.style.color = isCool ? '#2a6e1e' : '#8b3a2a';
+      bar.className = isCool ? 'cool' : 'notcool';
+      statConfidence.textContent = 'COOLNESS: ' + score + ' / 100';
+      statVerdict.textContent = score >= 70 ? 'VERDICT: APPROVED' : score >= 40 ? 'VERDICT: BORDERLINE' : 'VERDICT: REJECTED';
+      statNote.textContent = score >= 90 ? 'ERA: ICONIC' : score >= 75 ? 'ERA: TIMELESS' : score >= 50 ? 'ERA: PASSABLE' : score >= 25 ? 'ERA: QUESTIONABLE' : 'ERA: FASHION CRIME';
+      resultDesc.textContent = result.reason;
+    }
+
+    setTimeout(() => {
+      coolTextBox.classList.add('visible');
+      if (result.is_pants) bar.style.width = score + '%';
+      setTimeout(() => replayBtn.classList.add('visible'), 400);
+    }, 100);
+  }
+
+  function showError(msg) {
+    if (currentView === 'cover') {
+      flipTo('about');
+      bookmarks.forEach(b => b.classList.remove('active'));
+      document.querySelector('.bookmark[data-page="about"]').classList.add('active');
+    }
+    resultContent.classList.add('visible');
+    coolTextBox.textContent = 'OOPS.';
+    coolTextBox.style.color = '#8b3a2a';
+    resultDesc.textContent = msg;
+    statVerdict.textContent = '';
+    statConfidence.textContent = '';
+    statNote.textContent = '';
+    setTimeout(() => {
+      coolTextBox.classList.add('visible');
+      setTimeout(() => replayBtn.classList.add('visible'), 400);
+    }, 100);
+  }
+
+  /* ── DROP EVENTS ── */
   dropZone.addEventListener('click', () => fileInput.click());
   dropZone.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') fileInput.click(); });
   dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
@@ -335,12 +625,17 @@
     e.preventDefault();
     dropZone.classList.remove('drag-over');
     const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) triggerAnimation();
+    if (file && file.type.startsWith('image/')) { currentFile = file; triggerAnimation(); }
   });
-  fileInput.addEventListener('change', (e) => { if (e.target.files[0]) triggerAnimation(); });
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files[0]) { currentFile = e.target.files[0]; triggerAnimation(); }
+  });
 
+  /* ── ANIMATION ── */
   function triggerAnimation() {
+    const savedFile = currentFile;
     resetState();
+    currentFile = savedFile;
     dropZone.classList.add('hidden');
     loadingArea.classList.add('visible');
 
@@ -355,17 +650,12 @@
     const metrics = getPersonMetrics();
     const dropRect = dropZone.getBoundingClientRect();
 
-    // Size pants to match person's hips
     pantsSvg.style.width = metrics.hipsWidth + 'px';
     pantsSvg.style.height = 'auto';
-
-    // Position pants horizontally centered on the person (not screen center)
-    const personCenterX = metrics.centerX;
-    pantsSvg.style.left = personCenterX + 'px';
+    pantsSvg.style.left = metrics.centerX + 'px';
     pantsSvg.style.transform = 'translateX(-50%)';
 
     requestAnimationFrame(() => {
-      // Start from just below the drop zone
       const startY = dropRect.bottom;
       pantsSvg.style.top = startY + 'px';
       pantsSvg.style.opacity = '0';
@@ -377,26 +667,29 @@
     const rect = personStand.getBoundingClientRect();
     return {
       waistY: rect.top + rect.height * 0.62,
-      hipsWidth: rect.width *0.62,
+      hipsWidth: rect.width * 0.62,
       centerX: rect.left + rect.width / 2,
     };
   }
 
   function startThinkingTap() {
-    let showingThink1 = true;
-    const swapTime = 350;
+    let t = true;
     thinkInterval = setInterval(() => {
-      showFrame(showingThink1 ? personThink2 : personThink1);
-      showingThink1 = !showingThink1;
-    }, swapTime);
+      showFrame(t ? personThink2 : personThink1);
+      t = !t;
+    }, 350);
   }
 
   function stopThinkingTap() {
     if (thinkInterval) { clearInterval(thinkInterval); thinkInterval = null; }
   }
 
-  function runAnimation(startY, waistY, offScreenY) {
+  async function runAnimation(startY, waistY, offScreenY) {
     loadingArea.classList.remove('visible');
+
+    // Start the API call immediately so it runs during the animation
+    const classifyPromise = classifyImage(currentFile);
+
     setTimeout(() => {
       pantsSvg.style.opacity = '1';
 
@@ -410,11 +703,26 @@
         fill: 'forwards'
       });
 
-      fallAnim.onfinish = () => {
+      fallAnim.onfinish = async () => {
         pantsSvg.style.top = waistY + 'px';
         pantsSvg.style.opacity = '1';
         showFrame(personThink1);
         setTimeout(() => startThinkingTap(), 300);
+
+        // Wait for the API result
+        let result;
+        try {
+          result = await classifyPromise;
+        } catch (e) {
+          console.error(e);
+          stopThinkingTap();
+          showFrame(personStand);
+          pantsSvg.style.opacity = '0';
+          dropZone.classList.remove('hidden');
+          fileInput.value = '';
+          showError('Could not analyze your pants — ' + e.message);
+          return;
+        }
 
         setTimeout(() => {
           stopThinkingTap();
@@ -436,17 +744,9 @@
               fileInput.value = '';
             };
 
-            setTimeout(() => {
-              aboutContent.classList.add('hidden');
-              resultContent.classList.add('visible');
-              setTimeout(() => {
-                coolTextBox.classList.add('visible');
-                setTimeout(() => replayBtn.classList.add('visible'), 400);
-              }, 100);
-            }, 800);
-
+            setTimeout(() => showResult(result), 800);
           }, 500);
-        }, 2500);
+        }, 500);
       };
     }, 300);
   }
@@ -461,14 +761,17 @@
     showFrame(personStand);
 
     coolTextBox.classList.remove('visible');
+    coolTextBox.style.color = '';
     replayBtn.classList.remove('visible');
+    document.getElementById('confidence-bar').style.width = '0%';
+    document.getElementById('confidence-bar').className = '';
 
     resultContent.classList.remove('visible');
-    aboutContent.classList.remove('hidden');
 
     dropZone.classList.remove('hidden');
     loadingArea.classList.remove('visible');
     fileInput.value = '';
+    currentFile = null;
   }
 
   replayBtn.addEventListener('click', resetState);

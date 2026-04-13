@@ -12,9 +12,6 @@
   /* ── Title SVG ── */
   #title-svg { position: absolute; top: 2.8vw; left: 2.2vw; z-index: 20; height: 4.86vw; width: auto; }
 
-  /* ── Lamp SVG ── */
-  #lamp-svg { position: absolute; top: -10.4vw; left: 38%; z-index: 15; height: 27.8vw; width: auto; }
-
   #layout { display: flex; height: 100vh; }
 
   /* ── Left Column ── */
@@ -22,28 +19,28 @@
 
   #song-cards { display: flex; flex-direction: column; gap: 0.56vw; flex: 1; min-height: 13.9vw; justify-content: flex-end; }
 
-  .song-card { background: #313E24; padding: 0.97vw 1.11vw 1.11vw; display: flex; gap: 0.97vw; align-items: flex-start; opacity: 0; transform: translateY(-2.08vw); border-radius: 0; flex-shrink: 0; }
+  .song-card { background: #313E24; padding: 0.6vw 0.8vw 0.7vw; display: flex; gap: 0.6vw; align-items: flex-start; opacity: 0; transform: translateY(-2.08vw); border-radius: 0; flex-shrink: 0; }
   .song-card.show { animation: slideDown 0.45s cubic-bezier(0.4,0,0.2,1) forwards; }
   @keyframes slideDown { from { opacity: 0; transform: translateY(-2.08vw); } to { opacity: 1; transform: translateY(0); } }
 
-  .disk-wrap { width: 4.44vw; height: 4.44vw; flex-shrink: 0; }
+  .disk-wrap { width: 4.8vw; height: 4.8vw; flex-shrink: 0; align-self: center; }
   .disk-wrap img { width: 100%; height: 100%; }
   .song-card.show .disk-wrap img { animation: spin 3s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .song-info { flex: 1; min-width: 0; }
-  .song-rank { font-family: 'DM Mono', monospace; font-size: 0.63vw; color: #7a9468; letter-spacing: 0.14vw; text-transform: uppercase; margin-bottom: 0.28vw; display: flex; align-items: center; gap: 0.56vw; }
-  .song-rank .confidence { background: rgba(255,233,136,0.2); color: #FFE988; padding: 0.14vw 0.56vw; border-radius: 6.94vw; font-size: 0.63vw; }
+  .song-rank { font-family: 'DM Mono', monospace; font-size: 0.5vw; color: #7a9468; letter-spacing: 0.14vw; text-transform: uppercase; margin-bottom: 0.15vw; display: flex; align-items: center; gap: 0.4vw; }
+  .song-rank .confidence { background: rgba(255,233,136,0.2); color: #FFE988; padding: 0.1vw 0.4vw; border-radius: 6.94vw; font-size: 0.5vw; }
   .song-title-row { display: flex; align-items: center; gap: 0.69vw; }
-  .song-title { font-family: 'Playfair Display', serif; font-size: 1.11vw; font-weight: 700; color: #f0ede4; line-height: 1.2; }
-  .song-artist { font-family: 'DM Mono', monospace; font-size: 0.69vw; color: #a3b893; letter-spacing: 0.035vw; margin-bottom: 0.56vw; }
-  .song-meta { display: flex; gap: 0.35vw; flex-wrap: wrap; }
-  .song-meta span { font-family: 'DM Mono', monospace; font-size: 0.63vw; color: #7a9468; background: rgba(163,184,147,0.12); padding: 0.14vw 0.56vw; border-radius: 6.94vw; }
+  .song-title { font-family: 'Playfair Display', serif; font-size: 0.85vw; font-weight: 700; color: #f0ede4; line-height: 1.2; }
+  .song-artist { font-family: 'DM Mono', monospace; font-size: 0.55vw; color: #a3b893; letter-spacing: 0.035vw; margin-bottom: 0.35vw; }
+  .song-meta { display: flex; gap: 0.25vw; flex-wrap: wrap; }
+  .song-meta span { font-family: 'DM Mono', monospace; font-size: 0.6vw; color: #7a9468; background: rgba(163,184,147,0.12); padding: 0.18vw 0.5vw; border-radius: 6.94vw; }
 
-  .play-btn { width: 2.08vw; height: 2.08vw; border-radius: 50%; background: #FFE988; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.15s, background 0.15s; }
+  .play-btn { width: 1.6vw; height: 1.6vw; border-radius: 50%; background: #FFE988; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.15s, background 0.15s; }
   .play-btn:hover { transform: scale(1.12); background: #fff3a8; }
   .play-btn:active { transform: scale(0.95); }
-  .play-btn svg { width: 0.83vw; height: 0.83vw; fill: #313E24; }
+  .play-btn svg { width: 0.65vw; height: 0.65vw; fill: #313E24; }
   .play-btn .icon-play { margin-left: 0.14vw; }
   .play-btn .icon-pause { display: none; }
   .play-btn.playing .icon-play { display: none; }
@@ -53,7 +50,7 @@
   .play-btn.loading { animation: pulse 1s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 0.8; } }
 
-  .progress-bar { width: 100%; height: 0.21vw; background: rgba(255,255,255,0.08); margin-top: 0.69vw; border-radius: 0.14vw; overflow: hidden; display: none; }
+  .progress-bar { width: 100%; height: 0.15vw; background: rgba(255,255,255,0.08); margin-top: 0.4vw; border-radius: 0.14vw; overflow: hidden; display: none; }
   .progress-bar.visible { display: block; }
   .progress-fill { height: 100%; background: #FFE988; width: 0%; transition: width 0.3s linear; }
 
@@ -88,17 +85,246 @@
   .person-frame { height: clamp(17.4vw, 50vh, 27.8vw); width: auto; display: none; }
   .person-frame.active { display: block; }
 
-  #right-col { flex: 4; min-width: 0; height: 100vh; display: flex; align-items: flex-end; justify-content: flex-end; padding: 0 3.33vw 3vw 3.47vw; z-index: 2; }
-  #description-box { background: #FFE988; border-radius: 0; padding: 2.5vw; color: #313E24; width: 100%; max-width: 45vw; overflow-y: auto; max-height: 85vh; }
-  #description-box h2 { font-size: 1.94vw; font-weight: 900; margin-bottom: 1.25vw; color: #313E24; }
-  #description-box p { font-size: 0.97vw; line-height: 1.7; color: #313E24; margin-bottom: 0.97vw; }
-  #description-box .stat { font-family: 'DM Mono', monospace; font-size: 0.76vw; color: #5d7a4e; letter-spacing: 0.07vw; margin-bottom: 0.21vw; }
-  #description-box .divider { width: 2.78vw; height: 0.14vw; background: rgba(49,62,36,0.2); margin: 1.11vw 0; }
-  #description-box em { font-style: italic; color: #313E24; }
+  #right-col { flex: 4; min-width: 0; height: 100vh; display: flex; align-items: center; justify-content: flex-end; padding: 0 4vw 0 3.47vw; z-index: 2; }
+
+  #pdf-viewer-wrap {
+    width: 100%;
+    position: relative;
+    overflow: visible;
+  }
+  #learn-more-text {
+    position: absolute;
+    left: -20vw;
+    top: 0vw;
+    width: 13vw;
+    z-index: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+  #learn-more-text.hidden {
+    opacity: 0;
+  }
+  #bookmarks {
+    position: absolute;
+    left: -12vw;
+    top: 1vw;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8vw;
+    z-index: 1;
+    pointer-events: auto;
+  }
+  .bookmark {
+    position: relative;
+    width: 18vw;
+    height: 4.8vw;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    transform: translateX(6vw);
+  }
+  .bookmark:nth-child(3) {
+    width: 66vw;
+    height: 17.6vw;
+    transform: translateX(-19vw);
+  }
+  .bookmark.active {
+    transform: translateX(-2vw);
+  }
+  .bookmark:hover {
+    transform: translateX(-2vw);
+  }
+  .bookmark:nth-child(3).active {
+    transform: translateX(-27vw);
+  }
+  .bookmark:nth-child(3):hover {
+    transform: translateX(-27vw);
+  }
+  .bookmark img {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    transition: opacity 0.3s ease;
+  }
+  .bookmark .bm-white { opacity: 1; }
+  .bookmark .bm-yellow { opacity: 0; }
+  .bookmark.active .bm-white { opacity: 0; }
+  .bookmark.active .bm-yellow { opacity: 1; }
+  .bm-label {
+    position: absolute;
+    left: 7vw;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1vw;
+    font-weight: 900;
+    color: #313E24;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .bookmark:hover .bm-label,
+  .bookmark.active .bm-label {
+    opacity: 1;
+  }
+  .bookmark:nth-child(3) .bm-label {
+    left: 32.5vw;
+    top: 15%;
+    font-size: 1.2vw;
+  }
+
+  #pdf-viewer {
+    width: 100%;
+    height: 85vh;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    background: url('svgs/misc/journalpaper1.jpeg') center/cover no-repeat;
+    padding: 1vw 1vw 1vw 0;
+    perspective: 1500px;
+  }
+  /* Journal binding spine */
+  #pdf-spine {
+    width: 3vw;
+    flex-shrink: 0;
+    border-right: 0.1vw solid rgba(0,0,0,0.1);
+    position: relative;
+  }
+  #pdf-spine::after {
+    display: none;
+  }
+  #journal-content {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  .journal-page {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    transform-origin: left center;
+    transition: transform 0.6s ease;
+    backface-visibility: hidden;
+  }
+  .journal-page.active {
+    transform: rotateY(0deg);
+    z-index: 2;
+  }
+  .journal-page.flipping {
+    transform: rotateY(-90deg);
+    z-index: 2;
+  }
+  .journal-page.behind {
+    transform: rotateY(0deg);
+    z-index: 1;
+  }
+  .overlay-page {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    overflow: hidden;
+    transition: opacity 0.4s ease;
+  }
+  .overlay-page.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  #cover-page { z-index: 12; }
+  #about-page { z-index: 11; }
+  #github-page { z-index: 9; }
+  #cover-page img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+  #github-page .about-bg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+  #github-page .about-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    padding: 4vw 3.5vw;
+    box-sizing: border-box;
+  }
+  #github-btn.spinning {
+    animation: btn-spin 0.6s ease-in-out;
+  }
+  @keyframes btn-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(720deg); }
+  }
+  #about-page .about-bg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+  #about-page .about-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    padding: 4vw 3.5vw;
+    box-sizing: border-box;
+    overflow-y: auto;
+  }
+  #about-page h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2vw;
+    font-weight: 900;
+    color: #313E24;
+    margin-bottom: 1.2vw;
+  }
+  #about-page p {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.95vw;
+    color: #313E24;
+    line-height: 1.7;
+    margin-bottom: 1.2vw;
+  }
+  #about-page em {
+    font-style: italic;
+  }
+  .about-stats {
+    margin: 1.5vw 0;
+  }
+  .about-stats .stat {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7vw;
+    color: #5d7a4e;
+    letter-spacing: 0.1vw;
+    margin-bottom: 0.3vw;
+  }
+  #pdf-page {
+    display: flex;
+    width: 100%;
+    height: 100%;
+  }
+  #pdf-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #6d8a5c rgba(0,0,0,0.05);
+    background: #fff;
+  }
+  #pdf-scroll::-webkit-scrollbar { width: 0.4vw; }
+  #pdf-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
+  #pdf-scroll::-webkit-scrollbar-thumb { background: #6d8a5c; border-radius: 0.2vw; }
+  #pdf-scroll img {
+    width: 100%;
+    display: block;
+    border-bottom: 0.05vw solid rgba(0,0,0,0.06);
+  }
+
 
   .music-note { position: fixed; font-size: 1.94vw; z-index: 50; pointer-events: none; opacity: 0; color: #313E24; }
 
-  #loading-area { display: none; padding: 0.83vw 0; text-align: center; flex-shrink: 0; }
+  #loading-area { display: none; padding: 0.5vw 0; text-align: center; flex-shrink: 0; margin-top: auto; }
   #loading-area.visible { display: block; }
   .loading-dots { display: inline-flex; gap: 0.42vw; }
   .loading-dots span { width: 0.49vw; height: 0.49vw; background: #5d7a4e; border-radius: 50%; animation: bounce 1.2s ease-in-out infinite; }
@@ -152,9 +378,6 @@
   <!-- Title SVG -->
   <img id="title-svg" src="svgs/misc/chihiro_text.svg" alt="Chihiro">
 
-  <!-- Lamp SVG hanging from top -->
-  <img id="lamp-svg" src="svgs/office/lamp.svg" alt="Lamp">
-
   <div id="layout">
     <div id="left-col">
       <div id="song-cards"></div>
@@ -176,24 +399,135 @@
       <img id="person-music2" class="person-frame" src="svgs/character/person_music2.svg" alt="Music 2">
     </div>
     <div id="right-col">
-      <div id="description-box">
-        <h2>About Chihiro</h2>
-        <p>In a world full of stoners and alcoholics, my drug of choice is music. I listen to the same song over and over for an entire week, then rarely touch it again. When I play a song from an "era" of mine, it brings me the heaviest nostalgia — it's the way I remember places, people, food, and experiences.</p>
-        <div class="divider"></div>
-        <p><em>Chihiro</em> is a nostalgia-driven music recommendation system. It predicts songs that maximize my nostalgia based on semantic similarity between my current mood and past journal entries associated with my listening patterns.</p>
-        <div class="divider"></div>
-        <div class="stat">309 HANDWRITTEN JOURNAL PAGES</div>
-        <div class="stat">32,278 SPOTIFY STREAMS</div>
-        <div class="stat">324 UNIQUE SONGS</div>
-        <div class="stat">MODELS: TF-IDF · SBERT · VAE · LIME</div>
-        <div class="divider"></div>
-        <p>Built with fine-tuned Sentence-BERT, a Variational Autoencoder, and LIME interpretability. The models learned that writing about dumplings and claw machines meant the <em>Ylang Ylang</em> era, and writing about mom and bus rides meant <em>Hell N Back</em> season.</p>
+      <div id="pdf-viewer-wrap">
+        <img id="learn-more-text" src="svgs/chihiro/click-to-learn-more-text.svg" alt="Click to learn more">
+        <div id="bookmarks">
+          <div class="bookmark" data-page="0">
+            <img class="bm-white" src="svgs/chihiro/bookmark1-white.svg" alt="">
+            <img class="bm-yellow" src="svgs/chihiro/bookmark1-yellow.svg" alt="">
+            <span class="bm-label">about</span>
+          </div>
+          <div class="bookmark" data-page="14">
+            <img class="bm-white" src="svgs/chihiro/bookmark2-white.svg" alt="">
+            <img class="bm-yellow" src="svgs/chihiro/bookmark2-yellow.svg" alt="">
+            <span class="bm-label">deep dive</span>
+          </div>
+          <div class="bookmark" data-page="28">
+            <img class="bm-white" src="svgs/chihiro/bookmark3-white.svg" alt="">
+            <img class="bm-yellow" src="svgs/chihiro/bookmark3-yellow.svg" alt="">
+            <span class="bm-label">code</span>
+          </div>
+        </div>
+        <div id="pdf-viewer">
+          <div id="cover-page" class="overlay-page">
+            <img src="svgs/chihiro/journal-cover.jpeg" alt="Journal cover">
+          </div>
+          <div id="about-page" class="overlay-page hidden">
+            <img class="about-bg" src="svgs/misc/journalpaper1.jpeg" alt="">
+            <div class="about-overlay">
+              <h2>About Chihiro</h2>
+              <p>In a world full of stoners and alcoholics, my drug of choice is music. I listen to the same song over and over for an entire week, then rarely touch it again. When I play a song from an "era" of mine, it brings me the heaviest nostalgia — it's the way I remember places, people, food, and experiences.</p>
+              <p><em>Chihiro</em> is a nostalgia-driven music recommendation system. It predicts songs that maximize my nostalgia based on semantic similarity between my current mood and past journal entries associated with my listening patterns.</p>
+              <div class="about-stats">
+                <div class="stat">309 HANDWRITTEN JOURNAL PAGES</div>
+                <div class="stat">32,278 SPOTIFY STREAMS</div>
+                <div class="stat">324 UNIQUE SONGS</div>
+                <div class="stat">MODELS: TF-IDF · SBERT · VAE · LIME</div>
+              </div>
+              <p>Built with fine-tuned Sentence-BERT, a Variational Autoencoder, and LIME interpretability. The models learned that writing about dumplings and claw machines meant the <em>Ylang Ylang</em> era, and writing about mom and bus rides meant <em>Hell N Back</em> season.</p>
+            </div>
+            <p style="position:absolute;bottom:1.2vw;left:3.5vw;right:3.5vw;font-size:0.55vw;color:#313E24;font-style:italic;margin:0;">* This visual demo uses the Claude API for recommendations, not the trained notebook models.</p>
+          </div>
+          <div id="github-page" class="overlay-page hidden">
+            <img class="about-bg" src="svgs/misc/journalpaper1.jpeg" alt="">
+            <div class="about-overlay" style="display:flex;flex-direction:column;align-items:center;padding-top:8vw;">
+              <img src="svgs/chihiro/click-button-text.svg" alt="Click button to open GitHub link" style="width:55%;margin-bottom:2vw;">
+              <img id="github-btn" src="svgs/chihiro/button.svg" alt="Button" style="width:6vw;cursor:pointer;transition:transform 0.3s;">
+            </div>
+          </div>
+          <div id="pdf-spine"></div>
+          <div id="journal-content">
+            <div id="pdf-page">
+              <div id="pdf-scroll"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
 <script>
-  const ANTHROPIC_API_KEY = '';
+  // PDF page viewer — scrollable
+  const pdfScroll = document.getElementById('pdf-scroll');
+  const TOTAL_PAGES = 43;
+  for (let i = 0; i < TOTAL_PAGES; i++) {
+    const img = document.createElement('img');
+    const num = String(i + 1).padStart(2, '0');
+    img.src = `svgs/misc/chihiro_pages/page-${num}.jpg`;
+    img.alt = `page ${i + 1}`;
+    img.loading = 'lazy';
+    pdfScroll.appendChild(img);
+  }
+
+  // Bookmark interaction with page flip
+  const bookmarks = document.querySelectorAll('.bookmark');
+  const coverPage = document.getElementById('cover-page');
+  const aboutPage = document.getElementById('about-page');
+  const githubPage = document.getElementById('github-page');
+  let currentView = 'cover';
+  let flipping = false;
+
+  // Page order top to bottom: cover, about, github, pdf
+  // To show a page, flip away pages above it; unflip pages at or below it
+  function flipTo(target) {
+    if (flipping) return;
+    if (target === currentView) return;
+    flipping = true;
+
+    document.getElementById('learn-more-text').classList.add('hidden');
+
+    coverPage.classList.add('hidden');
+    aboutPage.classList.add('hidden');
+    githubPage.classList.add('hidden');
+
+    if (target === 'cover') coverPage.classList.remove('hidden');
+    if (target === 'about') aboutPage.classList.remove('hidden');
+    if (target === 'github') githubPage.classList.remove('hidden');
+
+    setTimeout(() => {
+      currentView = target;
+      flipping = false;
+    }, 400);
+  }
+
+  bookmarks.forEach(bm => {
+    bm.addEventListener('click', () => {
+      bookmarks.forEach(b => b.classList.remove('active'));
+      bm.classList.add('active');
+      const pageIdx = parseInt(bm.dataset.page);
+
+      if (pageIdx === 0) {
+        flipTo('about');
+      } else if (pageIdx === 28) {
+        flipTo('github');
+      } else {
+        flipTo('pdf');
+        setTimeout(() => {
+          pdfScroll.scrollTop = 0;
+        }, currentView !== 'pdf' ? 650 : 50);
+      }
+    });
+  });
+
+  document.getElementById('github-btn').addEventListener('click', (e) => {
+    const btn = e.currentTarget;
+    btn.classList.add('spinning');
+    btn.addEventListener('animationend', () => {
+      btn.classList.remove('spinning');
+      window.open('https://github.com/thefarmerbob/chihiro.git', '_blank');
+    }, { once: true });
+  });
+
 
   const SONG_ERAS = [
     { song: "Hell N Back", artist: "Bakar", era: "spring-comfort", period: "Apr 2024 – May 2025", plays: 94 },
@@ -312,9 +646,9 @@
     loadingArea.classList.add('visible');
     const list = SONG_ERAS.map(s => `- "${s.song}" by ${s.artist}: era="${s.era}", period="${s.period}", plays=${s.plays}`).join('\n');
     try {
-      const r = await fetch('https://api.anthropic.com/v1/messages', {
+      const r = await fetch('/.netlify/functions/claude-proxy', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 256,
           messages: [{ role: 'user', content: `You are "Chihiro," a nostalgia music rec engine.\n\nSongs:\n${list}\n\nUser: "${query}"\n\nReturn ONLY a JSON array of exactly 2 objects. No markdown. Each:\n{"song":"exact name","artist":"exact artist","confidence":0.0-1.0}\n\nPick 2 best matches. Prefer variety.` }]
         })

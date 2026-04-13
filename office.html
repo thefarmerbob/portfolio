@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mara Buşirku — Portfolio</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
       width: 100%; height: 100%;
@@ -115,10 +116,10 @@
       -webkit-backface-visibility: hidden;
     }
     .zoom-face img {
-      position: relative;
-      z-index: 1;
       width: 100%; height: 100%;
       object-fit: contain; display: block;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
     .zoom-face.back {
       transform: rotateY(180deg);
@@ -392,18 +393,19 @@
 <body>
   <div id="scroll-driver"><div id="scroll-content"></div></div>
 
+  <canvas id="iris-overlay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:10000;opacity:0;"></canvas>
   <div id="scene">
     <div id="wall">
-      <div class="wall-item" style="left:5vw; top:9vw; width:28vw;">
+      <div class="wall-item" style="left:5vw; top:4vw; width:28vw;">
         <img src="svgs/office/ABOUT.svg" alt="about" />
       </div>
-      <div class="wall-item" style="left:5vw; top:42vw; width:13vw;">
+      <div class="wall-item" style="left:5vw; top:37vw; width:13vw;">
         <img src="svgs/office/contactdetails.svg" alt="contact details" />
       </div>
-      <div class="wall-item" style="left:52vw; top:24vw; width:12vw;">
+      <div class="wall-item" style="left:52vw; top:19vw; width:12vw;">
         <img src="svgs/office/btwheresmyresume.svg" alt="here's my resume?" />
       </div>
-      <div class="wall-item flippable" style="left:5vw; top:19vw; width:17vw;">
+      <div class="wall-item flippable" style="left:5vw; top:18vw; width:17vw;">
         <div class="flip-container">
           <div class="flip-front"><img src="svgs/office/officeframe1.svg" alt="frame 1" /></div>
           <div class="flip-back">
@@ -417,56 +419,64 @@
           </div>
         </div>
       </div>
-      <div class="wall-item" style="left:27vw; top:23vw; width:14vw;">
-        <img src="svgs/office/officeframe2.svg" alt="frame 2" />
+      <div class="wall-item" style="left:27vw; top:18vw; width:14vw;">
+        <div style="position:relative;">
+          <img src="svgs/office/officeframe2.svg" alt="frame 2" style="display:block; width:100%; height:auto;" />
+          <div style="position:absolute; top:0; left:0; right:0; bottom:0; padding:18%; display:flex; align-items:center; justify-content:center;">
+            <p style="margin:0; color:#000; font-family:'Playfair Display', serif; font-size:1.3vw; font-weight:400; line-height:1.5; text-align:left;">Hello,<br>I'm Mara</p>
+          </div>
+        </div>
       </div>
       <div class="wall-item" id="office-lamp" style="left:46vw; top:-32vw; width:17vw; pointer-events:auto; cursor:pointer;">
         <img src="svgs/office/lamp.svg" alt="hanging lamp" />
       </div>
-      <div class="wall-item clickable" id="resume-trigger" style="left:65vw; top:18vw; width:10vw;">
+      <div class="wall-item clickable" id="resume-trigger" style="left:65vw; top:13vw; width:10vw;">
         <img src="svgs/office/officeframe3.svg" alt="frame 3" />
       </div>
-      <div class="wall-item" style="left:27vw; top:40vw; width:34vw;">
-        <img src="svgs/office/officeframe4.svg" alt="frame 4" />
+      <div class="wall-item" style="left:27vw; top:35vw; width:34vw;">
+        <div style="position:relative;">
+          <img src="svgs/office/officeframe4.svg" alt="frame 4" style="display:block; width:100%; height:auto;" />
+          <p style="position:absolute; top:0; left:0; right:0; bottom:0; margin:0; padding:12% 10%; color:#000; font-family:'Playfair Display', serif; font-size:1.3vw; font-weight:400; line-height:1.7; display:flex; align-items:center; text-align:left;">I am a senior at Minerva University studying Data Science and I am interested in the intersection of AI/ML and sustainability! I like building things that are both useful and thoughtfully designed.</p>
+        </div>
       </div>
-      <div class="wall-item" style="left:5vw; top:61vw; width:38vw;">
+      <div class="wall-item" style="left:5vw; top:61vw; width:42vw;">
         <img src="svgs/office/PROJECTS.svg" alt="projects" />
       </div>
 
       <div class="wall-item flippable" style="left:4vw; top:73vw; width:36vw;">
         <div class="flip-container">
-          <div class="flip-front"><img src="svgs/office/officeframe5.svg" alt="frame 5" /></div>
-          <div class="flip-back"><img src="svgs/office/officeframe5back.svg" alt="frame 5 back" /></div>
+          <div class="flip-front"><img src="svgs/office/officeframe5.svg" alt="frame 5" loading="lazy" /></div>
+          <div class="flip-back"><img src="svgs/office/officeframe5back.svg" alt="frame 5 back" loading="lazy" /></div>
         </div>
       </div>
       <div class="wall-item flippable" style="left:60vw; top:73vw; width:18vw;">
         <div class="flip-container">
-          <div class="flip-front"><img src="svgs/office/officeframe7.svg" alt="frame 7" /></div>
-          <div class="flip-back"><img src="svgs/office/officeframe7back.svg" alt="frame 7 back" /></div>
+          <div class="flip-front"><img src="svgs/office/officeframe7.svg" alt="frame 7" loading="lazy" /></div>
+          <div class="flip-back"><img src="svgs/office/officeframe7back.svg" alt="frame 7 back" loading="lazy" /></div>
         </div>
       </div>
       <div class="wall-item flippable" style="left:6vw; top:92vw; width:24vw;">
         <div class="flip-container">
-          <div class="flip-front"><img src="svgs/office/officeframe9.svg" alt="frame 9" /></div>
-          <div class="flip-back"><img src="svgs/office/officeframe9back.svg" alt="frame 9 back" /></div>
+          <div class="flip-front"><img src="svgs/office/officeframe9.svg" alt="frame 9" loading="lazy" /></div>
+          <div class="flip-back"><img src="svgs/office/officeframe9back.svg" alt="frame 9 back" loading="lazy" /></div>
         </div>
       </div>
       <div class="wall-item flippable" style="left:62vw; top:116vw; width:16vw;">
         <div class="flip-container">
-          <div class="flip-front"><img src="svgs/office/officeframe6.svg" alt="frame 6" /></div>
-          <div class="flip-back"><img src="svgs/office/officeframe6back.svg" alt="frame 6 back" /></div>
+          <div class="flip-front"><img src="svgs/office/officeframe6.svg" alt="frame 6" loading="lazy" /></div>
+          <div class="flip-back"><img src="svgs/office/officeframe6back.svg" alt="frame 6 back" loading="lazy" /></div>
         </div>
       </div>
       <div class="wall-item flippable" style="left:39vw; top:86vw; width:18vw;">
         <div class="flip-container">
-          <div class="flip-front"><img src="svgs/office/officeframe11.svg" alt="frame 11" /></div>
-          <div class="flip-back"><img src="svgs/office/officeframe11back.svg" alt="frame 11 back" /></div>
+          <div class="flip-front"><img src="svgs/office/officeframe11.svg" alt="frame 11" loading="lazy" /></div>
+          <div class="flip-back"><img src="svgs/office/officeframe11back.svg" alt="frame 11 back" loading="lazy" /></div>
         </div>
       </div>
       <div class="wall-item flippable" style="left:34vw; top:106vw; width:27vw;">
         <div class="flip-container">
-          <div class="flip-front"><img src="svgs/office/officeframe10.svg" alt="frame 10" /></div>
-          <div class="flip-back"><img src="svgs/office/officeframe10back.svg" alt="frame 10 back" /></div>
+          <div class="flip-front"><img src="svgs/office/officeframe10.svg" alt="frame 10" loading="lazy" /></div>
+          <div class="flip-back"><img src="svgs/office/officeframe10back.svg" alt="frame 10 back" loading="lazy" /></div>
         </div>
       </div>
       <div class="wall-item flippable" style="left:12vw; top:113vw; width:18vw;">
@@ -477,14 +487,14 @@
       </div>
       <div class="wall-item flippable" style="left:62vw; top:96vw; width:18vw;">
         <div class="flip-container">
-          <div class="flip-front"><img src="svgs/office/officeframe12.svg" alt="frame 12" /></div>
-          <div class="flip-back"><img src="svgs/office/officeframe12back.svg" alt="frame 12 back" /></div>
+          <div class="flip-front"><img src="svgs/office/officeframe12.svg" alt="frame 12" loading="lazy" /></div>
+          <div class="flip-back"><img src="svgs/office/officeframe12back.svg" alt="frame 12 back" loading="lazy" /></div>
         </div>
       </div>
       <div class="wall-item flippable" style="left:37vw; top:122vw; width:22vw;">
         <div class="flip-container">
-          <div class="flip-front"><img src="svgs/office/officeframe13.svg" alt="frame 13" /></div>
-          <div class="flip-back"><img src="svgs/office/officeframe13back.svg" alt="frame 13 back" /></div>
+          <div class="flip-front"><img src="svgs/office/officeframe13.svg" alt="frame 13" loading="lazy" /></div>
+          <div class="flip-back"><img src="svgs/office/officeframe13back.svg" alt="frame 13 back" loading="lazy" /></div>
         </div>
       </div>
       <div id="wall-door">
@@ -650,7 +660,7 @@
 
       // Position door text next to door
       const doorText = document.getElementById('wall-door-text');
-      doorText.style.top = (floorTop - doorH * 0.7) + 'px';
+      doorText.style.top = (floorTop - doorH * 0.6) + 'px';
     }
 
     function applyFromInput() {
@@ -771,7 +781,7 @@
 
     function getWalkCharSize() {
       const vw = window.innerWidth / 100;
-      return { w: 5.5 * vw, h: 9 * vw };
+      return { w: 5.5 * 0.7 * vw, h: 9 * 0.7 * vw };
     }
 
     function getLadderLeftX() {
@@ -1031,6 +1041,10 @@
         buttonBottom: '35%',
         buttonLeft: '43%'
       },
+      'officeframe11back': {
+        project: 'data-&-swe-projects.html',
+        buttonBottom: '25%'
+      },
       'officeframe12back': {
         project: 'chihiro.html',
         code: 'https://github.com/thefarmerbob/chihiro.git',
@@ -1115,6 +1129,7 @@
       zoomedIn = false;
       clearTimeout(flipTimer);
       zoomOverlay.classList.remove('active');
+      setTimeout(() => { if (!zoomedIn) zoomFrame.innerHTML = ''; }, 400);
     }
 
     zoomBackdrop.addEventListener('click', closeZoom);
@@ -1323,6 +1338,80 @@
 
     recalcAll();
     applyFromInput();
+
+    // Iris spiral transition for same-tab project links
+    const irisCanvas = document.getElementById('iris-overlay');
+    const irisCtx = irisCanvas.getContext('2d');
+
+    function irisTransition(anchorEl, url) {
+      const rect = anchorEl.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      irisCanvas.width = w;
+      irisCanvas.height = h;
+      irisCanvas.style.opacity = '1';
+
+      const maxR = Math.sqrt(Math.max(
+        cx * cx + cy * cy,
+        (w - cx) * (w - cx) + cy * cy,
+        cx * cx + (h - cy) * (h - cy),
+        (w - cx) * (w - cx) + (h - cy) * (h - cy)
+      ));
+
+      const duration = 1000;
+      const start = performance.now();
+
+      function draw(now) {
+        const t = Math.min((now - start) / duration, 1);
+        const ease = t * t;
+        const r = maxR * (1 - ease);
+        const rotation = t * Math.PI * 6;
+
+        irisCtx.clearRect(0, 0, w, h);
+        irisCtx.fillStyle = '#ffffff';
+        irisCtx.beginPath();
+        irisCtx.rect(0, 0, w, h);
+        irisCtx.arc(cx, cy, Math.max(r, 0), 0, Math.PI * 2, true);
+        irisCtx.fill('evenodd');
+
+        irisCtx.strokeStyle = '#000000';
+        irisCtx.lineWidth = 5;
+        const steps = 300;
+        const totalAngle = Math.PI * 20;
+        irisCtx.beginPath();
+        for (let i = 0; i <= steps; i++) {
+          const frac = i / steps;
+          const spiralR = Math.max(r, 0) + frac * (maxR * 1.3);
+          const angle = rotation + frac * totalAngle;
+          const x = cx + Math.cos(angle) * spiralR;
+          const y = cy + Math.sin(angle) * spiralR;
+          if (i === 0) irisCtx.moveTo(x, y);
+          else irisCtx.lineTo(x, y);
+        }
+        irisCtx.stroke();
+
+        irisCtx.strokeStyle = '#000000';
+        irisCtx.lineWidth = 4;
+        irisCtx.beginPath();
+        irisCtx.arc(cx, cy, Math.max(r, 0), 0, Math.PI * 2);
+        irisCtx.stroke();
+
+        if (t < 0.99) requestAnimationFrame(draw);
+        else window.location.href = url;
+      }
+      requestAnimationFrame(draw);
+    }
+
+    // Intercept view-project clicks that go to .html pages
+    document.addEventListener('click', (e) => {
+      const anchor = e.target.closest('a[href$=".html"]');
+      if (anchor && !anchor.target) {
+        e.preventDefault();
+        irisTransition(anchor, anchor.href);
+      }
+    });
   </script>
 </body>
 </html>
