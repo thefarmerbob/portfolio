@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Character must appear before anything else -->
+  <link rel="preload" href="svgs/character/person_stand.svg" as="image" fetchpriority="high">
   <title>loading...</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -88,7 +90,7 @@
 </head>
 <body>
   <div id="char-wrap">
-    <img id="char-img" src="svgs/character/person_stand.svg" alt="loading character">
+    <img id="char-img" src="svgs/character/person_stand.svg" alt="loading character" fetchpriority="high">
   </div>
 
   <div id="loading-label">loading<span id="dots"></span></div>
@@ -282,12 +284,22 @@
 
     countEl.textContent = '0 / ' + total;
 
-    // Load in parallel — browser limits concurrent requests anyway
-    ASSETS.forEach(src => {
-      const img = new Image();
-      img.onload = img.onerror = tick;
-      img.src = src;
-    });
+    // Wait for the character to be visible before flooding bandwidth with bulk requests
+    function startPreloading() {
+      ASSETS.forEach(src => {
+        const img = new Image();
+        img.onload = img.onerror = tick;
+        img.src = src;
+      });
+    }
+
+    const charImg = document.getElementById('char-img');
+    if (charImg.complete && charImg.naturalWidth > 0) {
+      startPreloading();
+    } else {
+      charImg.addEventListener('load', startPreloading, { once: true });
+      charImg.addEventListener('error', startPreloading, { once: true });
+    }
   </script>
 </body>
 </html>
