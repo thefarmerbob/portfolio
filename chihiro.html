@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preload" href="svgs/chihiro/journal-cover.jpeg" as="image">
+<link rel="preload" href="svgs/misc/journalpaper1.jpeg" as="image">
 <title>Chihiro</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Mono:wght@300;400&display=swap');
@@ -15,7 +17,7 @@
   #layout { display: flex; height: 100vh; }
 
   /* ── Left Column ── */
-  #left-col { display: flex; flex-direction: column; flex: 3; min-width: 0; padding: 6.67vw 0 3.47vw 2.2vw; z-index: 10; justify-content: flex-end; }
+  #left-col { display: flex; flex-direction: column; flex: 3; min-width: 0; padding: 6.67vw 0 1.5vw 2.2vw; z-index: 10; justify-content: flex-end; }
 
   #song-cards { display: flex; flex-direction: column; gap: 0.56vw; flex: 1; min-height: 13.9vw; justify-content: flex-end; }
 
@@ -372,6 +374,20 @@
     .loading-dots span { width: 1.2vw; height: 1.2vw; }
     #loading-text { font-size: 1.8vw; }
   }
+  #back-link {
+    position: fixed;
+    bottom: 2vw;
+    left: 2vw;
+    width: 5vw;
+    cursor: pointer;
+    z-index: 10;
+    filter: brightness(0);
+    transition: transform 0.2s ease, filter 0.2s ease;
+  }
+  #back-link:hover {
+    transform: scale(1.05);
+    filter: brightness(1);
+  }
 </style>
 </head>
 <body>
@@ -706,5 +722,8 @@
     }
   }
 </script>
+<a id="back-link" href="office.html">
+  <img src="svgs/data-and-swe-projects/back-text.svg" alt="Go back to office" style="width:100%; display:block;">
+</a>
 </body>
 </html>
