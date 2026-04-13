@@ -199,7 +199,7 @@
 
   <script>
     (function(){
-      var w=document.getElementById('profile-pic-wrap'),m=['1.jpg','2.mov','3.jpg','4.jpeg','5.jpeg','6.jpeg','7.jpeg','8.jpeg','9.MOV','10.jpeg','11.jpeg','12.jpeg','13.jpeg','14.jpeg'],c=0,els=[];
+      var w=document.getElementById('profile-pic-wrap'),m=['1.jpg','2.jpg','3.jpg','4.jpeg','5.jpeg','6.jpeg','7.jpeg','8.jpeg','9.MOV','10.jpeg','11.jpeg','12.jpg','13.jpeg','14.jpeg'],c=0,els=[];
       m.forEach(function(n,i){var v=n.endsWith('.mov')||n.endsWith('.MOV'),e;
         if(v){e=document.createElement('video');e.src='svgs/profile-pics/'+n;e.muted=true;e.loop=true;e.playsInline=true;}
         else{e=document.createElement('img');e.src='svgs/profile-pics/'+n;e.alt='profile '+(i+1);}
@@ -303,6 +303,17 @@
       }
       requestAnimationFrame(draw);
     }
+
+    // Reset iris when user navigates back (browser restores page from bfcache)
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted) {
+        transitioning = false;
+        irisCtx.clearRect(0, 0, irisCanvas.width, irisCanvas.height);
+        irisCanvas.classList.remove('active');
+        overlayOffice.style.opacity = '0';
+        overlayGallery.style.opacity = '0';
+      }
+    });
 
     // --- Scroll/key/touch-driven character (like gallery) ---
     const charEl = document.getElementById('home-char');

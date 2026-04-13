@@ -235,9 +235,81 @@
       z-index: 6;
       background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.12) 100%);
     }
+
+
+    /* ── Gallery loading overlay ── */
+    #gallery-loader {
+      position: fixed;
+      inset: 0;
+      background: #8ba87a;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2.2vw;
+      transition: opacity 0.55s ease;
+    }
+    #gallery-loader.done {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #gl-char {
+      width: 7vw;
+      min-width: 60px;
+      animation: gl-spin 1.8s linear infinite;
+    }
+    #gl-char img { width: 100%; display: block; }
+    @keyframes gl-spin {
+      to { transform: rotate(360deg); }
+    }
+    #gl-label {
+      font-family: 'Courier New', monospace;
+      font-size: clamp(12px, 1.1vw, 18px);
+      color: #1a2e10;
+      letter-spacing: 0.18em;
+    }
+    #gl-dots::after {
+      content: '';
+      animation: gl-dot 1.4s steps(4, end) infinite;
+    }
+    @keyframes gl-dot {
+      0%  { content: ''; }
+      25% { content: '.'; }
+      50% { content: '..'; }
+      75% { content: '...'; }
+    }
+    #gl-bar-wrap {
+      width: clamp(180px, 22vw, 360px);
+      height: 3px;
+      background: rgba(0,0,0,0.15);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    #gl-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: #1a2e10;
+      border-radius: 99px;
+      transition: width 0.2s ease;
+    }
+    #gl-count {
+      font-family: 'Courier New', monospace;
+      font-size: clamp(9px, 0.7vw, 13px);
+      color: rgba(26,46,16,0.55);
+      letter-spacing: 0.12em;
+    }
   </style>
 </head>
 <body>
+  <!-- Gallery loading overlay -->
+  <div id="gallery-loader">
+    <div id="gl-char"><img src="svgs/character/person_stand.svg" alt=""></div>
+    <div id="gl-label">loading<span id="gl-dots"></span></div>
+    <div id="gl-bar-wrap"><div id="gl-bar-fill"></div></div>
+    <div id="gl-count">0 / 0</div>
+  </div>
+
   <div id="scroll-driver">
     <div id="scroll-content"></div>
   </div>
@@ -332,7 +404,7 @@
         div.style.width = (f.w * s) + 'px';
         div.style.height = (f.h * s) + 'px';
         const img = document.createElement('img');
-        img.dataset.src = `svgs/gallery-frames/galleryframe${f.id}.svg`;
+        img.src = `svgs/gallery-frames/galleryframe${f.id}.svg`;
         img.alt = `gallery frame ${f.id}`;
         img.style.width = '100%';
         img.style.height = '100%';
@@ -402,22 +474,39 @@
     let wallWidth = buildWall();
     attachFrameClicks();
 
-    // Lazy-load gallery frames as they scroll into view
-    function attachLazyFrames() {
-      const lazyImgs = wallEl.querySelectorAll('img[data-src]');
-      const obs = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const img = entry.target;
-            img.src = img.dataset.src;
-            delete img.dataset.src;
-            obs.unobserve(img);
+    // ── Gallery loading overlay ──
+    // Track all frame imgs; hide overlay only when every one has loaded.
+    (function() {
+      const loader  = document.getElementById('gallery-loader');
+      const barFill = document.getElementById('gl-bar-fill');
+      const countEl = document.getElementById('gl-count');
+
+      function trackFrames() {
+        const imgs = wallEl.querySelectorAll('img');
+        const total = imgs.length;
+        if (total === 0) { loader.classList.add('done'); return; }
+        countEl.textContent = '0 / ' + total;
+        let loaded = 0;
+
+        function tick() {
+          loaded++;
+          barFill.style.width = (loaded / total * 100) + '%';
+          countEl.textContent = loaded + ' / ' + total;
+          if (loaded >= total) {
+            loader.classList.add('done');
+            loader.addEventListener('transitionend', () => loader.remove(), { once: true });
+            setTimeout(() => loader.remove(), 700);
           }
+        }
+
+        imgs.forEach(img => {
+          if (img.complete) { tick(); }
+          else { img.addEventListener('load', tick, { once: true });
+                 img.addEventListener('error', tick, { once: true }); }
         });
-      }, { rootMargin: '0px 400px 0px 400px' });
-      lazyImgs.forEach(img => obs.observe(img));
-    }
-    attachLazyFrames();
+      }
+      trackFrames();
+    })();
 
     const charEl = document.getElementById('character');
     let charWidth = 0;
@@ -514,7 +603,6 @@
       wallWidth = buildWall();
       buildOverlay();
       attachFrameClicks();
-      attachLazyFrames();
       sizeCharacter();
       MAX_WALL_OFFSET = Math.max(0, wallWidth - window.innerWidth);
       // Restore positions from fractions
