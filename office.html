@@ -310,7 +310,7 @@
     #wall-floor {
       position: absolute;
       left: 0; width: 100%;
-      height: 50vw;
+      height: 50vh;
       background: #ffffff;
       pointer-events: none;
       z-index: 9;
@@ -331,8 +331,8 @@
       width: 100%; height: 100%;
       object-fit: contain; display: block;
     }
-    #wall-door #door1 { bottom: -2.9vw; }
-    #wall-door #door2-p2 { bottom: -0.2vw; left: 7vw; width: 83%; height: 78%; }
+    #wall-door #door1 { bottom: -1.2vw; }
+    #wall-door #door2-p2 { bottom: 5%; left: 40%; width: 84%; height: 80%; }
 
     /* Door front panel overlay — fixed, above character */
     #door-front-overlay {
@@ -378,7 +378,7 @@
     #character.walking {
       right: auto;
       top: auto !important;
-      bottom: 11%;
+      bottom: 6.5vh;
     }
     #character.walking .climb-frame { display: none; }
 
@@ -501,7 +501,7 @@
         <img id="door1" src="svgs/office/door1.svg" alt="closed door" />
         <img id="door2-p2" src="svgs/office/door2-p2.svg" alt="open door back" style="display:none;" />
       </div>
-      <div id="wall-door-text" style="position:absolute; left:25vw; width:14vw; z-index:11; pointer-events:none;">
+      <div id="wall-door-text" style="position:absolute; left:26vw; width:14vw; z-index:11; pointer-events:none;">
         <img src="svgs/gallery-objects/gallery-home-text.svg" alt="click to go back" style="width:100%; height:auto; display:block;" />
       </div>
       <div id="wall-floor-line"></div>
@@ -646,21 +646,20 @@
 
       // Position floor at bottom of all wall content
       // When fully scrolled (wallOffset = maxWO), floor screen Y = floorTop - maxWO
-      // We want that to be at ~vh * 0.92 (8% from bottom)
+      // We want that to be at ~vh * 0.95 (5% from bottom, matching gallery/home)
       const vh = window.innerHeight;
-      const floorTop = layout.maxWO + Math.min(vh * 0.92, layout.contentBottom + 10 * (window.innerWidth / 100));
+      const floorTop = layout.maxWO + Math.min(vh * 0.95, layout.contentBottom + 10 * (vh / 100));
       wallFloorLine.style.top = floorTop + 'px';
       wallFloor.style.top = (floorTop + 4) + 'px';
 
-      // Position door above the floor line (use vw-based height for consistency)
-      const vwPx = window.innerWidth / 100;
-      const doorH = 30 * vwPx;
+      // Position door above the floor line (use vh-based height for consistency)
+      const doorH = window.innerWidth * 0.30;
       doorEl.style.height = doorH + 'px';
-      doorEl.style.top = (floorTop - doorH) + 'px';
+      doorEl.style.top = (floorTop - doorH + doorH * 0.06) + 'px';
 
       // Position door text next to door
       const doorText = document.getElementById('wall-door-text');
-      doorText.style.top = (floorTop - doorH * 0.6) + 'px';
+      doorText.style.top = (floorTop - doorH * 0.70) + 'px';
     }
 
     function applyFromInput() {
@@ -861,9 +860,9 @@
 
       // Position front overlay to match door's screen position
       const rect = doorEl.getBoundingClientRect();
-      const vw = window.innerWidth / 100;
-      doorFrontOverlay.style.left = (rect.left - 0.4 * vw) + 'px';
-      doorFrontOverlay.style.top = (rect.top + 2.7 * vw) + 'px';      doorFrontOverlay.style.width = (rect.width * 1.02) + 'px';
+      doorFrontOverlay.style.left = rect.left + 'px';
+      doorFrontOverlay.style.top = (rect.top + rect.height * 0.03) + 'px';
+      doorFrontOverlay.style.width = (rect.width * 1.02) + 'px';
       doorFrontOverlay.style.height = (rect.height * 1.02) + 'px';
       doorFrontOverlay.style.display = 'block';
     }

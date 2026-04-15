@@ -4,13 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home</title>
-  <script>
-    (function(){
-      var D = 1100;
-      function z(){ document.documentElement.style.zoom = window.innerWidth < D ? window.innerWidth/D : 1; }
-      z(); window.addEventListener('resize', z);
-    })();
-  </script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
@@ -19,16 +12,24 @@
       overflow: hidden;
     }
 
-    #home-container {
-      position: relative;
+    #scene {
+      position: fixed;
+      top: 0; left: 0;
       width: 100%; height: 100%;
+      overflow: hidden;
+      z-index: 1;
     }
+
+    #home-wall {
+      position: absolute;
+      top: 0; left: 0;
+      height: 100%;
+      will-change: transform;
+    }
+
     #plant-wrap {
       position: absolute;
-      left: 65%;
-      bottom: 3.8vw;
-      transform: translateX(-30%) rotate(-1deg);
-      width: 38vw;
+      transform: rotate(-1deg);
       z-index: 1;
     }
     #home-img, .home-overlay {
@@ -48,26 +49,16 @@
     /* Home text & frame */
     #home-text {
       position: absolute;
-      left: 6vw;
-      top: 5vw;
-      width: 28vw;
       z-index: 3;
       pointer-events: none;
     }
     #home-frame {
       position: absolute;
-      left: 20vw;
-      top: 4vw;
-      width: 10vw;
       z-index: 3;
       pointer-events: none;
     }
     #profile-pic-wrap {
       position: absolute;
-      left: 20vw;
-      top: 4vw;
-      width: 10vw;
-      height: 10vw;
       z-index: 2;
       border-radius: 50%;
       overflow: hidden;
@@ -126,16 +117,16 @@
       position: fixed;
       bottom: 0; left: 0;
       width: 100%;
-      height: 5vw;
+      height: 5vh;
       background: #ffffff;
       z-index: 0;
     }
     #floor-line {
       position: fixed;
-      bottom: 5vw;
+      bottom: 5vh;
       left: 0;
       width: 100%;
-      height: 0.15vw;
+      height: 2px;
       background: rgb(0, 0, 0);
       z-index: 0;
     }
@@ -143,15 +134,13 @@
     /* Walking character */
     #home-char {
       position: fixed;
-      bottom: 4.5vw;
       z-index: 2;
-      width: 4.01vw;
-      height: 6.31vw;
+      will-change: left;
     }
     #home-char img {
       position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: -100%; left: 0;
+      width: 250%; height: 250%;
       object-fit: contain;
       opacity: 0;
     }
@@ -175,17 +164,19 @@
 </head>
 <body>
   <canvas id="iris-overlay"></canvas>
-  <div id="home-container">
-    <img id="home-text" src="svgs/home/home-text.svg" alt="Hello you! I'm Mara">
-    <div id="profile-pic-wrap"></div>
-    <img id="home-frame" src="svgs/home/home-frame.svg" alt="">
-    <div id="plant-wrap">
-      <img id="home-img" src="svgs/home/home1.svg" alt="home" />
-      <img id="overlay-office" class="home-overlay" src="svgs/home/home2.svg" alt="" />
-      <img id="overlay-gallery" class="home-overlay" src="svgs/home/home3.svg" alt="" />
-      <div id="hotspot-wrap">
-        <div class="hotspot" id="hotspot-office"></div>
-        <div class="hotspot" id="hotspot-gallery"></div>
+  <div id="scene">
+    <div id="home-wall">
+      <img id="home-text" src="svgs/home/home-text.svg" alt="Hello you! I'm Mara">
+      <div id="profile-pic-wrap"></div>
+      <img id="home-frame" src="svgs/home/home-frame.svg" alt="">
+      <div id="plant-wrap">
+        <img id="home-img" src="svgs/home/home1.svg" alt="home" />
+        <img id="overlay-office" class="home-overlay" src="svgs/home/home2.svg" alt="" />
+        <img id="overlay-gallery" class="home-overlay" src="svgs/home/home3.svg" alt="" />
+        <div id="hotspot-wrap">
+          <div class="hotspot" id="hotspot-office"></div>
+          <div class="hotspot" id="hotspot-gallery"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -205,6 +196,59 @@
   <div id="floor"></div>
 
   <script>
+    // --- Layout constants (design space at 1920x1080) ---
+    const BASE_W = 1920;
+    const BASE_H = 1080;
+    const WALL_BASE_W = 1920;
+
+    const wallEl = document.getElementById('home-wall');
+
+    function buildLayout() {
+      const floorH = 0.05 * window.innerHeight;
+      const s = (window.innerHeight - floorH) / (BASE_H - 0.05 * BASE_H);
+      const portrait = window.innerWidth < window.innerHeight;
+
+      // Sizes always use s (height-based) so elements stay big
+      // Horizontal positions: on portrait, use tighter spacing
+      const textX = portrait ? 30 : 115;
+      const picX = portrait ? (textX + 340) : 430;
+      const plantX = portrait ? (picX + 250) : 1150;
+      const wallBaseW = portrait ? (plantX + 780) : WALL_BASE_W;
+
+      const wallWidth = wallBaseW * s;
+      wallEl.style.width = wallWidth + 'px';
+
+      // Text
+      const textEl = document.getElementById('home-text');
+      textEl.style.left = (textX * s) + 'px';
+      textEl.style.top = (96 * s) + 'px';
+      textEl.style.width = (537 * s) + 'px';
+
+      // Profile pic
+      const picWrap = document.getElementById('profile-pic-wrap');
+      picWrap.style.left = (picX * s) + 'px';
+      picWrap.style.top = (77 * s) + 'px';
+      picWrap.style.width = (192 * s) + 'px';
+      picWrap.style.height = (192 * s) + 'px';
+
+      // Frame
+      const frameEl = document.getElementById('home-frame');
+      frameEl.style.left = (picX * s) + 'px';
+      frameEl.style.top = (77 * s) + 'px';
+      frameEl.style.width = (192 * s) + 'px';
+
+      // Plant
+      const plantEl = document.getElementById('plant-wrap');
+      plantEl.style.left = (plantX * s) + 'px';
+      plantEl.style.bottom = (floorH - 25 * s) + 'px';
+      plantEl.style.width = (730 * s) + 'px';
+
+      return wallWidth;
+    }
+
+    let wallWidth = buildLayout();
+
+    // --- Profile pic carousel ---
     (function(){
       var w=document.getElementById('profile-pic-wrap'),m=['1.jpg','2.jpeg','3.jpeg','4.jpeg','5.jpeg','6.jpeg','7.jpeg','8.jpeg','9.MOV','10.jpeg','11.jpeg','12.jpeg','13.jpeg','14.jpeg'],c=0,els=[];
       m.forEach(function(n,i){var v=n.endsWith('.mov')||n.endsWith('.MOV'),e;
@@ -216,7 +260,7 @@
         c=(c+1)%els.length;var nx=els[c];nx.classList.add('active');if(nx.tagName==='VIDEO'){nx.currentTime=0;nx.play();}},3000);
     })();
 
-    const img = document.getElementById('home-img');
+    // --- Hotspot hover ---
     const overlayOffice = document.getElementById('overlay-office');
     const overlayGallery = document.getElementById('overlay-gallery');
     let transitioning = false;
@@ -230,7 +274,6 @@
     hotspotOffice.addEventListener('mouseleave', () => {
       if (!transitioning) overlayOffice.style.opacity = '0';
     });
-
     hotspotGallery.addEventListener('mouseenter', () => {
       if (!transitioning) overlayGallery.style.opacity = '0.5';
     });
@@ -238,6 +281,7 @@
       if (!transitioning) overlayGallery.style.opacity = '0';
     });
 
+    // --- Iris transition ---
     const irisCanvas = document.getElementById('iris-overlay');
     const irisCtx = irisCanvas.getContext('2d');
 
@@ -311,7 +355,6 @@
       requestAnimationFrame(draw);
     }
 
-    // Reset iris when user navigates back (browser restores page from bfcache)
     window.addEventListener('pageshow', (e) => {
       if (e.persisted) {
         transitioning = false;
@@ -322,35 +365,75 @@
       }
     });
 
-    // --- Scroll/key/touch-driven character (like gallery) ---
+    // --- Character & wall-scroll system (gallery-style) ---
     const charEl = document.getElementById('home-char');
     const charImgs = charEl.querySelectorAll('img');
     const rightFrames = charEl.querySelectorAll('[data-dir="right"]');
     const leftFrames = charEl.querySelectorAll('[data-dir="left"]');
     const idleRightImg = charEl.querySelector('[data-idle="right"]');
     const idleLeftImg = charEl.querySelector('[data-idle="left"]');
-    let charPct = 50;
+
+    let charWidth = 0;
+
+    function sizeCharacter() {
+      const floorH = 0.05 * window.innerHeight;
+      const s = (window.innerHeight - floorH) / (BASE_H - 0.05 * BASE_H);
+      charWidth = 38 * s;
+      charEl.style.width = charWidth + 'px';
+      charEl.style.height = (62 * s) + 'px';
+      charEl.style.bottom = (0.065 * window.innerHeight) + 'px';
+    }
+    sizeCharacter();
+
+    const LEFT_EDGE = 0.05;
+    const RIGHT_EDGE = 0.55;
+
+    let characterX = window.innerWidth * 0.30;
+    let charXFrac = 0.30;
+    let wallOffset = 0;
+    let wallOffsetFrac = 0;
+    let MAX_WALL_OFFSET = Math.max(0, wallWidth - window.innerWidth);
+
+    function getCharMinX() { return window.innerWidth * LEFT_EDGE; }
+    function getCharMaxX() { return window.innerWidth - charWidth * 2.5; }
+    function getCharScrollRightX() { return window.innerWidth * RIGHT_EDGE; }
+    function getCharScrollLeftX() { return window.innerWidth * 0.30; }
+
+    function applyPositions() {
+      charXFrac = characterX / window.innerWidth;
+      wallOffsetFrac = MAX_WALL_OFFSET > 0 ? wallOffset / MAX_WALL_OFFSET : 0;
+      charEl.style.left = characterX + 'px';
+      wallEl.style.transform = `translateX(${-wallOffset}px)`;
+    }
+
+    window.addEventListener('resize', () => {
+      wallWidth = buildLayout();
+      sizeCharacter();
+      MAX_WALL_OFFSET = Math.max(0, wallWidth - window.innerWidth);
+      wallOffset = wallOffsetFrac * MAX_WALL_OFFSET;
+      characterX = charXFrac * window.innerWidth;
+      characterX = Math.max(getCharMinX(), Math.min(characterX, getCharMaxX()));
+      applyPositions();
+    });
+
     let lastDirection = 'right';
     let charFrame = 0;
     let accumulatedDelta = 0;
     let idleTimeout = null;
 
-    const WALK_SPEED = 0.5;
+    const WALK_SPEED = 8;
     const SCROLL_TO_WALK = 0.4;
-    const FRAME_STEP = 35;
+    const FRAME_STEP = 80;
     const IDLE_DELAY = 250;
 
     function showCharFrame(dir, idx) {
       charImgs.forEach(im => im.classList.remove('active'));
-      const frames = dir === 'right' ? rightFrames : leftFrames;
-      frames[idx].classList.add('active');
+      (dir === 'right' ? rightFrames : leftFrames)[idx].classList.add('active');
     }
-
     function showIdle() {
       charImgs.forEach(im => im.classList.remove('active'));
       (lastDirection === 'right' ? idleRightImg : idleLeftImg).classList.add('active');
     }
-
     function advanceWalkFrame(direction) {
       lastDirection = direction;
       charFrame = (charFrame + 1) % 4;
@@ -359,33 +442,62 @@
       idleTimeout = setTimeout(showIdle, IDLE_DELAY);
     }
 
-    function moveChar(deltaPx) {
+    function moveBy(deltaPx) {
       if (transitioning) return;
       if (Math.abs(deltaPx) < 0.5) return;
 
-      const deltaPct = (deltaPx / window.innerWidth) * 100;
       const direction = deltaPx > 0 ? 'right' : 'left';
+      let remaining = deltaPx;
 
-      charPct += deltaPct;
-      charPct = Math.max(2, Math.min(charPct, 93));
-      charEl.style.left = charPct + 'vw';
+      if (direction === 'right') {
+        if (characterX < getCharScrollRightX()) {
+          const charMove = Math.min(remaining, getCharScrollRightX() - characterX);
+          characterX += charMove;
+          remaining -= charMove;
+        }
+        if (remaining > 0 && wallOffset < MAX_WALL_OFFSET) {
+          const wallMove = Math.min(remaining, MAX_WALL_OFFSET - wallOffset);
+          wallOffset += wallMove;
+          remaining -= wallMove;
+        }
+        if (remaining > 0) {
+          characterX = Math.min(characterX + remaining, getCharMaxX());
+        }
+      } else {
+        remaining = Math.abs(remaining);
+        if (characterX > getCharScrollLeftX()) {
+          const charMove = Math.min(remaining, characterX - getCharScrollLeftX());
+          characterX -= charMove;
+          remaining -= charMove;
+        }
+        if (remaining > 0 && wallOffset > 0) {
+          const wallMove = Math.min(remaining, wallOffset);
+          wallOffset -= wallMove;
+          remaining -= wallMove;
+        }
+        if (remaining > 0) {
+          characterX = Math.max(characterX - remaining, getCharMinX());
+        }
+      }
 
       accumulatedDelta += Math.abs(deltaPx);
       if (accumulatedDelta >= FRAME_STEP) {
         advanceWalkFrame(direction);
         accumulatedDelta = accumulatedDelta % FRAME_STEP;
       }
+
+      applyPositions();
     }
 
-    // Scroll (wheel) to walk
+    // Wheel
     document.addEventListener('wheel', (e) => {
       if (transitioning) return;
       e.preventDefault();
       const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-      moveChar(delta * SCROLL_TO_WALK);
+      moveBy(delta * SCROLL_TO_WALK);
     }, { passive: false });
 
-    // Keyboard (arrow keys / A/D) to walk
+    // Keyboard
     let keysHeld = { left: false, right: false };
     let keyAnimFrame = null;
 
@@ -401,32 +513,33 @@
     });
     function keyLoop() {
       let delta = 0;
-      if (keysHeld.right) delta += WALK_SPEED * window.innerWidth / 100;
-      if (keysHeld.left) delta -= WALK_SPEED * window.innerWidth / 100;
-      if (delta !== 0) { moveChar(delta); keyAnimFrame = requestAnimationFrame(keyLoop); }
+      if (keysHeld.right) delta += WALK_SPEED;
+      if (keysHeld.left) delta -= WALK_SPEED;
+      if (delta !== 0) { moveBy(delta); keyAnimFrame = requestAnimationFrame(keyLoop); }
       else keyAnimFrame = null;
     }
 
-    // Touch to walk
+    // Touch
     let touchLastX = 0;
     document.addEventListener('touchstart', (e) => { touchLastX = e.touches[0].clientX; }, { passive: true });
     document.addEventListener('touchmove', (e) => {
       if (transitioning) return;
       const touchX = e.touches[0].clientX;
-      moveChar((touchLastX - touchX) * 0.8);
+      moveBy((touchLastX - touchX) * 0.8);
       touchLastX = touchX;
     }, { passive: true });
 
-    charEl.style.left = charPct + 'vw';
-    showIdle();
-
+    // Hotspot clicks
     hotspotOffice.addEventListener('click', () => {
       irisTransition(hotspotOffice, 'office.html', overlayOffice);
     });
-
     hotspotGallery.addEventListener('click', () => {
       irisTransition(hotspotGallery, 'gallery.html', overlayGallery);
     });
+
+    // Init
+    showIdle();
+    applyPositions();
   </script>
 </body>
 </html>
