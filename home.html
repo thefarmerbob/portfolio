@@ -126,7 +126,7 @@
       bottom: 5vh;
       left: 0;
       width: 100%;
-      height: 2px;
+      height: 0.2vh;
       background: rgb(0, 0, 0);
       z-index: 0;
     }
@@ -148,6 +148,33 @@
       opacity: 1;
     }
 
+    /* Loading screen */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background: #8ba87a;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.4s ease;
+    }
+    #loading-screen.done {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #loading-dot {
+      width: 12px;
+      height: 12px;
+      background: #000;
+      border-radius: 50%;
+      animation: ldpulse 0.8s ease-in-out infinite alternate;
+    }
+    @keyframes ldpulse {
+      from { transform: scale(0.6); opacity: 0.4; }
+      to   { transform: scale(1.4); opacity: 1; }
+    }
+
     /* Circle iris wipe */
     #iris-overlay {
       position: fixed;
@@ -163,16 +190,17 @@
   </style>
 </head>
 <body>
+  <div id="loading-screen"><div id="loading-dot"></div></div>
   <canvas id="iris-overlay"></canvas>
   <div id="scene">
     <div id="home-wall">
-      <img id="home-text" src="svgs/home/home-text.svg" alt="Hello you! I'm Mara">
+      <img id="home-text" src="svgs/home/home-text.svg" alt="Hello you! I'm Mara" fetchpriority="high">
       <div id="profile-pic-wrap"></div>
       <img id="home-frame" src="svgs/home/home-frame.svg" alt="">
       <div id="plant-wrap">
-        <img id="home-img" src="svgs/home/home1.svg" alt="home" />
-        <img id="overlay-office" class="home-overlay" src="svgs/home/home2.svg" alt="" />
-        <img id="overlay-gallery" class="home-overlay" src="svgs/home/home3.svg" alt="" />
+        <img id="home-img" src="svgs/home/home1.svg" alt="home" fetchpriority="high" />
+        <img id="overlay-office" class="home-overlay" src="svgs/home/home2.svg" alt="" loading="lazy" />
+        <img id="overlay-gallery" class="home-overlay" src="svgs/home/home3.svg" alt="" loading="lazy" />
         <div id="hotspot-wrap">
           <div class="hotspot" id="hotspot-office"></div>
           <div class="hotspot" id="hotspot-gallery"></div>
@@ -181,16 +209,16 @@
     </div>
   </div>
   <div id="home-char">
-    <img src="svgs/gallery-character/walkright1.svg" data-dir="right" data-frame="1" />
-    <img src="svgs/gallery-character/walkright2.svg" data-dir="right" data-frame="2" />
-    <img src="svgs/gallery-character/walkright3.svg" data-dir="right" data-frame="3" />
-    <img src="svgs/gallery-character/walkright4.svg" data-dir="right" data-frame="4" />
-    <img src="svgs/gallery-character/walkleft1.svg" data-dir="left" data-frame="1" />
-    <img src="svgs/gallery-character/walkleft2.svg" data-dir="left" data-frame="2" />
-    <img src="svgs/gallery-character/walkleft3.svg" data-dir="left" data-frame="3" />
-    <img src="svgs/gallery-character/walkleft4.svg" data-dir="left" data-frame="4" />
-    <img src="svgs/gallery-character/idleright.svg" class="active" data-idle="right" />
-    <img src="svgs/gallery-character/idleleft.svg" data-idle="left" />
+    <img src="svgs/gallery-character/walkright1.svg" data-dir="right" data-frame="1" loading="lazy" />
+    <img src="svgs/gallery-character/walkright2.svg" data-dir="right" data-frame="2" loading="lazy" />
+    <img src="svgs/gallery-character/walkright3.svg" data-dir="right" data-frame="3" loading="lazy" />
+    <img src="svgs/gallery-character/walkright4.svg" data-dir="right" data-frame="4" loading="lazy" />
+    <img src="svgs/gallery-character/walkleft1.svg" data-dir="left" data-frame="1" loading="lazy" />
+    <img src="svgs/gallery-character/walkleft2.svg" data-dir="left" data-frame="2" loading="lazy" />
+    <img src="svgs/gallery-character/walkleft3.svg" data-dir="left" data-frame="3" loading="lazy" />
+    <img src="svgs/gallery-character/walkleft4.svg" data-dir="left" data-frame="4" loading="lazy" />
+    <img src="svgs/gallery-character/idleright.svg" class="active" data-idle="right" fetchpriority="high" />
+    <img src="svgs/gallery-character/idleleft.svg" data-idle="left" loading="lazy" />
   </div>
   <div id="floor-line"></div>
   <div id="floor"></div>
@@ -248,17 +276,80 @@
 
     let wallWidth = buildLayout();
 
-    // --- Profile pic carousel ---
+    // --- Profile pic carousel (lazy-loads each pic just before it's shown) ---
     (function(){
-      var w=document.getElementById('profile-pic-wrap'),m=['1.jpg','2.jpeg','3.jpeg','4.jpeg','5.jpeg','6.jpeg','7.jpeg','8.jpeg','9.MOV','10.jpeg','11.jpeg','12.jpeg','13.jpeg','14.jpeg'],c=0,els=[];
-      m.forEach(function(n,i){var v=n.endsWith('.mov')||n.endsWith('.MOV'),e;
-        if(v){e=document.createElement('video');e.src='svgs/profile-pics/'+n;e.muted=true;e.loop=true;e.playsInline=true;}
-        else{e=document.createElement('img');e.src='svgs/profile-pics/'+n;e.alt='profile '+(i+1);}
-        if(i===0){e.classList.add('active');if(v)e.play();}
-        w.appendChild(e);els.push(e);});
-      setInterval(function(){var p=els[c];p.classList.remove('active');if(p.tagName==='VIDEO')p.pause();
-        c=(c+1)%els.length;var nx=els[c];nx.classList.add('active');if(nx.tagName==='VIDEO'){nx.currentTime=0;nx.play();}},3000);
+      var BASE='svgs/profile-pics/';
+      var w=document.getElementById('profile-pic-wrap');
+      var m=['1.jpeg','2.jpeg','3.jpeg','4.jpeg','5.MOV','6.jpeg'];
+      var c=0,els=[];
+
+      function loadEl(i){
+        var n=m[i],e=els[i];
+        if(!e||e._loaded)return;
+        var isVid=n.endsWith('.mov')||n.endsWith('.MOV');
+        if(isVid){e.src=BASE+n;}
+        else{e.src=BASE+n;}
+        e._loaded=true;
+      }
+
+      m.forEach(function(n,i){
+        var isVid=n.endsWith('.mov')||n.endsWith('.MOV'),e;
+        if(isVid){e=document.createElement('video');e.muted=true;e.loop=true;e.playsInline=true;}
+        else{e=document.createElement('img');e.alt='profile '+(i+1);}
+        w.appendChild(e);els.push(e);
+      });
+
+      // Load first two immediately
+      loadEl(0);loadEl(1);
+      els[0].classList.add('active');
+      if(els[0].tagName==='VIDEO'){els[0]._loaded&&els[0].play();}
+
+      setInterval(function(){
+        var p=els[c];
+        p.classList.remove('active');
+        if(p.tagName==='VIDEO')p.pause();
+        c=(c+1)%els.length;
+        var nx=els[c];
+        loadEl(c);
+        loadEl((c+1)%els.length); // preload next-next
+        nx.classList.add('active');
+        if(nx.tagName==='VIDEO'){nx.currentTime=0;nx.play();}
+      },3000);
     })();
+
+    // --- Loading screen ---
+    (function(){
+      var screen=document.getElementById('loading-screen');
+      var critical=[
+        document.getElementById('home-img'),
+        document.getElementById('home-text'),
+        document.querySelector('[data-idle="right"]')
+      ];
+      var remaining=critical.length;
+      function onLoad(){
+        remaining--;
+        if(remaining>0)return;
+        screen.classList.add('done');
+        setTimeout(function(){screen.remove();},450);
+        prefetchPages();
+      }
+      critical.forEach(function(el){
+        if(!el)return onLoad();
+        if(el.complete&&el.naturalWidth)return onLoad();
+        el.addEventListener('load',onLoad,{once:true});
+        el.addEventListener('error',onLoad,{once:true});
+      });
+      // Safety fallback
+      setTimeout(function(){if(screen.parentNode){screen.classList.add('done');setTimeout(function(){screen.remove();},450);}},4000);
+    })();
+
+    function prefetchPages(){
+      ['office.html','gallery.html'].forEach(function(url){
+        var l=document.createElement('link');
+        l.rel='prefetch';l.as='document';l.href=url;
+        document.head.appendChild(l);
+      });
+    }
 
     // --- Hotspot hover ---
     const overlayOffice = document.getElementById('overlay-office');

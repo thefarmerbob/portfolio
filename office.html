@@ -292,7 +292,7 @@
 
     /* ====== LADDER & CHARACTER ====== */
     #ladder-wrap {
-      position: absolute; right: 4vw; top: -8vw;
+      position: absolute; right: 4vw; top: 6vw;
       width: 14vw; will-change: transform;
     }
     .ladder-spacer { height: 20vw; }
@@ -302,7 +302,6 @@
     #wall-floor-line {
       position: absolute;
       left: 0; width: 100%;
-      height: 4px;
       background: #000;
       pointer-events: none;
       z-index: 10;
@@ -331,8 +330,8 @@
       width: 100%; height: 100%;
       object-fit: contain; display: block;
     }
-    #wall-door #door1 { bottom: -1.2vw; }
-    #wall-door #door2-p2 { bottom: 5%; left: 40%; width: 84%; height: 80%; }
+    #wall-door #door1 { bottom: -1.2vw; object-position: bottom center; }
+    #wall-door #door2-p2 { bottom: 0%; left: 40%; width: 84%; height: 88%; object-position: bottom center; }
 
     /* Door front panel overlay — fixed, above character */
     #door-front-overlay {
@@ -355,11 +354,6 @@
     #character .climb-frame {
       position: absolute; top: 0; left: 25%;
       width: 55%; height: auto;
-    }
-    #character #frameStand {
-      width: 32%;
-      left: -20%;
-      top: 5vw;
     }
     #character .climb-frame.hidden { opacity: 0; }
     #character .climb-frame.visible { opacity: 1; }
@@ -515,7 +509,6 @@
     <div id="character">
       <img id="frame1" class="climb-frame visible" src="svgs/character/goingdownladder1.svg" alt="character frame 1" />
       <img id="frame2" class="climb-frame hidden" src="svgs/character/goingdownladder2.svg" alt="character frame 2" />
-      <img id="frameStand" class="climb-frame hidden" src="svgs/character/standf.svg" alt="character standing" />
       <img id="walkL1" class="walk-frame" src="svgs/gallery-character/walkleft1.svg" alt="walk left 1" />
       <img id="walkL2" class="walk-frame" src="svgs/gallery-character/walkleft2.svg" alt="walk left 2" />
       <img id="walkL3" class="walk-frame" src="svgs/gallery-character/walkleft3.svg" alt="walk left 3" />
@@ -573,13 +566,12 @@
     const wallFloor     = document.getElementById('wall-floor');
     const charFrame1   = document.getElementById('frame1');
     const charFrame2   = document.getElementById('frame2');
-    const charFrameStand = document.getElementById('frameStand');
     const ladderImg    = document.querySelector('.ladder-img');
 
     /* ============================================================
        CHARACTER CLIMBING SYSTEM — LINEAR PROGRESS
        ============================================================ */
-    const CHAR_START_TOP_FRAC = 0.16;
+    const CHAR_START_TOP_FRAC = 0.40;
     const FRAME_STEP = 140;
 
     let totalInput = 0;        // accumulated scroll input (0 … totalRange)
@@ -588,13 +580,12 @@
     let maxWallOffset = 0;
     let accumulatedDelta = 0;
     let currentFrame = 1;
-    let isStanding = false;
     let hasReachedLadderBottom = false;
 
     /* --- Ladder geometry (recomputed on load/resize) --- */
     function getLadderBottomInWallSpace() {
       const vw = window.innerWidth / 100;
-      const ladderStartY = 12 * vw;             // -8vw top + 20vw spacer
+      const ladderStartY = 26 * vw;             // 6vw top + 20vw spacer
       const ladderRenderedW = 14 * 0.7 * vw;    // 9.8vw
       let ladderH;
       if (ladderImg && ladderImg.naturalWidth > 0) {
@@ -605,17 +596,16 @@
       return ladderStartY + ladderH;
     }
 
-    /* --- Standing sprite feet offset from character top --- */
-    function getStandFeetOffset() {
+    function getClimbFeetOffset() {
       const vw = window.innerWidth / 100;
-      const spriteW = 0.32 * 18 * vw;
+      const spriteW = 0.55 * 18 * vw;
       let spriteH;
-      if (charFrameStand.naturalWidth > 0) {
-        spriteH = (charFrameStand.naturalHeight / charFrameStand.naturalWidth) * spriteW;
+      if (charFrame1.naturalWidth > 0) {
+        spriteH = (charFrame1.naturalHeight / charFrame1.naturalWidth) * spriteW;
       } else {
         spriteH = spriteW * 2.5;
       }
-      return 5 * vw + spriteH;  // top:5vw + sprite height
+      return spriteH;
     }
 
     /* --- Compute layout: start/end Y for character + maxWallOffset --- */
@@ -623,7 +613,7 @@
       const vw = window.innerWidth / 100;
       const vh = window.innerHeight;
       const ladderBottom = getLadderBottomInWallSpace();
-      const feetOffset = getStandFeetOffset();
+      const feetOffset = getClimbFeetOffset();
       const startY = vh * CHAR_START_TOP_FRAC;
 
       // We need enough wall scroll to show all content
@@ -645,21 +635,23 @@
         (maxWallOffset + window.innerHeight) + 'px';
 
       // Position floor at bottom of all wall content
-      // When fully scrolled (wallOffset = maxWO), floor screen Y = floorTop - maxWO
-      // We want that to be at ~vh * 0.95 (5% from bottom, matching gallery/home)
       const vh = window.innerHeight;
       const floorTop = layout.maxWO + Math.min(vh * 0.95, layout.contentBottom + 10 * (vh / 100));
-      wallFloorLine.style.top = floorTop + 'px';
-      wallFloor.style.top = (floorTop + 4) + 'px';
 
-      // Position door above the floor line (use vh-based height for consistency)
+      // Position door — raised to compensate for SVG bottom whitespace (~7% of height)
       const doorH = window.innerWidth * 0.30;
       doorEl.style.height = doorH + 'px';
-      doorEl.style.top = (floorTop - doorH + doorH * 0.06) + 'px';
+      doorEl.style.top = (floorTop - doorH * 0.07 - doorH) + 'px';
+
+      // Floor line at natural position (independent of door)
+      const floorLineH = 5 / window.devicePixelRatio;
+      wallFloorLine.style.height = floorLineH + 'px';
+      wallFloorLine.style.top = floorTop + 'px';
+      wallFloor.style.top = (floorTop + floorLineH) + 'px';
 
       // Position door text next to door
       const doorText = document.getElementById('wall-door-text');
-      doorText.style.top = (floorTop - doorH * 0.70) + 'px';
+      doorText.style.top = (floorTop - doorH * 0.1 - doorH * 0.70) + 'px';
     }
 
     function applyFromInput() {
@@ -676,39 +668,21 @@
       ladderWrap.style.transform = `translateY(${-wallOffset}px)`;
       charEl.style.top           = characterScreenY + 'px';
 
-      // Check if at bottom
       if (t >= 0.999) {
         if (!hasReachedLadderBottom) {
           hasReachedLadderBottom = true;
-          showStanding();
+          enterWalkMode();
         }
       } else {
         if (hasReachedLadderBottom) {
           hasReachedLadderBottom = false;
-          hideStanding();
+          charFrame1.className = 'climb-frame ' + (currentFrame === 1 ? 'visible' : 'hidden');
+          charFrame2.className = 'climb-frame ' + (currentFrame === 2 ? 'visible' : 'hidden');
         }
       }
     }
 
-    /* --- Standing sprite management --- */
-    function showStanding() {
-      if (isStanding) return;
-      isStanding = true;
-      charFrame1.className = 'climb-frame hidden';
-      charFrame2.className = 'climb-frame hidden';
-      charFrameStand.className = 'climb-frame visible';
-    }
-
-    function hideStanding() {
-      if (!isStanding) return;
-      isStanding = false;
-      charFrameStand.className = 'climb-frame hidden';
-      charFrame1.className = 'climb-frame ' + (currentFrame === 1 ? 'visible' : 'hidden');
-      charFrame2.className = 'climb-frame ' + (currentFrame === 2 ? 'visible' : 'hidden');
-    }
-
     function advanceClimbFrame() {
-      if (isStanding) return;
       const show1 = currentFrame !== 1;
       charFrame1.className = 'climb-frame ' + (show1 ? 'visible' : 'hidden');
       charFrame2.className = 'climb-frame ' + (show1 ? 'hidden'  : 'visible');
@@ -802,10 +776,8 @@
       charEl.style.left = walkX + 'px';
       charEl.style.top = '';
 
-      // Hide climb frames, show idle left
       charFrame1.className = 'climb-frame hidden';
       charFrame2.className = 'climb-frame hidden';
-      charFrameStand.className = 'climb-frame hidden';
       showWalkFrame(idleLeftEl);
     }
 
@@ -821,8 +793,8 @@
       // Hide walk frames
       allWalkFrames.forEach(f => f.classList.remove('visible'));
 
-      // Restore standing
-      showStanding();
+      charFrame1.className = 'climb-frame ' + (currentFrame === 1 ? 'visible' : 'hidden');
+      charFrame2.className = 'climb-frame ' + (currentFrame === 2 ? 'visible' : 'hidden');
       hasReachedLadderBottom = true;
     }
 
@@ -874,24 +846,23 @@
     }
 
     function triggerDoorSequence() {
-      // Ensure open door is shown
       showOpenDoor();
 
-      // Animate character walking to door center and fading
       const doorCX = getDoorCenterX();
       const sz = getWalkCharSize();
       const targetX = doorCX;
+
+      const doorRect = doorEl.getBoundingClientRect();
+      const irisCx = doorRect.left + doorRect.width / 2;
+      const irisCy = doorRect.top + doorRect.height / 2;
 
       charEl.style.transition = 'left 0.15s ease-in, opacity 0.1s ease-in 0.05s';
       charEl.style.left = targetX + 'px';
       charEl.style.opacity = '0';
 
-      // After character disappears, close door and redirect
       setTimeout(() => {
         hideOpenDoor();
-        setTimeout(() => {
-          window.location.href = 'home.html';
-        }, 150);
+        irisTransitionFromPoint(irisCx, irisCy, 'home.html');
       }, 200);
     }
 
@@ -1333,7 +1304,7 @@
     if (ladderImg) {
       ladderImg.addEventListener('load', () => { recalcAll(); applyFromInput(); });
     }
-    charFrameStand.addEventListener('load', () => { recalcAll(); applyFromInput(); });
+    charFrame1.addEventListener('load', () => { recalcAll(); applyFromInput(); });
 
     recalcAll();
     applyFromInput();
@@ -1342,10 +1313,7 @@
     const irisCanvas = document.getElementById('iris-overlay');
     const irisCtx = irisCanvas.getContext('2d');
 
-    function irisTransition(anchorEl, url) {
-      const rect = anchorEl.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
+    function irisTransitionFromPoint(cx, cy, url) {
       const w = window.innerWidth;
       const h = window.innerHeight;
       irisCanvas.width = w;
@@ -1402,6 +1370,19 @@
       }
       requestAnimationFrame(draw);
     }
+
+    function irisTransition(anchorEl, url) {
+      const rect = anchorEl.getBoundingClientRect();
+      irisTransitionFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2, url);
+    }
+
+    // Reset iris canvas when navigating back (bfcache restore)
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted) {
+        irisCanvas.style.opacity = '0';
+        irisCtx.clearRect(0, 0, irisCanvas.width, irisCanvas.height);
+      }
+    });
 
     // Intercept view-project clicks that go to .html pages
     document.addEventListener('click', (e) => {

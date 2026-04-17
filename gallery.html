@@ -181,8 +181,8 @@
       width: 100%; height: 100%;
       object-fit: contain; display: block;
     }
-    #wall-door #gallery-door1 { bottom: -0.1%; }
-    #wall-door #gallery-door2-p2 { bottom: 3%; left: 30%; width: 102%; height: 94%; }
+    #wall-door #gallery-door1 { bottom: 0; }
+    #wall-door #gallery-door2-p2 { bottom: 1%; left: 18%; width: 90%; height: 90%; }
 
     /* Door front panel overlay — fixed, above character */
     #gallery-door-front-overlay {
@@ -335,6 +335,7 @@
     <img src="svgs/office/door2-p1.svg" alt="open door front" />
   </div>
   <div id="vignette"></div>
+  <canvas id="iris-overlay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:10000;opacity:0;"></canvas>
 
   <!-- Zoom overlay for painting close-up -->
   <div id="zoom-overlay">
@@ -903,19 +904,83 @@
       door1.style.display = 'block';
     }
 
+    const irisCanvas = document.getElementById('iris-overlay');
+    const irisCtx = irisCanvas.getContext('2d');
+
+    function irisTransitionFromPoint(cx, cy, url) {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      irisCanvas.width = w;
+      irisCanvas.height = h;
+      irisCanvas.style.opacity = '1';
+
+      const maxR = Math.sqrt(Math.max(
+        cx * cx + cy * cy,
+        (w - cx) * (w - cx) + cy * cy,
+        cx * cx + (h - cy) * (h - cy),
+        (w - cx) * (w - cx) + (h - cy) * (h - cy)
+      ));
+
+      const duration = 1000;
+      const start = performance.now();
+
+      function draw(now) {
+        const t = Math.min((now - start) / duration, 1);
+        const ease = t * t;
+        const r = maxR * (1 - ease);
+        const rotation = t * Math.PI * 6;
+
+        irisCtx.clearRect(0, 0, w, h);
+        irisCtx.fillStyle = '#ffffff';
+        irisCtx.beginPath();
+        irisCtx.rect(0, 0, w, h);
+        irisCtx.arc(cx, cy, Math.max(r, 0), 0, Math.PI * 2, true);
+        irisCtx.fill('evenodd');
+
+        irisCtx.strokeStyle = '#000000';
+        irisCtx.lineWidth = 5;
+        const steps = 300;
+        const totalAngle = Math.PI * 20;
+        irisCtx.beginPath();
+        for (let i = 0; i <= steps; i++) {
+          const frac = i / steps;
+          const spiralR = Math.max(r, 0) + frac * (maxR * 1.3);
+          const angle = rotation + frac * totalAngle;
+          const x = cx + Math.cos(angle) * spiralR;
+          const y = cy + Math.sin(angle) * spiralR;
+          if (i === 0) irisCtx.moveTo(x, y);
+          else irisCtx.lineTo(x, y);
+        }
+        irisCtx.stroke();
+
+        irisCtx.strokeStyle = '#000000';
+        irisCtx.lineWidth = 4;
+        irisCtx.beginPath();
+        irisCtx.arc(cx, cy, Math.max(r, 0), 0, Math.PI * 2);
+        irisCtx.stroke();
+
+        if (t < 0.99) requestAnimationFrame(draw);
+        else window.location.href = url;
+      }
+      requestAnimationFrame(draw);
+    }
+
     function triggerDoorSequence() {
       showOpenDoor();
 
       const doorCX = getDoorCenterX();
+      const doorEl = getDoorEl();
+      const doorRect = doorEl.getBoundingClientRect();
+      const irisCx = doorRect.left + doorRect.width / 2;
+      const irisCy = doorRect.top + doorRect.height / 2;
+
       charEl.style.transition = 'left 0.4s ease-in, opacity 0.3s ease-in 0.1s';
       charEl.style.left = doorCX + 'px';
       charEl.style.opacity = '0';
 
       setTimeout(() => {
         hideOpenDoor();
-        setTimeout(() => {
-          window.location.href = 'home.html';
-        }, 200);
+        irisTransitionFromPoint(irisCx, irisCy, 'home.html');
       }, 450);
     }
 
