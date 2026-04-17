@@ -152,14 +152,14 @@
       bottom: 0;
       left: 0;
       width: 100%;
-      height: 5vh;
+      height: 8vh;
       background: #ffffff;
       z-index: 0;
       pointer-events: none;
     }
     #floor-line {
       position: fixed;
-      bottom: 5vh;
+      bottom: 8vh;
       left: 0;
       width: 100%;
       height: 0.45vh;
@@ -959,7 +959,7 @@
         irisCtx.arc(cx, cy, Math.max(r, 0), 0, Math.PI * 2);
         irisCtx.stroke();
 
-        if (t < 0.99) requestAnimationFrame(draw);
+        if (t < 1) requestAnimationFrame(draw);
         else window.location.href = url;
       }
       requestAnimationFrame(draw);

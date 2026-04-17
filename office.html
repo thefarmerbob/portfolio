@@ -330,8 +330,8 @@
       width: 100%; height: 100%;
       object-fit: contain; display: block;
     }
-    #wall-door #door1 { bottom: -2.5vw; object-position: bottom center; }
-    #wall-door #door2-p2 { bottom: -7%; left: 40%; width: 84%; height: 88%; object-position: bottom center; }
+    #wall-door #door1 { bottom: -2.3vw; object-position: bottom center; }
+    #wall-door #door2-p2 { bottom: -7.5%; left: 40%; width: 82%; height: 84%; object-position: bottom center; }
 
     /* Door front panel overlay — fixed, above character */
     #door-front-overlay {
@@ -853,7 +853,7 @@
       // Position front overlay to match door's screen position
       const rect = doorEl.getBoundingClientRect();
       doorFrontOverlay.style.left = rect.left + 'px';
-      doorFrontOverlay.style.top = (rect.top + rect.height * 0.18) + 'px';
+      doorFrontOverlay.style.top = (rect.top + rect.height * 0.15) + 'px';
       doorFrontOverlay.style.width = (rect.width * 1.02) + 'px';
       doorFrontOverlay.style.height = (rect.height * 1.02) + 'px';
       doorFrontOverlay.style.display = 'block';
@@ -1385,7 +1385,7 @@
         irisCtx.arc(cx, cy, Math.max(r, 0), 0, Math.PI * 2);
         irisCtx.stroke();
 
-        if (t < 0.99) requestAnimationFrame(draw);
+        if (t < 1) requestAnimationFrame(draw);
         else window.location.href = url;
       }
       requestAnimationFrame(draw);
