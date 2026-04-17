@@ -659,10 +659,14 @@
       const contentBottom = 140 * vw;  // approx lowest wall item
       const contentWO = Math.max(0, contentBottom - vh);
 
-      // Ensure door (30vw tall) always clears the last painting — critical on portrait screens
-      // where vh > contentBottom and the natural maxWO would be near zero
+      // On portrait screens (vh > vw*133) the content fits in one screen and the door
+      // would overlap the paintings. Add extra scroll so paintings clear the door naturally —
+      // the space appears in the green wall area, not at the bottom white strip.
       const floorScreenPos = Math.min(vh * 0.95, contentBottom + 2 * (vh / 100));
-      const minForDoor = Math.max(0, contentBottom + 30 * vw * 1.1 + 10 * vw - floorScreenPos);
+      const isPortrait = vh > vw * 133;
+      const minForDoor = isPortrait
+        ? Math.max(0, contentBottom + 30 * vw * 1.15 + 15 * vw - floorScreenPos)
+        : 0;
 
       // +4vw compensates for ladder moving up visually so floor stays put
       const maxWO = Math.max(contentWO, ladderBottom + 4 * vw - vh * 1.05, minForDoor);
