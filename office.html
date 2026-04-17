@@ -414,6 +414,14 @@
       font-size: clamp(9px,0.7vw,13px);
       color: rgba(26,46,16,0.55); letter-spacing: 0.12em;
     }
+    #narrow-notice {
+      display: none; position: fixed; inset: 0; z-index: 99999;
+      background: #8ba87a; flex-direction: column; align-items: center; justify-content: center; gap: 24px;
+      font-family: 'Courier New', monospace; color: #1a2e10;
+      font-size: 16px; text-align: center; padding: 40px; line-height: 1.7;
+    }
+    #narrow-notice img { width: 80px; }
+    @media (max-aspect-ratio: 1/1) { #narrow-notice { display: flex; } }
   </style>
 </head>
 <body>
@@ -424,6 +432,7 @@
       <div id="ld-pct">0%</div>
     </div>
   </div>
+  <div id="narrow-notice"><img src="svgs/character/person_stand.svg" alt="">✦ this page is best<br>experienced on a laptop<br>or wider screen ✦</div>
   <div id="scroll-driver"><div id="scroll-content"></div></div>
 
   <canvas id="iris-overlay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:10000;opacity:0;"></canvas>
@@ -659,17 +668,8 @@
       const contentBottom = 140 * vw;  // approx lowest wall item
       const contentWO = Math.max(0, contentBottom - vh);
 
-      // On portrait screens (vh > vw*133) the content fits in one screen and the door
-      // would overlap the paintings. Add extra scroll so paintings clear the door naturally —
-      // the space appears in the green wall area, not at the bottom white strip.
-      const floorScreenPos = Math.min(vh * 0.95, contentBottom + 2 * (vh / 100));
-      const isPortrait = vh > vw * 133;
-      const minForDoor = isPortrait
-        ? Math.max(0, contentBottom + 30 * vw * 1.15 + 15 * vw - floorScreenPos)
-        : 0;
-
-      // +4vw compensates for ladder moving up visually so floor stays put
-      const maxWO = Math.max(contentWO, ladderBottom + 4 * vw - vh * 1.05, minForDoor);
+      // Floor is always pinned to ladder bottom: maxWO chosen so floor lands at vh*0.95 on screen
+      const maxWO = Math.max(contentWO, ladderBottom - vh * 0.95);
       const endY = Math.max(startY, ladderBottom - feetOffset - maxWO);
 
       return { startY, endY, maxWO, ladderBottom, contentBottom };
