@@ -497,13 +497,14 @@
         const imgs = wallEl.querySelectorAll('img');
         const total = imgs.length;
         if (total === 0) { loader.classList.add('done'); return; }
-        countEl.textContent = '0 / ' + total;
+        countEl.textContent = '0%';
         let loaded = 0;
 
         function tick() {
           loaded++;
-          barFill.style.width = (loaded / total * 100) + '%';
-          countEl.textContent = loaded + ' / ' + total;
+          const pct = loaded / total * 100;
+          barFill.style.width = pct + '%';
+          countEl.textContent = Math.round(pct) + '%';
           if (loaded >= total) {
             // Reveal scene and fade loader simultaneously
             document.getElementById('scene').style.opacity = '1';

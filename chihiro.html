@@ -3,9 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" href="svgs/chihiro/journal-cover.jpeg" as="image">
 <link rel="preload" href="svgs/misc/journalpaper1.jpeg" as="image">
 <title>Chihiro</title>
+<style>
+  #page-loader{position:fixed;inset:0;background:#95B887;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;transition:opacity 0.4s ease;}
+  #page-loader.done{opacity:0;pointer-events:none;}
+  #pl-dot{width:12px;height:12px;background:#1a2e10;border-radius:50%;animation:plpulse 0.8s ease-in-out infinite alternate;}
+  @keyframes plpulse{from{transform:scale(0.6);opacity:0.4;}to{transform:scale(1.4);opacity:1;}}
+  #pl-bar-wrap{width:clamp(120px,16vw,260px);height:3px;background:rgba(0,0,0,0.15);border-radius:99px;overflow:hidden;}
+  #pl-bar-fill{height:100%;width:0%;background:#1a2e10;border-radius:99px;transition:width 0.2s ease;}
+  #pl-pct{font-family:'Courier New',monospace;font-size:11px;color:rgba(26,46,16,0.55);letter-spacing:0.12em;}
+</style>
 <script>
   (function(){
     var D = 1100;
@@ -398,6 +409,7 @@
 </style>
 </head>
 <body>
+<div id="page-loader"><div id="pl-dot"></div><div id="pl-bar-wrap"><div id="pl-bar-fill"></div></div><div id="pl-pct">0%</div></div>
   <!-- Title SVG -->
   <img id="title-svg" src="svgs/misc/chihiro_text.svg" alt="Chihiro">
 
@@ -728,6 +740,25 @@
       });
     }
   }
+</script>
+<script>
+(function(){
+  var loader=document.getElementById('page-loader');
+  var barFill=document.getElementById('pl-bar-fill');
+  var pctEl=document.getElementById('pl-pct');
+  var srcs=['svgs/chihiro/journal-cover.jpeg','svgs/misc/journalpaper1.jpeg',
+    'svgs/misc/chihiro_text.svg','svgs/character/person_sit.svg',
+    'svgs/chihiro/bookmark1-white.svg','svgs/chihiro/bookmark2-white.svg','svgs/chihiro/bookmark3-white.svg'];
+  var total=srcs.length,loaded=0;
+  function tick(){
+    loaded++;
+    var pct=Math.round(loaded/total*100);
+    barFill.style.width=pct+'%'; pctEl.textContent=pct+'%';
+    if(loaded>=total){loader.classList.add('done');setTimeout(function(){loader.remove();},450);}
+  }
+  srcs.forEach(function(s){var i=new Image();i.onload=i.onerror=tick;i.src=s;});
+  setTimeout(function(){if(loader.parentNode){loader.classList.add('done');setTimeout(function(){loader.remove();},450);}},5000);
+})();
 </script>
 <a id="back-link" href="office.html">
   <img src="svgs/data-and-swe-projects/back-text.svg" alt="Go back to office" style="width:100%; display:block;">

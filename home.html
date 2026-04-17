@@ -164,15 +164,26 @@
       pointer-events: none;
     }
     #loading-dot {
-      width: 12px;
-      height: 12px;
-      background: #000;
-      border-radius: 50%;
+      width: 12px; height: 12px;
+      background: #000; border-radius: 50%;
       animation: ldpulse 0.8s ease-in-out infinite alternate;
     }
     @keyframes ldpulse {
       from { transform: scale(0.6); opacity: 0.4; }
       to   { transform: scale(1.4); opacity: 1; }
+    }
+    #ld-bar-wrap {
+      width: clamp(120px, 16vw, 260px); height: 3px;
+      background: rgba(0,0,0,0.15); border-radius: 99px; overflow: hidden;
+    }
+    #ld-bar-fill {
+      height: 100%; width: 0%; background: #1a2e10;
+      border-radius: 99px; transition: width 0.2s ease;
+    }
+    #ld-pct {
+      font-family: 'Courier New', monospace;
+      font-size: clamp(9px, 0.7vw, 13px);
+      color: rgba(26,46,16,0.55); letter-spacing: 0.12em;
     }
 
     /* Circle iris wipe */
@@ -190,7 +201,13 @@
   </style>
 </head>
 <body>
-  <div id="loading-screen"><div id="loading-dot"></div></div>
+  <div id="loading-screen">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+      <div id="loading-dot"></div>
+      <div id="ld-bar-wrap"><div id="ld-bar-fill"></div></div>
+      <div id="ld-pct">0%</div>
+    </div>
+  </div>
   <canvas id="iris-overlay"></canvas>
   <div id="scene">
     <div id="home-wall">
@@ -329,15 +346,20 @@
     // --- Loading screen ---
     (function(){
       var screen=document.getElementById('loading-screen');
+      var barFill=document.getElementById('ld-bar-fill');
+      var pctEl=document.getElementById('ld-pct');
       var critical=[
         document.getElementById('home-img'),
         document.getElementById('home-text'),
         document.querySelector('[data-idle="right"]')
       ];
-      var remaining=critical.length;
+      var total=critical.length, loaded=0;
       function onLoad(){
-        remaining--;
-        if(remaining>0)return;
+        loaded++;
+        var pct=Math.round(loaded/total*100);
+        if(barFill)barFill.style.width=pct+'%';
+        if(pctEl)pctEl.textContent=pct+'%';
+        if(loaded<total)return;
         screen.classList.add('done');
         setTimeout(function(){screen.remove();},450);
         prefetchPages();
@@ -348,7 +370,6 @@
         el.addEventListener('load',onLoad,{once:true});
         el.addEventListener('error',onLoad,{once:true});
       });
-      // Safety fallback
       setTimeout(function(){if(screen.parentNode){screen.classList.add('done');setTimeout(function(){screen.remove();},450);}},4000);
     })();
 
