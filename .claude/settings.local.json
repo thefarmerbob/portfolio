@@ -59,7 +59,16 @@
       "Bash(git -C /Users/maradumitru/personal-website-v3 show HEAD:pants.html)",
       "Bash(git -C /Users/maradumitru/personal-website-v3 show HEAD:chihiro.html)",
       "Bash(npx netlify:*)",
-      "Bash(npx --yes netlify status)"
+      "Bash(npx --yes netlify status)",
+      "Bash(npx --yes netlify deploy --prod)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(svgo --version)",
+      "Bash(npm install:*)",
+      "Bash(svgo:*)",
+      "Bash(convert --version)",
+      "Bash(git rm:*)"
     ]
   }
 }

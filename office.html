@@ -1430,17 +1430,34 @@
       }, 4000);
     })();
 
-    // Prefetch gallery assets in the background so gallery loads instantly
+    // Prefetch chihiro, jars and pants assets in the background
+    // (gallery was already cached by home.html's prefetch)
     (function(){
-      const frameIds=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
-                      21,22,23,24,25,26,27,28,29,30,31,32,33,101,102,103,104,105];
-      const assets=frameIds.map(id=>`svgs/gallery-frames/galleryframe${id}.svg`).concat([
-        'svgs/gallery-objects/gallerylamp1.svg','svgs/gallery-objects/gallerylamp2.svg',
-        'svgs/gallery-objects/galleryplant.svg','svgs/gallery-objects/gallery-intro-text.svg',
-        'svgs/gallery-objects/gallery-home-text.svg','svgs/office/door2-p1.svg',
-        'svgs/office/door2-p2.svg','svgs/character/person_stand.svg',
-        'gallery.html'
-      ]);
+      const assets=[
+        // Chihiro
+        'svgs/chihiro/bookmark1-white.svg','svgs/chihiro/bookmark1-yellow.svg',
+        'svgs/chihiro/bookmark2-white.svg','svgs/chihiro/bookmark2-yellow.svg',
+        'svgs/chihiro/bookmark3-white.svg','svgs/chihiro/bookmark3-yellow.svg',
+        'svgs/chihiro/button.svg','svgs/chihiro/click-button-text.svg',
+        'svgs/chihiro/click-to-learn-more-text.svg','svgs/chihiro/journal-cover.jpeg',
+        'svgs/misc/chihiro_text.svg','svgs/misc/disk.svg',
+        // Data & SWE projects (jars)
+        'svgs/data-and-swe-projects/shelf.svg',
+        'svgs/data-and-swe-projects/back-text.svg',
+        'svgs/data-and-swe-projects/click-jar-to-open-project-text-outline.svg',
+        'svgs/data-and-swe-projects/jar1.svg','svgs/data-and-swe-projects/jar1-text.svg',
+        'svgs/data-and-swe-projects/jar2.svg','svgs/data-and-swe-projects/jar2-text.svg',
+        'svgs/data-and-swe-projects/jar4.svg','svgs/data-and-swe-projects/jar4-text.svg',
+        'svgs/data-and-swe-projects/jar5.svg','svgs/data-and-swe-projects/jar5-text.svg',
+        'svgs/data-and-swe-projects/jar5-1.svg','svgs/data-and-swe-projects/jar5-text-1.svg',
+        'svgs/data-and-swe-projects/jar6.svg','svgs/data-and-swe-projects/jar6-text.svg',
+        'svgs/data-and-swe-projects/jar7.svg','svgs/data-and-swe-projects/jar7-text.svg',
+        // Pants
+        'svgs/misc/pants.svg','svgs/misc/are-your-pants-cool-text.svg',
+        'svgs/misc/click-to-learn-more-text-pants.svg','svgs/misc/journalpaper1.jpeg',
+        // Music
+        'svgs/character/person_music1.svg','svgs/character/person_music2.svg',
+      ];
       let idx=0;
       function fetchNext(){
         if(idx>=assets.length)return;
