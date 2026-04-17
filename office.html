@@ -414,18 +414,9 @@
       font-size: clamp(9px,0.7vw,13px);
       color: rgba(26,46,16,0.55); letter-spacing: 0.12em;
     }
-    #narrow-notice {
-      display: none; position: fixed; inset: 0; z-index: 99999;
-      background: #8ba87a; flex-direction: column; align-items: center; justify-content: center; gap: 24px;
-      font-family: 'Courier New', monospace; color: #1a2e10;
-      font-size: 16px; text-align: center; padding: 40px; line-height: 1.7;
-    }
-    #narrow-notice img { width: 80px; }
-    @media (max-width: 700px) { #narrow-notice { display: flex; } }
   </style>
 </head>
 <body>
-  <div id="narrow-notice"><img src="svgs/character/person_stand.svg" alt="">✦ this page is best<br>experienced on a laptop<br>or wider screen ✦</div>
   <div id="loading-screen">
     <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
       <div id="loading-dot"></div>
@@ -606,6 +597,12 @@
     /* ============================================================
        SCROLL, WALL & LADDER
        ============================================================ */
+    // Zoom-aware CSS coordinate helpers
+    // The root zoom script scales the page when narrow; all layout JS must
+    // use CSS pixels (= physical px / zoom) so positions match CSS vw/vh units.
+    function cssVW() { const z = parseFloat(document.documentElement.style.zoom) || 1; return window.innerWidth  / z / 100; }
+    function cssVH() { const z = parseFloat(document.documentElement.style.zoom) || 1; return window.innerHeight / z; }
+
     const scrollDriver = document.getElementById('scroll-driver');
     const wall         = document.getElementById('wall');
     const ladderWrap   = document.getElementById('ladder-wrap');
@@ -632,7 +629,7 @@
 
     /* --- Ladder geometry (recomputed on load/resize) --- */
     function getLadderBottomInWallSpace() {
-      const vw = window.innerWidth / 100;
+      const vw = cssVW();
       const ladderStartY = 15 * vw;             // 1vw top + 14vw spacer
       const ladderRenderedW = 14 * 0.7 * vw;    // 9.8vw
       let ladderH;
@@ -645,7 +642,7 @@
     }
 
     function getClimbFeetOffset() {
-      const vw = window.innerWidth / 100;
+      const vw = cssVW();
       const spriteW = 0.55 * 18 * vw;
       let spriteH;
       if (charFrame1.naturalWidth > 0) {
@@ -658,8 +655,8 @@
 
     /* --- Compute layout: start/end Y for character + maxWallOffset --- */
     function computeLayout() {
-      const vw = window.innerWidth / 100;
-      const vh = window.innerHeight;
+      const vw = cssVW();
+      const vh = cssVH();
       const ladderBottom = getLadderBottomInWallSpace();
       const feetOffset = getClimbFeetOffset();
       const startY = vh * CHAR_START_TOP_FRAC;
@@ -681,14 +678,14 @@
       const layout = computeLayout();
       maxWallOffset = layout.maxWO;
       document.getElementById('scroll-content').style.height =
-        (maxWallOffset + window.innerHeight) + 'px';
+        (maxWallOffset + cssVH()) + 'px';
 
       // Position floor at bottom of all wall content
-      const vh = window.innerHeight;
+      const vh = cssVH();
       const floorTop = layout.maxWO + Math.min(vh * 0.95, layout.contentBottom + 2 * (vh / 100));
 
       // Position door — raised to compensate for SVG bottom whitespace (~7% of height)
-      const doorH = window.innerWidth * 0.30;
+      const doorH = cssVW() * 30;
       doorEl.style.height = doorH + 'px';
       doorEl.style.top = (floorTop - doorH * 0.07 - doorH) + 'px';
 
@@ -802,7 +799,7 @@
     let walkAccDelta = 0;
 
     function getWalkCharSize() {
-      const vw = window.innerWidth / 100;
+      const vw = cssVW();
       return { w: 5.5 * 0.7 * vw, h: 9 * 0.7 * vw };
     }
 
