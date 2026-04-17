@@ -597,12 +597,6 @@
     /* ============================================================
        SCROLL, WALL & LADDER
        ============================================================ */
-    // Zoom-aware CSS coordinate helpers
-    // The root zoom script scales the page when narrow; all layout JS must
-    // use CSS pixels (= physical px / zoom) so positions match CSS vw/vh units.
-    function cssVW() { const z = parseFloat(document.documentElement.style.zoom) || 1; return window.innerWidth  / z / 100; }
-    function cssVH() { const z = parseFloat(document.documentElement.style.zoom) || 1; return window.innerHeight / z; }
-
     const scrollDriver = document.getElementById('scroll-driver');
     const wall         = document.getElementById('wall');
     const ladderWrap   = document.getElementById('ladder-wrap');
@@ -629,7 +623,7 @@
 
     /* --- Ladder geometry (recomputed on load/resize) --- */
     function getLadderBottomInWallSpace() {
-      const vw = cssVW();
+      const vw = window.innerWidth / 100;
       const ladderStartY = 15 * vw;             // 1vw top + 14vw spacer
       const ladderRenderedW = 14 * 0.7 * vw;    // 9.8vw
       let ladderH;
@@ -642,7 +636,7 @@
     }
 
     function getClimbFeetOffset() {
-      const vw = cssVW();
+      const vw = window.innerWidth / 100;
       const spriteW = 0.55 * 18 * vw;
       let spriteH;
       if (charFrame1.naturalWidth > 0) {
@@ -655,8 +649,8 @@
 
     /* --- Compute layout: start/end Y for character + maxWallOffset --- */
     function computeLayout() {
-      const vw = cssVW();
-      const vh = cssVH();
+      const vw = window.innerWidth / 100;
+      const vh = window.innerHeight;
       const ladderBottom = getLadderBottomInWallSpace();
       const feetOffset = getClimbFeetOffset();
       const startY = vh * CHAR_START_TOP_FRAC;
@@ -665,10 +659,13 @@
       const contentBottom = 140 * vw;  // approx lowest wall item
       const contentWO = Math.max(0, contentBottom - vh);
 
-      // At end: ladder bottom on screen should be above the floor (floor = bottom 8%)
-      // ladderBottom - maxWO should land at ~vh * 0.95 so ladder overlaps the floor
-      // +16vw compensates for ladder moving up visually (10vw→26vw) so floor stays put
-      const maxWO = Math.max(contentWO, ladderBottom + 4 * vw - vh * 1.05);
+      // Ensure door (30vw tall) always clears the last painting — critical on portrait screens
+      // where vh > contentBottom and the natural maxWO would be near zero
+      const floorScreenPos = Math.min(vh * 0.95, contentBottom + 2 * (vh / 100));
+      const minForDoor = Math.max(0, contentBottom + 30 * vw * 1.1 + 10 * vw - floorScreenPos);
+
+      // +4vw compensates for ladder moving up visually so floor stays put
+      const maxWO = Math.max(contentWO, ladderBottom + 4 * vw - vh * 1.05, minForDoor);
       const endY = Math.max(startY, ladderBottom - feetOffset - maxWO);
 
       return { startY, endY, maxWO, ladderBottom, contentBottom };
@@ -678,10 +675,10 @@
       const layout = computeLayout();
       maxWallOffset = layout.maxWO;
       document.getElementById('scroll-content').style.height =
-        (maxWallOffset + cssVH()) + 'px';
+        (maxWallOffset + window.innerHeight) + 'px';
 
       // Position floor at bottom of all wall content
-      const vh = cssVH();
+      const vh = window.innerHeight;
       const floorTop = layout.maxWO + Math.min(vh * 0.95, layout.contentBottom + 2 * (vh / 100));
 
       // Position door — raised to compensate for SVG bottom whitespace (~7% of height)
@@ -799,7 +796,7 @@
     let walkAccDelta = 0;
 
     function getWalkCharSize() {
-      const vw = cssVW();
+      const vw = window.innerWidth / 100;
       return { w: 5.5 * 0.7 * vw, h: 9 * 0.7 * vw };
     }
 
