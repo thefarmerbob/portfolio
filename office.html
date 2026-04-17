@@ -661,7 +661,7 @@
 
       // At end: ladder bottom on screen should be above the floor (floor = bottom 8%)
       // ladderBottom - maxWO should land at ~vh * 0.95 so ladder overlaps the floor
-      const maxWO = Math.max(contentWO, ladderBottom - vh * 1.15);
+      const maxWO = Math.max(contentWO, ladderBottom - vh * 1.05);
       const endY = Math.max(startY, ladderBottom - feetOffset - maxWO);
 
       return { startY, endY, maxWO, ladderBottom, contentBottom };
