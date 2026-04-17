@@ -372,7 +372,7 @@
     #character.walking {
       right: auto;
       top: auto !important;
-      bottom: 6.5vh;
+      bottom: 23vh;
     }
     #character.walking .climb-frame { display: none; }
 
@@ -642,7 +642,7 @@
 
       // At end: ladder bottom on screen should be above the floor (floor = bottom 8%)
       // ladderBottom - maxWO should land at ~vh * 0.95 so ladder overlaps the floor
-      const maxWO = Math.max(contentWO, ladderBottom - vh * 0.95);
+      const maxWO = Math.max(contentWO, ladderBottom - vh * 0.78);
       const endY = Math.max(startY, ladderBottom - feetOffset - maxWO);
 
       return { startY, endY, maxWO, ladderBottom, contentBottom };
@@ -656,7 +656,7 @@
 
       // Position floor at bottom of all wall content
       const vh = window.innerHeight;
-      const floorTop = layout.maxWO + Math.min(vh * 0.95, layout.contentBottom + 10 * (vh / 100));
+      const floorTop = layout.maxWO + Math.min(vh * 0.78, layout.contentBottom + 10 * (vh / 100));
 
       // Position door — raised to compensate for SVG bottom whitespace (~7% of height)
       const doorH = window.innerWidth * 0.30;
@@ -664,7 +664,7 @@
       doorEl.style.top = (floorTop - doorH * 0.07 - doorH) + 'px';
 
       // Floor line at natural position (independent of door)
-      const floorLineH = 5 / window.devicePixelRatio;
+      const floorLineH = 8 / window.devicePixelRatio;
       wallFloorLine.style.height = floorLineH + 'px';
       wallFloorLine.style.top = floorTop + 'px';
       wallFloor.style.top = (floorTop + floorLineH) + 'px';
