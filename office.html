@@ -295,7 +295,7 @@
       position: absolute; right: 4vw; top: 1vw;
       width: 14vw; will-change: transform;
     }
-    .ladder-spacer { height: 6vw; }
+    .ladder-spacer { height: 9vw; }
     #ladder-wrap img.ladder-img { display: block; width: 70%; height: auto; }
 
     /* ====== FLOOR (scrolls with wall, positioned by JS at ladder bottom) ====== */
@@ -610,7 +610,7 @@
     /* ============================================================
        CHARACTER CLIMBING SYSTEM — LINEAR PROGRESS
        ============================================================ */
-    const CHAR_START_TOP_FRAC = 0.12;
+    const CHAR_START_TOP_FRAC = 0.15;
     const FRAME_STEP = 140;
 
     let totalInput = 0;        // accumulated scroll input (0 … totalRange)
@@ -624,7 +624,7 @@
     /* --- Ladder geometry (recomputed on load/resize) --- */
     function getLadderBottomInWallSpace() {
       const vw = window.innerWidth / 100;
-      const ladderStartY = 7 * vw;              // 1vw top + 6vw spacer
+      const ladderStartY = 10 * vw;             // 1vw top + 9vw spacer
       const ladderRenderedW = 14 * 0.7 * vw;    // 9.8vw
       let ladderH;
       if (ladderImg && ladderImg.naturalWidth > 0) {
@@ -662,7 +662,7 @@
       // At end: ladder bottom on screen should be above the floor (floor = bottom 8%)
       // ladderBottom - maxWO should land at ~vh * 0.95 so ladder overlaps the floor
       // +16vw compensates for ladder moving up visually (10vw→26vw) so floor stays put
-      const maxWO = Math.max(contentWO, ladderBottom + 16 * vw - vh * 1.05);
+      const maxWO = Math.max(contentWO, ladderBottom + 13 * vw - vh * 1.05);
       const endY = Math.max(startY, ladderBottom - feetOffset - maxWO);
 
       return { startY, endY, maxWO, ladderBottom, contentBottom };
