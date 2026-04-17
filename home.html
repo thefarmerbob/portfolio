@@ -232,44 +232,52 @@
     const wallEl = document.getElementById('home-wall');
 
     function buildLayout() {
-      const floorH = 0.05 * window.innerHeight;
-      const s = (window.innerHeight - floorH) / (BASE_H - 0.05 * BASE_H);
-      const portrait = window.innerWidth < window.innerHeight;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const floorH = 0.05 * vh;
+      const s = (vh - floorH) / (BASE_H - 0.05 * BASE_H);
 
-      // Sizes always use s (height-based) so elements stay big
-      // Horizontal positions: on portrait, use tighter spacing
-      const textX = portrait ? 30 : 115;
-      const picX = portrait ? (textX + 340) : 430;
-      const plantX = portrait ? (picX + 250) : 1150;
-      const wallBaseW = portrait ? (plantX + 780) : WALL_BASE_W;
+      // Design-space positions (1920×1080 reference)
+      const textXDS  = 115;
+      const picXDS   = 430;
+      const plantXDS = 1150;
+      const plantWDS = 730;
 
-      const wallWidth = wallBaseW * s;
+      // Total scaled width of the content group (text left → plant right)
+      const contentW = (plantXDS + plantWDS - textXDS) * s;  // 1765 * s
+
+      // Center the group; if it's wider than the viewport, start flush left (scroll allowed)
+      const sidePad = Math.max(0, (vw - contentW) / 2);
+      const xOff = sidePad - textXDS * s;
+
+      // Wall is viewport-wide when content fits, otherwise content-wide (enables scroll)
+      const wallWidth = Math.max(vw, contentW);
       wallEl.style.width = wallWidth + 'px';
 
       // Text
       const textEl = document.getElementById('home-text');
-      textEl.style.left = (textX * s) + 'px';
-      textEl.style.top = (96 * s) + 'px';
+      textEl.style.left  = (xOff + textXDS * s) + 'px';   // = sidePad
+      textEl.style.top   = (96 * s) + 'px';
       textEl.style.width = (537 * s) + 'px';
 
       // Profile pic
       const picWrap = document.getElementById('profile-pic-wrap');
-      picWrap.style.left = (picX * s) + 'px';
-      picWrap.style.top = (77 * s) + 'px';
-      picWrap.style.width = (192 * s) + 'px';
+      picWrap.style.left   = (xOff + picXDS * s) + 'px';
+      picWrap.style.top    = (77 * s) + 'px';
+      picWrap.style.width  = (192 * s) + 'px';
       picWrap.style.height = (192 * s) + 'px';
 
       // Frame
       const frameEl = document.getElementById('home-frame');
-      frameEl.style.left = (picX * s) + 'px';
-      frameEl.style.top = (77 * s) + 'px';
+      frameEl.style.left  = (xOff + picXDS * s) + 'px';
+      frameEl.style.top   = (77 * s) + 'px';
       frameEl.style.width = (192 * s) + 'px';
 
       // Plant
       const plantEl = document.getElementById('plant-wrap');
-      plantEl.style.left = (plantX * s) + 'px';
+      plantEl.style.left   = (xOff + plantXDS * s) + 'px';
       plantEl.style.bottom = (floorH - 25 * s) + 'px';
-      plantEl.style.width = (730 * s) + 'px';
+      plantEl.style.width  = (plantWDS * s) + 'px';
 
       return wallWidth;
     }
