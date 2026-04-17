@@ -746,7 +746,9 @@
       if (zoomedIn || enteringDoor) return;
       e.preventDefault();
       // Support both vertical and horizontal scrolling (trackpad sideways, shift+scroll, etc.)
-      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      let delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if (e.deltaMode === 1) delta *= 32;
+      if (e.deltaMode === 2) delta *= window.innerHeight;
       moveBy(delta * SCROLL_TO_WALK);
     }, { passive: false });
 

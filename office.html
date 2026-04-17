@@ -954,7 +954,9 @@
     document.addEventListener('wheel', (e) => {
       if (zoomedIn || resumeOverlay.classList.contains('active')) return;
       e.preventDefault();
-      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      let delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if (e.deltaMode === 1) delta *= 32;
+      if (e.deltaMode === 2) delta *= window.innerHeight;
       moveBy(delta * SCROLL_TO_MOVE);
     }, { passive: false });
 

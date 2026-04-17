@@ -451,9 +451,17 @@
     transform: scale(1.05);
     filter: brightness(1);
   }
+  #narrow-notice {
+    display: none; position: fixed; inset: 0; z-index: 99999;
+    background: #95B887; align-items: center; justify-content: center;
+    font-family: 'Courier New', monospace; color: #1a2e10;
+    font-size: 16px; text-align: center; padding: 40px; line-height: 1.7;
+  }
+  @media (max-width: 700px) { #narrow-notice { display: flex; } }
 </style>
 </head>
 <body>
+<div id="narrow-notice">✦ this page is best<br>experienced on a laptop<br>or wider screen ✦</div>
 <div id="page-loader"><div id="pl-dot"></div><div id="pl-bar-wrap"><div id="pl-bar-fill"></div></div><div id="pl-pct">0%</div></div>
 
   <img id="page-title" src="svgs/misc/are-your-pants-cool-text.svg" alt="Are your pants cool?">
