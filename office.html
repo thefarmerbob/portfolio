@@ -685,7 +685,7 @@
       const floorTop = layout.maxWO + Math.min(vh * 0.95, layout.contentBottom + 2 * (vh / 100));
 
       // Position door — raised to compensate for SVG bottom whitespace (~7% of height)
-      const doorH = cssVW() * 30;
+      const doorH = window.innerWidth * 0.30;
       doorEl.style.height = doorH + 'px';
       doorEl.style.top = (floorTop - doorH * 0.07 - doorH) + 'px';
 
