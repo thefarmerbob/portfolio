@@ -309,7 +309,7 @@
     #wall-floor {
       position: absolute;
       left: 0; width: 100%;
-      height: 50vh;
+      height: 70vh;
       background: #ffffff;
       pointer-events: none;
       z-index: 9;
@@ -662,7 +662,7 @@
       // At end: ladder bottom on screen should be above the floor (floor = bottom 8%)
       // ladderBottom - maxWO should land at ~vh * 0.95 so ladder overlaps the floor
       // +16vw compensates for ladder moving up visually (10vw→26vw) so floor stays put
-      const maxWO = Math.max(contentWO, ladderBottom + 8 * vw - vh * 1.05);
+      const maxWO = Math.max(contentWO, ladderBottom + 4 * vw - vh * 1.05);
       const endY = Math.max(startY, ladderBottom - feetOffset - maxWO);
 
       return { startY, endY, maxWO, ladderBottom, contentBottom };
