@@ -330,8 +330,8 @@
       width: 100%; height: 100%;
       object-fit: contain; display: block;
     }
-    #wall-door #door1 { bottom: -1.2vw; object-position: bottom center; }
-    #wall-door #door2-p2 { bottom: 0%; left: 40%; width: 84%; height: 88%; object-position: bottom center; }
+    #wall-door #door1 { bottom: -3vw; object-position: bottom center; }
+    #wall-door #door2-p2 { bottom: -2%; left: 40%; width: 84%; height: 88%; object-position: bottom center; }
 
     /* Door front panel overlay — fixed, above character */
     #door-front-overlay {
@@ -382,9 +382,29 @@
       pointer-events: none; z-index: 2;
       background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.12) 100%);
     }
+
+    /* ====== LOADING SCREEN ====== */
+    #loading-screen {
+      position: fixed; inset: 0;
+      background: #8ba87a;
+      z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.4s ease;
+    }
+    #loading-screen.done { opacity: 0; pointer-events: none; }
+    #loading-dot {
+      width: 12px; height: 12px;
+      background: #000; border-radius: 50%;
+      animation: ldpulse 0.8s ease-in-out infinite alternate;
+    }
+    @keyframes ldpulse {
+      from { transform: scale(0.6); opacity: 0.4; }
+      to   { transform: scale(1.4); opacity: 1; }
+    }
   </style>
 </head>
 <body>
+  <div id="loading-screen"><div id="loading-dot"></div></div>
   <div id="scroll-driver"><div id="scroll-content"></div></div>
 
   <canvas id="iris-overlay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:10000;opacity:0;"></canvas>
@@ -833,7 +853,7 @@
       // Position front overlay to match door's screen position
       const rect = doorEl.getBoundingClientRect();
       doorFrontOverlay.style.left = rect.left + 'px';
-      doorFrontOverlay.style.top = (rect.top + rect.height * 0.03) + 'px';
+      doorFrontOverlay.style.top = (rect.top + rect.height * 0.07) + 'px';
       doorFrontOverlay.style.width = (rect.width * 1.02) + 'px';
       doorFrontOverlay.style.height = (rect.height * 1.02) + 'px';
       doorFrontOverlay.style.display = 'block';
@@ -1383,6 +1403,32 @@
         irisCtx.clearRect(0, 0, irisCanvas.width, irisCanvas.height);
       }
     });
+
+    // Loading screen — dismiss once critical above-fold images are ready
+    (function(){
+      var screen = document.getElementById('loading-screen');
+      var criticalSrcs = [
+        'svgs/office/ABOUT.svg',
+        'svgs/office/officeframe1.svg',
+        'svgs/office/desk.svg'
+      ];
+      var remaining = criticalSrcs.length;
+      function onLoad() {
+        remaining--;
+        if (remaining > 0) return;
+        screen.classList.add('done');
+        setTimeout(function(){ screen.remove(); }, 450);
+      }
+      criticalSrcs.forEach(function(src) {
+        var img = new Image();
+        img.onload = img.onerror = onLoad;
+        img.src = src;
+      });
+      // Safety fallback
+      setTimeout(function(){
+        if (screen.parentNode) { screen.classList.add('done'); setTimeout(function(){ screen.remove(); }, 450); }
+      }, 4000);
+    })();
 
     // Prefetch gallery assets in the background so gallery loads instantly
     (function(){

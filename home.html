@@ -240,18 +240,19 @@
       // Design-space positions (1920×1080 reference)
       const textXDS  = 115;
       const picXDS   = 430;
-      const plantXDS = 1150;
+      const plantXDS = 570;
       const plantWDS = 730;
 
       // Total scaled width of the content group (text left → plant right)
       const contentW = (plantXDS + plantWDS - textXDS) * s;  // 1765 * s
 
-      // Center the group; if it's wider than the viewport, start flush left (scroll allowed)
-      const sidePad = Math.max(0, (vw - contentW) / 2);
+      // Center the group with a minimum side padding on each side
+      const MIN_PAD = 30;
+      const sidePad = Math.max(MIN_PAD, (vw - contentW) / 2);
       const xOff = sidePad - textXDS * s;
 
-      // Wall is viewport-wide when content fits, otherwise content-wide (enables scroll)
-      const wallWidth = Math.max(vw, contentW);
+      // Wall is viewport-wide when content fits; otherwise adds min padding on both sides (enables scroll)
+      const wallWidth = Math.max(vw, contentW + 2 * MIN_PAD);
       wallEl.style.width = wallWidth + 'px';
 
       // Text
