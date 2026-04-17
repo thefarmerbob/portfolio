@@ -349,6 +349,35 @@
         l.rel='prefetch';l.as='document';l.href=url;
         document.head.appendChild(l);
       });
+
+      // Prefetch all gallery SVG assets in the background so gallery loads instantly.
+      // Uses fetch() so the responses land in the HTTP cache before the user clicks.
+      var frameIds=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
+                    21,22,23,24,25,26,27,28,29,30,31,32,33,101,102,103,104,105];
+      var assets=frameIds.map(function(id){
+        return 'svgs/gallery-frames/galleryframe'+id+'.svg';
+      }).concat([
+        'svgs/gallery-objects/gallerylamp1.svg',
+        'svgs/gallery-objects/gallerylamp2.svg',
+        'svgs/gallery-objects/galleryplant.svg',
+        'svgs/gallery-objects/gallery-intro-text.svg',
+        'svgs/gallery-objects/gallery-home-text.svg',
+        'svgs/office/door1.svg',
+        'svgs/office/door2-p1.svg',
+        'svgs/office/door2-p2.svg',
+        'svgs/character/person_stand.svg'
+      ]);
+
+      // Fetch sequentially so we don't flood the connection.
+      // Start after 1.5s so home page has full priority first.
+      var idx=0;
+      function fetchNext(){
+        if(idx>=assets.length)return;
+        fetch(assets[idx],{priority:'low'}).catch(function(){}).finally(function(){
+          idx++;fetchNext();
+        });
+      }
+      setTimeout(fetchNext,1500);
     }
 
     // --- Hotspot hover ---
