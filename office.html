@@ -421,7 +421,7 @@
       font-size: 16px; text-align: center; padding: 40px; line-height: 1.7;
     }
     #narrow-notice img { width: 80px; }
-    @media (max-aspect-ratio: 1/1) { #narrow-notice { display: flex; } }
+    /* shown/hidden by JS based on whether content fits in viewport height */
   </style>
 </head>
 <body>
@@ -1322,7 +1322,18 @@
     /* ============================================================
        INIT & RESIZE
        ============================================================ */
+    function updateNarrowNotice() {
+      const notice = document.getElementById('narrow-notice');
+      if (!notice) return;
+      // Show notice only when content (ladder bottom ≈ 164vw) fits entirely in viewport height
+      // — meaning the page can't scroll and the layout would be compressed/broken
+      const ladderBottom = getLadderBottomInWallSpace();
+      notice.style.display = ladderBottom < window.innerHeight ? 'flex' : 'none';
+    }
+    updateNarrowNotice();
+
     window.addEventListener('resize', () => {
+      updateNarrowNotice();
       const wasAtBottom = hasReachedLadderBottom || mode === 'walk';
 
       // Preserve progress ratio across resize
