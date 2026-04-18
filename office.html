@@ -85,7 +85,7 @@
     #zoom-frame {
       position: absolute;
       perspective: 1200px;
-      filter: drop-shadow(0 12px 40px rgba(0,0,0,0.5));
+      -webkit-perspective: 1200px;
       cursor: pointer;
     }
     #zoom-frame.animating {
@@ -99,6 +99,7 @@
       width: 100%; height: 100%;
       position: relative;
       transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
     }
     .zoom-flip-inner.can-flip {
       transition: transform 0.7s cubic-bezier(0.4, 0.0, 0.2, 1);
@@ -108,6 +109,7 @@
     }
     .zoom-flip-inner.flipped .zoom-face.front {
       pointer-events: none;
+      visibility: hidden;
     }
     .zoom-face {
       position: absolute; top: 0; left: 0;
@@ -118,11 +120,10 @@
     .zoom-face img {
       width: 100%; height: 100%;
       object-fit: contain; display: block;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
     }
     .zoom-face.back {
       transform: rotateY(180deg);
+      -webkit-transform: rotateY(180deg);
       pointer-events: auto;
     }
     .zoom-buttons {
@@ -382,6 +383,11 @@
       background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.12) 100%);
     }
 
+    /* ====== MOBILE OVERRIDES ====== */
+    @media (orientation: portrait) {
+      .ladder-spacer { height: 40vw; }
+    }
+
     /* ====== LOADING SCREEN ====== */
     #loading-screen {
       position: fixed; inset: 0;
@@ -623,7 +629,9 @@
     /* --- Ladder geometry (recomputed on load/resize) --- */
     function getLadderBottomInWallSpace() {
       const vw = window.innerWidth / 100;
-      const ladderStartY = 21 * vw;             // 1vw top + 20vw spacer
+      const isPortrait = window.innerHeight > window.innerWidth;
+      const spacer = isPortrait ? 40 : 20;
+      const ladderStartY = (1 + spacer) * vw;   // 1vw top + spacer
       const ladderRenderedW = 14 * 0.7 * vw;    // 9.8vw
       let ladderH;
       if (ladderImg && ladderImg.naturalWidth > 0) {
@@ -881,9 +889,9 @@
       // Position front overlay to match door's screen position
       const rect = doorEl.getBoundingClientRect();
       doorFrontOverlay.style.left = rect.left + 'px';
-      doorFrontOverlay.style.top = (rect.top + rect.height * 0.15) + 'px';
-      doorFrontOverlay.style.width = (rect.width * 1.02) + 'px';
-      doorFrontOverlay.style.height = (rect.height * 1.02) + 'px';
+      doorFrontOverlay.style.top = rect.top + 'px';
+      doorFrontOverlay.style.width = rect.width + 'px';
+      doorFrontOverlay.style.height = rect.height + 'px';
       doorFrontOverlay.style.display = 'block';
     }
 

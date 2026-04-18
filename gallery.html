@@ -656,8 +656,9 @@
     let keysHeld = { left: false, right: false };
     let keyAnimFrame = null;
 
-    const WALK_SPEED = 8;
-    const SCROLL_TO_WALK = 0.4;
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const WALK_SPEED = isMobile ? 16 : 8;
+    const SCROLL_TO_WALK = isMobile ? 0.8 : 0.4;
     const FRAME_STEP = 80;
     const IDLE_DELAY = 250;
 
