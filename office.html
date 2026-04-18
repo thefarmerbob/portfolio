@@ -295,7 +295,7 @@
       position: absolute; right: 4vw; top: 1vw;
       width: 14vw; will-change: transform;
     }
-    .ladder-spacer { height: 14vw; }
+    .ladder-spacer { height: 20vw; }
     #ladder-wrap img.ladder-img { display: block; width: 70%; height: auto; }
 
     /* ====== FLOOR (scrolls with wall, positioned by JS at ladder bottom) ====== */
@@ -309,7 +309,7 @@
     #wall-floor {
       position: absolute;
       left: 0; width: 100%;
-      height: 70vh;
+      height: 90vh;
       background: #ffffff;
       pointer-events: none;
       z-index: 9;
@@ -352,7 +352,7 @@
       will-change: top;
     }
     #character .climb-frame {
-      position: absolute; top: 0; left: 25%;
+      position: absolute; top: 7.5vw; left: 25%;
       width: 55%; height: auto;
     }
     #character .climb-frame.hidden { opacity: 0; }
@@ -372,7 +372,6 @@
     #character.walking {
       right: auto;
       top: auto !important;
-      bottom: 6.5vh;
     }
     #character.walking .climb-frame { display: none; }
 
@@ -414,14 +413,6 @@
       font-size: clamp(9px,0.7vw,13px);
       color: rgba(26,46,16,0.55); letter-spacing: 0.12em;
     }
-    #narrow-notice {
-      display: none; position: fixed; inset: 0; z-index: 99999;
-      background: #8ba87a; flex-direction: column; align-items: center; justify-content: center; gap: 24px;
-      font-family: 'Courier New', monospace; color: #1a2e10;
-      font-size: 16px; text-align: center; padding: 40px; line-height: 1.7;
-    }
-    #narrow-notice img { width: 80px; }
-    /* shown/hidden by JS based on whether content fits in viewport height */
   </style>
 </head>
 <body>
@@ -432,8 +423,7 @@
       <div id="ld-pct">0%</div>
     </div>
   </div>
-  <div id="narrow-notice"><img src="svgs/character/person_stand.svg" alt="">✦ this page is best<br>experienced on a laptop<br>or wider screen ✦</div>
-  <div id="scroll-driver"><div id="scroll-content"></div></div>
+<div id="scroll-driver"><div id="scroll-content"></div></div>
 
   <canvas id="iris-overlay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:10000;opacity:0;"></canvas>
   <div id="scene">
@@ -633,7 +623,7 @@
     /* --- Ladder geometry (recomputed on load/resize) --- */
     function getLadderBottomInWallSpace() {
       const vw = window.innerWidth / 100;
-      const ladderStartY = 15 * vw;             // 1vw top + 14vw spacer
+      const ladderStartY = 21 * vw;             // 1vw top + 20vw spacer
       const ladderRenderedW = 14 * 0.7 * vw;    // 9.8vw
       let ladderH;
       if (ladderImg && ladderImg.naturalWidth > 0) {
@@ -665,7 +655,7 @@
       const startY = vh * CHAR_START_TOP_FRAC;
 
       // We need enough wall scroll to show all content
-      const contentBottom = 140 * vw;  // approx lowest wall item
+      const contentBottom = 146 * vw;  // approx lowest wall item (+ extra gap before floor)
       const contentWO = Math.max(0, contentBottom - vh);
 
       // Floor is always pinned to ladder bottom: maxWO chosen so floor lands at vh*0.95 on screen
@@ -681,9 +671,11 @@
       document.getElementById('scroll-content').style.height =
         (maxWallOffset + window.innerHeight) + 'px';
 
-      // Position floor at bottom of all wall content
+      // Position floor — always at or below 95% of viewport when fully scrolled
       const vh = window.innerHeight;
-      const floorTop = layout.maxWO + Math.min(vh * 0.95, layout.contentBottom + 2 * (vh / 100));
+      const vw = window.innerWidth / 100;
+      const naturalFloor = layout.contentBottom + 2 * (vh / 100);
+      const floorTop = Math.max(naturalFloor, layout.maxWO + vh * 0.95) - 3 * vw;
 
       // Position door — raised to compensate for SVG bottom whitespace (~7% of height)
       const doorH = window.innerWidth * 0.30;
@@ -809,6 +801,13 @@
       return window.innerWidth * 0.82;
     }
 
+    function getWalkBottom() {
+      // Floor screen position = floorTop - wallOffset (at max scroll, wallOffset = maxWallOffset)
+      const floorScreenY = parseFloat(wallFloorLine.style.top) - maxWallOffset;
+      const vh = window.innerHeight;
+      return (vh - floorScreenY) + 2;  // 2px above floor line
+    }
+
     function enterWalkMode() {
       mode = 'walk';
       const sz = getWalkCharSize();
@@ -822,6 +821,7 @@
       charEl.style.height = sz.h + 'px';
       charEl.style.left = walkX + 'px';
       charEl.style.top = '';
+      charEl.style.bottom = getWalkBottom() + 'px';
 
       charFrame1.className = 'climb-frame hidden';
       charFrame2.className = 'climb-frame hidden';
@@ -1068,6 +1068,10 @@
         project: 'chihiro.html',
         code: 'https://github.com/thefarmerbob/chihiro.git',
         buttonBottom: '21%'
+      },
+      'officeframe13back': {
+        project: 'https://medium.com/@MaraDumitru',
+        buttonBottom: '40%'
       }
     };
 
@@ -1322,18 +1326,7 @@
     /* ============================================================
        INIT & RESIZE
        ============================================================ */
-    function updateNarrowNotice() {
-      const notice = document.getElementById('narrow-notice');
-      if (!notice) return;
-      // Show notice only when content (ladder bottom ≈ 164vw) fits entirely in viewport height
-      // — meaning the page can't scroll and the layout would be compressed/broken
-      const ladderBottom = getLadderBottomInWallSpace();
-      notice.style.display = ladderBottom < window.innerHeight ? 'flex' : 'none';
-    }
-    updateNarrowNotice();
-
     window.addEventListener('resize', () => {
-      updateNarrowNotice();
       const wasAtBottom = hasReachedLadderBottom || mode === 'walk';
 
       // Preserve progress ratio across resize
@@ -1356,6 +1349,7 @@
         // Recalculate walkX from stored fraction
         walkX = walkXFrac * window.innerWidth;
         charEl.style.left = walkX + 'px';
+        charEl.style.bottom = getWalkBottom() + 'px';
       }
       applyFromInput();
     });
