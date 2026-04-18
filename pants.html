@@ -458,7 +458,7 @@
     font-size: 16px; text-align: center; padding: 40px; line-height: 1.7;
   }
   #narrow-notice img { width: 80px; }
-  @media (max-width: 700px) { #narrow-notice { display: flex; } }
+  @media (max-aspect-ratio: 3/2) { #narrow-notice { display: flex; } }
 </style>
 </head>
 <body>
@@ -872,5 +872,15 @@
 <a id="back-link" href="office.html">
   <img src="svgs/data-and-swe-projects/back-text.svg" alt="Go back to office" style="width:100%; display:block;">
 </a>
+<script>
+document.addEventListener('keydown', function(e){
+  if((e.metaKey || e.ctrlKey) && (e.key === '=' || e.key === '+' || e.key === '-' || e.key === '0')){
+    e.preventDefault();
+  }
+});
+document.addEventListener('wheel', function(e){
+  if(e.metaKey || e.ctrlKey) e.preventDefault();
+}, {passive: false});
+</script>
 </body>
 </html>

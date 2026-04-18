@@ -805,7 +805,8 @@
       // Floor screen position = floorTop - wallOffset (at max scroll, wallOffset = maxWallOffset)
       const floorScreenY = parseFloat(wallFloorLine.style.top) - maxWallOffset;
       const vh = window.innerHeight;
-      return (vh - floorScreenY) + 2;  // 2px above floor line
+      const vw = window.innerWidth / 100;
+      return (vh - floorScreenY) - 1 * vw;
     }
 
     function enterWalkMode() {
@@ -1066,7 +1067,7 @@
       },
       'officeframe12back': {
         project: 'chihiro.html',
-        code: 'https://github.com/thefarmerbob/chihiro.git',
+        code: 'https://github.com/thefarmerbob/chihiro',
         buttonBottom: '21%'
       },
       'officeframe13back': {
@@ -1513,5 +1514,15 @@
       }
     });
   </script>
+<script>
+document.addEventListener('keydown', function(e){
+  if((e.metaKey || e.ctrlKey) && (e.key === '=' || e.key === '+' || e.key === '-' || e.key === '0')){
+    e.preventDefault();
+  }
+});
+document.addEventListener('wheel', function(e){
+  if(e.metaKey || e.ctrlKey) e.preventDefault();
+}, {passive: false});
+</script>
 </body>
 </html>

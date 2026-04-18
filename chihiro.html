@@ -413,7 +413,11 @@
     font-size: 16px; text-align: center; padding: 40px; line-height: 1.7;
   }
   #narrow-notice img { width: 80px; }
-  @media (max-width: 700px) { #narrow-notice { display: flex; } }
+  @media (max-aspect-ratio: 3/2) { #narrow-notice { display: flex; } }
+  @media (max-height: 900px) { #input-box { height: 22vw; } }
+  @media (max-height: 750px) { #input-box { height: 18vw; } }
+  @media (max-height: 600px) { #input-box { height: 14vw; } }
+  @media (max-height: 450px) { #input-box { height: 10vw; } }
 </style>
 </head>
 <body>
@@ -568,7 +572,7 @@
     btn.classList.add('spinning');
     btn.addEventListener('animationend', () => {
       btn.classList.remove('spinning');
-      window.open('https://github.com/thefarmerbob/chihiro.git', '_blank');
+      window.open('https://github.com/thefarmerbob/chihiro', '_blank');
     }, { once: true });
   });
 
@@ -690,7 +694,7 @@
     loadingArea.classList.add('visible');
     const list = SONG_ERAS.map(s => `- "${s.song}" by ${s.artist}: era="${s.era}", period="${s.period}", plays=${s.plays}`).join('\n');
     try {
-      const r = await fetch('/.netlify/functions/claude-proxy', {
+      const r = await fetch('/api/claude-proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 256,
@@ -772,5 +776,15 @@
 <a id="back-link" href="office.html">
   <img src="svgs/data-and-swe-projects/back-text.svg" alt="Go back to office" style="width:100%; display:block;">
 </a>
+<script>
+document.addEventListener('keydown', function(e){
+  if((e.metaKey || e.ctrlKey) && (e.key === '=' || e.key === '+' || e.key === '-' || e.key === '0')){
+    e.preventDefault();
+  }
+});
+document.addEventListener('wheel', function(e){
+  if(e.metaKey || e.ctrlKey) e.preventDefault();
+}, {passive: false});
+</script>
 </body>
 </html>
