@@ -460,10 +460,10 @@
   #narrow-notice img { width: 80px; }
   @media (max-aspect-ratio: 3/2) { #narrow-notice { display: flex; } }
   @media (min-aspect-ratio: 3/1) { #narrow-notice { display: flex; } }
-  @media (max-height: 900px) { #drop-zone { height: 11vw; } }
-  @media (max-height: 750px) { #drop-zone { height: 9vw; } }
-  @media (max-height: 600px) { #drop-zone { height: 7vw; } }
-  @media (max-height: 450px) { #drop-zone { height: 5vw; } }
+  @media (max-height: 900px) { #drop-zone { height: 11vw; width: 45vw; } }
+  @media (max-height: 750px) { #drop-zone { height: 9vw; width: 50vw; } }
+  @media (max-height: 600px) { #drop-zone { height: 7vw; width: 55vw; } }
+  @media (max-height: 450px) { #drop-zone { height: 5vw; width: 55vw; } }
 </style>
 </head>
 <body>
@@ -789,7 +789,7 @@
         setTimeout(() => startThinkingTap(), 300);
 
         // Wait for the API result (minimum 3s thinking time)
-        const minThink = new Promise(r => setTimeout(r, 3000));
+        const minThink = new Promise(r => setTimeout(r, 2000));
         let result;
         try {
           [result] = await Promise.all([classifyPromise, minThink]);
