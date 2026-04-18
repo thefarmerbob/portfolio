@@ -962,8 +962,14 @@
         irisCtx.arc(cx, cy, Math.max(r, 0), 0, Math.PI * 2);
         irisCtx.stroke();
 
-        if (t < 0.99) requestAnimationFrame(draw);
-        else window.location.href = url;
+        if (t < 1) {
+          requestAnimationFrame(draw);
+        } else {
+          irisCtx.clearRect(0, 0, w, h);
+          irisCtx.fillStyle = '#ffffff';
+          irisCtx.fillRect(0, 0, w, h);
+          window.location.href = url;
+        }
       }
       requestAnimationFrame(draw);
     }

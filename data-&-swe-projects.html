@@ -24,12 +24,30 @@
   }
   #narrow-notice img { width: 80px; }
   @media (max-aspect-ratio: 3/2) { #narrow-notice { display: flex; } }
+  @media (min-aspect-ratio: 3/1) { #narrow-notice { display: flex; } }
 </style>
 <script>
   (function(){
     var D = 1100;
     function z(){ document.documentElement.style.zoom = window.innerWidth < D ? window.innerWidth/D : 1; }
     z(); window.addEventListener('resize', z);
+  })();
+  (function(){
+    var BASE_H = 750;
+    function scaleScene(){
+      var scene = document.getElementById('scene');
+      if(!scene) return;
+      var vh = window.innerHeight;
+      if(vh < BASE_H){
+        var s = vh / BASE_H;
+        scene.style.transform = 'scale(' + s + ')';
+        scene.style.transformOrigin = 'center center';
+      } else {
+        scene.style.transform = '';
+      }
+    }
+    window.addEventListener('resize', scaleScene);
+    window.addEventListener('DOMContentLoaded', scaleScene);
   })();
 </script>
 <style>
