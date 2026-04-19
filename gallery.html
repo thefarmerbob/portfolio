@@ -299,6 +299,10 @@
       color: rgba(26,46,16,0.55);
       letter-spacing: 0.12em;
     }
+    @media (orientation: portrait) {
+      .wall-frame img { filter: none; transform: translateZ(0); -webkit-transform: translateZ(0); }
+      #wall { transform: translateZ(0); -webkit-transform: translateZ(0); }
+    }
   </style>
 </head>
 <body>

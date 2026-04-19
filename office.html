@@ -109,7 +109,6 @@
     }
     .zoom-flip-inner.flipped .zoom-face.front {
       pointer-events: none;
-      visibility: hidden;
     }
     .zoom-face {
       position: absolute; top: 0; left: 0;
@@ -386,6 +385,7 @@
     /* ====== MOBILE OVERRIDES ====== */
     @media (orientation: portrait) {
       .ladder-spacer { height: 40vw; }
+      .wall-item img { -webkit-transform: translateZ(0); }
     }
 
     /* ====== LOADING SCREEN ====== */
@@ -889,9 +889,9 @@
       // Position front overlay to match door's screen position
       const rect = doorEl.getBoundingClientRect();
       doorFrontOverlay.style.left = rect.left + 'px';
-      doorFrontOverlay.style.top = rect.top + 'px';
-      doorFrontOverlay.style.width = rect.width + 'px';
-      doorFrontOverlay.style.height = rect.height + 'px';
+      doorFrontOverlay.style.top = (rect.top + rect.height * 0.15) + 'px';
+      doorFrontOverlay.style.width = (rect.width * 1.02) + 'px';
+      doorFrontOverlay.style.height = (rect.height * 1.02) + 'px';
       doorFrontOverlay.style.display = 'block';
     }
 
@@ -1153,6 +1153,11 @@
         inner.classList.add('can-flip');
         void inner.offsetHeight;
         inner.classList.add('flipped');
+        // Halfway through the 0.7s flip, remove front face
+        setTimeout(() => {
+          const frontFace = inner.querySelector('.zoom-face.front');
+          if (frontFace) frontFace.remove();
+        }, 350);
       }, 480);
     }
 
