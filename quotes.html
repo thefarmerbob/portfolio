@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Movie Quotes</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Mono:wght@300;400&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* Width reserved down the right for the ladder, so the wall never runs under it. */
+  :root { --rail: clamp(66px, 9vh, 120px); }
+
+  body {
+    background: #8ba87a;
+    min-height: 100vh;
+    font-family: 'Playfair Display', serif;
+    padding: clamp(28px, 4vw, 70px) clamp(18px, 3vw, 54px) clamp(40px, 5vw, 90px);
+    padding-right: calc(var(--rail) + clamp(18px, 3vw, 54px));
+  }
+
+  /* ====== LADDER & CLIMBER (same sprites as the office) ====== */
+  /* `left` is set by JS to sit in the middle of the gap between the wall and
+     the right edge of the window — the wall is capped at 1560px and centred,
+     so that gap is wider than the reserved padding on a big screen. */
+  #rail {
+    position: fixed;
+    right: 0; top: 0;
+    width: var(--rail);
+    height: 100vh;
+    z-index: 4;
+    pointer-events: none;
+  }
+  #rail .ladder-img {
+    position: absolute;
+    left: 50%;
+    top: -1vh;
+    height: 102vh;
+    width: auto;                 /* ladder is 89x1356, so let it keep its own ratio */
+    transform: translateX(-50%);
+  }
+  #climber {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 10vh;                 /* climber is 86x166 */
+    transform: translateX(-50%);
+    will-change: top;
+  }
+  /* First frame stays in flow so the wrapper actually has a height (the
+     scroll maths needs it); the second is stacked on top of it. */
+  #climber img { width: 100%; height: auto; display: block; }
+  #climber img#cf1 { position: relative; }
+  #climber img#cf2 { position: absolute; left: 0; top: 0; }
+  #climber img.hidden { visibility: hidden; }
+
+  /* Not enough room for the rail once the wall drops to two columns. */
+  @media (max-width: 950px) {
+    :root { --rail: 0px; }
+    #rail { display: none; }
+    body { padding-right: clamp(18px, 3vw, 54px); }
+  }
+
+  header { text-align: center; margin-bottom: 3.2vw; }
+  /* Hand-lettered title, like the other pages use. Capped at its natural
+     842px so it never upscales and goes soft. */
+  h1 { line-height: 0; }
+  h1 img {
+    display: block;
+    margin: 0 auto;
+    width: clamp(240px, 37vw, 680px);
+    height: auto;
+  }
+  header p {
+    margin-top: 1.4vw;
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(12px, 1.05vw, 18px);
+    font-style: italic;
+    color: rgba(49, 62, 36, 0.75);
+  }
+
+  /* The images run from 5.5:1 banners to 1:2 portraits, so the wall is laid
+     out as balanced columns with one fixed gutter, and very tall images are
+     capped so a single one cannot tower over its column. */
+  :root { --gutter: clamp(14px, 1.4vw, 26px); }
+
+  /* Columns are filled by JS, always into whichever is currently shortest, so
+     the wall ends level instead of leaving a hole at the bottom of a column
+     the way CSS multi-column balancing does. */
+  #wall {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gutter);
+    max-width: 1560px;
+    margin: 0 auto;
+  }
+  #wall .col {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gutter);
+  }
+
+  .shot {
+    margin: 0;
+    background: #fdfaf1;
+    padding: 9px 9px 0;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+    cursor: zoom-in;
+    transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.24s ease;
+  }
+  .shot:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.34);
+  }
+  .shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 56vh;        /* keeps the 1:2 portraits in proportion */
+    object-fit: contain;
+    background: #f2ece0;
+  }
+  .shot figcaption {
+    padding: 7px 0 9px;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: rgba(26, 46, 16, 0.4);
+  }
+
+  /* Full-size viewer — same backdrop as zooming a painting in the gallery. */
+  #viewer {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    cursor: zoom-out;
+    padding: 3vh 3vw;
+  }
+  #viewer.open { opacity: 1; pointer-events: auto; }
+  #viewer img {
+    max-width: 92vw;
+    max-height: 92vh;
+    width: auto;
+    height: auto;
+    background: #fdfaf1;
+    padding: 12px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    transform: scale(0.9);
+    transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  #viewer.open img { transform: scale(1); }
+  #viewer img { filter: drop-shadow(0 12px 40px rgba(0, 0, 0, 0.5)); }
+  #viewer-hint {
+    position: fixed;
+    bottom: 3vh;
+    left: 0; right: 0;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: rgba(255, 255, 255, 0.6);
+    pointer-events: none;
+  }
+
+  /* Same placement and behaviour as chihiro / pants / the projects page. */
+  #back-link {
+    position: fixed;
+    bottom: 0.8vw;
+    left: 1.5vw;
+    width: 3vw;
+    min-width: 44px;
+    cursor: pointer;
+    z-index: 10;
+    filter: brightness(0);
+    transition: transform 0.2s ease, filter 0.2s ease;
+  }
+  #back-link:hover {
+    transform: scale(1.05);
+    filter: brightness(1);
+  }
+  #back-link img { width: 100%; display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><img src="svgs/misc/quotes-from-my-favorite.svg" alt="quotes from my favorite"></h1>
+  <p>movies, books, and series (you know, the ones the ladybug keeps leaving behind)</p>
+</header>
+
+<div id="rail" aria-hidden="true">
+  <img class="ladder-img" src="svgs/office/finalladder.svg" alt="">
+  <div id="climber">
+    <img id="cf1" src="svgs/character/goingdownladder1.svg" alt="">
+    <img id="cf2" class="hidden" src="svgs/character/goingdownladder2.svg" alt="">
+  </div>
+</div>
+
+<div id="wall"></div>
+
+<a id="back-link" href="home.html" title="Go back">
+  <img src="svgs/data-and-swe-projects/back-text.svg" alt="Go back">
+</a>
+
+<div id="viewer"><img id="viewer-img" src="" alt=""></div>
+<div id="viewer-hint" style="display:none">click anywhere to close &nbsp;·&nbsp; ← → to browse</div>
+
+<script>
+  var DIR = 'svgs/movie-quotes/';
+  /* Bumped whenever the folder is renumbered. Without it the browser keeps
+     serving the previous picture for a reused filename, which shows up as
+     the same image appearing twice under different numbers. */
+  var V = '?v=4';
+  // [file, width, height] — the sizes are baked in so the columns can be
+  // balanced before any image has loaded, rather than reflowing as they arrive.
+  var FILES = [
+    ['1.jpg',500,369],['2.jpg',676,1200],['3.jpg',650,365],['4.jpg',1200,647],
+    ['5.png',1112,506],['6.jpg',1024,1024],['7.jpg',750,1266],['8.png',682,124],
+    ['9.jpg',1024,1024],['10.jpg',448,446],['11.jpg',640,640],['12.png',738,1186],
+    ['13.jpg',500,543],['14.jpg',500,875],['15.jpg',700,1176],['16.jpg',420,700],
+    ['17.jpg',831,773],['18.jpg',1024,2048],['19.jpg',750,750],['20.jpg',441,490],
+    ['21.jpg',1200,1500],['22.png',1150,326],['23.jpg',735,372],['24.jpg',736,1308],
+    ['25.jpg',500,274],['26.jpg',736,920],['27.jpg',667,375],['28.jpg',854,854],
+    ['29.jpg',736,1256],['30.jpg',437,700],['31.jpg',735,490],['32.jpg',526,514],
+    ['33.jpg',720,729],['34.jpg',500,209],['35.jpg',500,563],['36.jpg',736,727],
+    ['37.jpg',492,700],['38.jpg',500,426],['39.png',542,230],['40.jpg',374,534],
+    ['41.jpg',1181,775],['42.jpg',735,716],['43.png',1032,546],['44.jpg',540,528],
+    ['45.jpg',563,655],['46.jpg',455,438],['47.jpg',736,414],['48.png',1252,388],
+    ['49.jpg',1080,396]
+  ];
+
+  var wall = document.getElementById('wall');
+
+  // Built once, then just moved between columns when the width changes.
+  var tiles = FILES.map(function (rec, i) {
+    var name = rec[0];
+    var fig = document.createElement('figure');
+    fig.className = 'shot';
+    fig.dataset.index = i;
+
+    var img = document.createElement('img');
+    img.src = DIR + name + V;
+    img.alt = 'Movie quote ' + (i + 1);
+    img.loading = 'lazy';           // 49 images — only fetch what's in view
+    img.decoding = 'async';
+
+    var cap = document.createElement('figcaption');
+    cap.textContent = String(i + 1).padStart(2, '0');
+
+    fig.appendChild(img);
+    fig.appendChild(cap);
+    return { el: fig, w: rec[1], h: rec[2] };
+  });
+
+  function columnCount(w) {
+    if (w <= 600) return 1;
+    if (w <= 950) return 2;
+    if (w <= 1400) return 3;
+    return 4;
+  }
+
+  var laidOutFor = -1;
+
+  function layout() {
+    var n = columnCount(window.innerWidth);
+    if (n === laidOutFor) return;
+    laidOutFor = n;
+
+    wall.innerHTML = '';
+    var cols = [], heights = [];
+    for (var c = 0; c < n; c++) {
+      var col = document.createElement('div');
+      col.className = 'col';
+      wall.appendChild(col);
+      cols.push(col);
+      heights.push(0);
+    }
+
+    var gutter = parseFloat(getComputedStyle(wall).gap) || 20;
+    var colW = (wall.clientWidth - gutter * (n - 1)) / n;
+    var capPx = window.innerHeight * 0.56;      // matches the max-height rule
+    var CHROME = 9 + 27;                        // top padding + caption block
+
+    tiles.forEach(function (t) {
+      // Shortest column wins, so the wall finishes level.
+      var k = 0;
+      for (var j = 1; j < n; j++) if (heights[j] < heights[k]) k = j;
+      cols[k].appendChild(t.el);
+      var imgH = Math.min(colW * (t.h / t.w), capPx);
+      heights[k] += imgH + CHROME + gutter;
+    });
+
+    centreRail();
+  }
+
+  // Sit the ladder in the middle of the empty strip to the right of the wall,
+  // rather than tight against the window edge.
+  function centreRail() {
+    var rail = document.getElementById('rail');
+    if (!rail || getComputedStyle(rail).display === 'none') return;
+    var right = wall.getBoundingClientRect().right;
+    var mid = (right + window.innerWidth) / 2;
+    rail.style.right = 'auto';
+    rail.style.left = Math.round(mid - rail.offsetWidth / 2) + 'px';
+  }
+
+  layout();
+  var resizeTimer;
+  window.addEventListener('resize', function () {
+    centreRail();                 // layout() bails early if the column count is unchanged
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(layout, 150);
+  });
+
+  // ── Climber: walks down the ladder as the page scrolls ───────────────
+  (function () {
+    var climber = document.getElementById('climber');
+    var cf1 = document.getElementById('cf1');
+    var cf2 = document.getElementById('cf2');
+    if (!climber) return;
+
+    var alt = false, lastStep = 0, ch = 0;
+
+    // Cached so the scroll handler never forces a layout read.
+    function measure() { ch = climber.offsetHeight; }
+
+    function place() {
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+      var p = max > 0 ? Math.min(1, Math.max(0, y / max)) : 0;
+
+      // Keep a little clear of both edges so the sprite is never clipped.
+      var inset = window.innerHeight * 0.04;
+      var travel = window.innerHeight - ch - inset * 2;
+      climber.style.top = (inset + p * Math.max(0, travel)) + 'px';
+
+      // Swap the two rungs-apart frames every so many pixels climbed, so the
+      // legs move with the scroll rather than on a timer.
+      if (Math.abs(y - lastStep) > 34) {
+        lastStep = y;
+        alt = !alt;
+        cf1.classList.toggle('hidden', alt);
+        cf2.classList.toggle('hidden', !alt);
+      }
+    }
+
+    window.addEventListener('scroll', place, { passive: true });
+    window.addEventListener('resize', function () { measure(); place(); });
+    if (cf1.complete) measure(); else cf1.addEventListener('load', function () { measure(); place(); });
+    measure();
+    place();
+  })();
+
+  // ── Full-size viewer ────────────────────────────────────────────────
+  var viewer = document.getElementById('viewer');
+  var viewerImg = document.getElementById('viewer-img');
+  var hint = document.getElementById('viewer-hint');
+  var current = -1;
+
+  function show(i) {
+    current = ((i % FILES.length) + FILES.length) % FILES.length;
+    viewerImg.src = DIR + FILES[current][0] + V;
+    viewerImg.alt = 'Movie quote ' + (current + 1);
+    viewer.classList.add('open');
+    hint.style.display = '';
+    document.body.style.overflow = 'hidden';
+  }
+  function hide() {
+    viewer.classList.remove('open');
+    hint.style.display = 'none';
+    document.body.style.overflow = '';
+    current = -1;
+  }
+
+  wall.addEventListener('click', function (e) {
+    var fig = e.target.closest ? e.target.closest('.shot') : null;
+    if (fig) show(parseInt(fig.dataset.index, 10));
+  });
+  viewer.addEventListener('click', hide);
+
+  document.addEventListener('keydown', function (e) {
+    if (current < 0) return;
+    if (e.key === 'Escape') hide();
+    else if (e.key === 'ArrowRight') show(current + 1);
+    else if (e.key === 'ArrowLeft') show(current - 1);
+  });
+
+  // Come back to whichever page sent you here, when that was a page on this site.
+  document.getElementById('back-link').addEventListener('click', function (e) {
+    if (document.referrer && document.referrer.indexOf(location.origin) === 0) {
+      e.preventDefault();
+      history.back();
+    }
+  });
+</script>
+
+<script>
+// Pin the page size, the same way the other pages do it.
+document.addEventListener('keydown', function (e) {
+  if ((e.metaKey || e.ctrlKey) &&
+      (e.key === '=' || e.key === '+' || e.key === '-' || e.key === '0')) {
+    e.preventDefault();
+  }
+});
+document.addEventListener('wheel', function (e) {
+  if (e.metaKey || e.ctrlKey) e.preventDefault();
+}, { passive: false });
+document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+</script>
+</body>
+</html>

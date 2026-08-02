@@ -1,0 +1,104 @@
+/* Shared ladybug behaviour — wing flap on hover, click-to-fly, quote card.
+   Each page keeps its own positioning rule; only behaviour lives here.
+
+   Imported here rather than per page: only office, pants and chihiro load
+   webfonts, so without this the card's caption would fall back to a different
+   typeface on home, gallery and the projects page. */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap');
+
+.ladybug {
+  pointer-events: none;          /* never steals hover/clicks from the scene */
+}
+/* Visibility of the perched sprite is driven inline from ladybug.js: it has to
+   disappear instantly the moment the flapping frames stand in for it, or a
+   faded copy of it is left sitting under them. */
+
+/* ── Flapping frames ────────────────────────────────────────────────
+   Used both for the hover flap and the airborne copy. Two stacked
+   frames toggled by visibility rather than swapping one src, so there
+   is no decode hitch, and frame 2 is pre-scaled by the JS because the
+   two drawings sit at different scales inside their own viewBoxes. */
+#ladybug-flier,
+#ladybug-hover-flap {
+  position: fixed;
+  left: 0; top: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  transform-origin: 50% 50%;
+}
+#ladybug-hover-flap { z-index: 8000; }
+#ladybug-flier      { z-index: 9000; }
+
+#ladybug-flier img,
+#ladybug-hover-flap img { display: block; position: absolute; left: 0; top: 0; }
+#ladybug-flier .f2,
+#ladybug-hover-flap .f2 { visibility: hidden; }
+#ladybug-flier.alt .f1,
+#ladybug-hover-flap.alt .f1 { visibility: hidden; }
+#ladybug-flier.alt .f2,
+#ladybug-hover-flap.alt .f2 { visibility: visible; }
+
+/* ── Quote card ─────────────────────────────────────────────────── */
+#ladybug-quote {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Same backdrop as zooming a painting in the gallery. Blurring only once
+     lit, so the scene stays sharp while the ladybug is still in flight. */
+  background: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  transition: background 0.45s ease, backdrop-filter 0.45s ease,
+              -webkit-backdrop-filter 0.45s ease, opacity 0.4s ease;
+  /* Inert until the paper has landed, so a click during the animation can't
+     dismiss it — and so the scene stays usable while the ladybug is mid-air. */
+  pointer-events: none;
+  cursor: pointer;
+}
+#ladybug-quote.lit {
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+#ladybug-quote.ready { pointer-events: auto; }
+
+/* The figure's transform is animated frame by frame from ladybug.js as it is
+   squeezed out and flops into place, so it carries no transition of its own. */
+#ladybug-quote figure {
+  margin: 0;
+  background: #fdfaf1;
+  padding: 14px;
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.42);
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+#ladybug-quote img {
+  display: block;
+  max-height: 72vh;
+  max-width: 82vw;
+  width: auto;
+}
+#ladybug-quote figcaption {
+  margin-top: 12px;
+  text-align: center;
+}
+#ladybug-quote .quote-all {
+  font-family: 'Playfair Display', serif;
+  font-size: 17px;
+  font-weight: 700;
+  font-style: italic;
+  color: #313E24;
+  text-decoration: none;
+  border-bottom: 1.5px solid rgba(49, 62, 36, 0.4);
+  padding-bottom: 2px;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+#ladybug-quote .quote-all:hover {
+  color: #1a2e10;
+  border-bottom-color: #1a2e10;
+}
+

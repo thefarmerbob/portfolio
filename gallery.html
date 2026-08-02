@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gallery Walk</title>
-  <style>
+  <link rel="stylesheet" href="ladybug.css">
+<style>
     * {
       margin: 0;
       padding: 0;
@@ -123,6 +124,8 @@
       pointer-events: none;
       z-index: 2;
     }
+    /* Ladybug beside the tiger painting — behaviour lives in ladybug.css/js */
+    #gallery-ladybug { pointer-events: none; transform: rotate(-90deg); }
     .gallery-object img {
       width: 100%;
       height: 100%;
@@ -432,6 +435,20 @@
       lamp.style.zIndex = '6';
       lamp.innerHTML = '<img src="svgs/gallery-objects/gallerylamp1.svg" alt="lamp" />';
       wallEl.appendChild(lamp);
+
+      // Ladybug on the wall to the left of the big tiger painting (frame 101).
+      // The painting spans x 2130..3230; frame 10 below-left ends at x 2050 but
+      // only starts at y 529, so this sits in the open wall above it.
+      const ladybug = document.createElement('div');
+      ladybug.id = 'gallery-ladybug';
+      ladybug.className = 'gallery-object ladybug';
+      ladybug.style.left = (1865 * s) + 'px';
+      ladybug.style.top = (399 * s) + 'px';
+      ladybug.style.width = (85 * s) + 'px';
+      ladybug.style.height = (85 * s) + 'px';
+      ladybug.style.zIndex = '3';
+      ladybug.innerHTML = '<img src="svgs/ladybug/ladybug-1.svg" alt="" />';
+      wallEl.appendChild(ladybug);
 
       const plant = document.createElement('div');
       plant.className = 'gallery-object';
@@ -1074,5 +1091,6 @@ document.addEventListener('wheel', function(e){
   if(e.metaKey || e.ctrlKey) e.preventDefault();
 }, {passive: false});
 </script>
+<script src="ladybug.js"></script>
 </body>
 </html>

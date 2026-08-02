@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mara Buşirku — Portfolio</title>
-  <style>
+  <link rel="stylesheet" href="ladybug.css">
+<style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
@@ -46,6 +47,9 @@
     }
     .wall-item { position: absolute; }
     .wall-item img { display: block; width: 100%; height: auto; }
+
+    /* Ladybug beside PROJECTS — behaviour lives in ladybug.css/js */
+    #office-ladybug { pointer-events: none; transform: rotate(-90deg); }
 
     .wall-item.clickable,
     .wall-item.flippable {
@@ -478,6 +482,10 @@
       </div>
       <div class="wall-item" style="left:5vw; top:61vw; width:42vw;">
         <img src="svgs/office/PROJECTS.svg" alt="projects" />
+      </div>
+      <!-- Ladybug perched beside the PROJECTS title -->
+      <div class="wall-item ladybug" id="office-ladybug" style="left:49vw; top:62.8vw; width:3vw;">
+        <img src="svgs/ladybug/ladybug-1.svg" alt="" loading="lazy" />
       </div>
 
       <div class="wall-item flippable" style="left:4vw; top:73vw; width:36vw;">
@@ -1542,5 +1550,6 @@ document.addEventListener('wheel', function(e){
   if(e.metaKey || e.ctrlKey) e.preventDefault();
 }, {passive: false});
 </script>
+<script src="ladybug.js"></script>
 </body>
 </html>

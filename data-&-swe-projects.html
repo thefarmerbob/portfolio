@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Data & SWE Projects</title>
+<link rel="stylesheet" href="ladybug.css">
 <style>
   #page-loader {
     position: fixed; inset: 0; background: #95B887; z-index: 9999;
@@ -140,6 +141,18 @@
   /* jar7 text: above */
   #slot-jar7 .jar-text { left: -1vw; top: -7vw; width: 12vw; }
 
+  /* Ladybug sitting on the bottom shelf, to the right of the last jar */
+  #shelf-ladybug {
+    position: absolute;
+    left: 54.5vw;
+    bottom: 1.75vw;
+    width: 3.6vw;
+    z-index: 2;
+    pointer-events: none;
+    will-change: transform;
+    transform: scaleX(-1);   /* mirrored */
+  }
+
   /* Back link */
   #back-link {
     position: fixed;
@@ -275,6 +288,7 @@
       <img class="jar-img" src="svgs/data-and-swe-projects/jar7.svg" alt="Predator/Prey Cellular Automata">
     </div>
     <img class="shelf-img" src="svgs/data-and-swe-projects/shelf.svg" alt="">
+    <img id="shelf-ladybug" class="ladybug" src="svgs/ladybug/ladybug-3.svg" alt="">
   </div>
 </div>
 
@@ -377,5 +391,6 @@ document.addEventListener('wheel', function(e){
   if(e.metaKey || e.ctrlKey) e.preventDefault();
 }, {passive: false});
 </script>
+<script src="ladybug.js"></script>
 </body>
 </html>

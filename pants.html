@@ -8,6 +8,7 @@
 <link rel="preload" href="svgs/chihiro/journal-cover.jpeg" as="image">
 <link rel="preload" href="svgs/misc/journalpaper1.jpeg" as="image">
 <title>Are Your Pants Cool?</title>
+<link rel="stylesheet" href="ladybug.css">
 <style>
   #page-loader{position:fixed;inset:0;background:#95B887;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;transition:opacity 0.4s ease;}
   #page-loader.done{opacity:0;pointer-events:none;}
@@ -169,6 +170,17 @@
     width: 100%;
     position: relative;
     overflow: visible;
+  }
+  /* Ladybug perched on the top edge of the journal cover */
+  #journal-ladybug {
+    position: absolute;
+    left: 72%;
+    top: -1.92vw;
+    width: 3.6vw;
+    z-index: 3;
+    pointer-events: none;
+    will-change: transform;
+    transform: scaleX(-1);   /* mirrored */
   }
   #learn-more-text {
     position: absolute;
@@ -548,6 +560,7 @@
           <div id="pdf-page"><div id="pdf-scroll"></div></div>
         </div>
       </div>
+      <img id="journal-ladybug" class="ladybug" src="svgs/ladybug/ladybug-3.svg" alt="">
     </div>
   </div>
 
@@ -888,5 +901,6 @@ document.addEventListener('wheel', function(e){
   if(e.metaKey || e.ctrlKey) e.preventDefault();
 }, {passive: false});
 </script>
+<script src="ladybug.js"></script>
 </body>
 </html>
