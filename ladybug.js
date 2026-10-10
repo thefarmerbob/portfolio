@@ -106,6 +106,12 @@
      first moments of the flight rather than being carried through it. */
   var FLAP_ROT = { 'ladybug-2.svg': -90 };
 
+  /* A standing turn on the airborne drawing. The flap frames are shared by
+     every page, and their body sits a little off the axis the flight heading
+     is measured along, so the bug looks like it is flying crabwise. This
+     leans it back into line. Negative is anticlockwise, as in CSS. */
+  var FLIGHT_ROT = -30;
+
   function spriteName(el) {
     var img = el.tagName === 'IMG' ? el : el.querySelector('img');
     var src = img && img.getAttribute('src');
@@ -302,54 +308,47 @@
     var rot = rotOf(el);
     var TURN_OUT = 0.2;
 
-    /* One loop off the perch, then a smooth up-and-down cruise out past the
-       left edge. LOOP_END is the fraction of the flight spent looping. */
-    var LOOP_END = 0.34;
-    var WAVES = 2.5;                       // rises and falls on the way out
+    /* One unbroken arc off the perch and away past the left edge. It used to
+       throw a full loop first, but a loop turns the sprite through all 360° —
+       the bug ends up tumbling rather than flying, which is not what a ladybug
+       does. Now it lifts off, climbs away and rides a slow swell out, and the
+       heading only ever swings through a few degrees. */
     var EXIT_X = -(w * 3);                 // comfortably off the left edge
 
-    // Loop below the perch when there is no room above it (pants/chihiro sit
-    // right at the top of the window), otherwise above.
     var roomUp = sy - MARGIN, roomDown = vh - MARGIN - sy;
-    var loopDown = roomDown > roomUp;
-    var R = Math.min(
-      Math.min(vw, vh) * 0.09,
-      (loopDown ? roomDown : roomUp) / 2,
-      sx - MARGIN,
-      vw - MARGIN - sx
-    );
-    // Never collapse to nothing: a zero radius leaves the path with no
-    // derivative, and the heading would have nothing to read.
-    R = Math.max(R, w * 0.9);
 
-    // Cruise height for the outbound leg, with room for the full wave.
-    var cruiseY = Math.min(Math.max(sy, vh * 0.25), vh * 0.7);
-    var amp = Math.min(90, cruiseY - MARGIN, vh - MARGIN - cruiseY);
-    amp = Math.max(amp, 0);
+    /* It climbs away if there is room overhead, and drops away if there isn't —
+       on the pages where it perches at the very top of the window, up is not an
+       option. */
+    var LIFT = Math.min(vh * 0.16, 130);
+    var cruiseY = roomUp > roomDown ? sy - LIFT : sy + LIFT;
+    cruiseY = Math.min(Math.max(cruiseY, MARGIN + 24), vh - MARGIN - 24);
 
     function smooth(u) { return u * u * (3 - 2 * u); }
+
+    /* A ladybug does not carve waves through the air — it goes roughly where it
+       is going, unsteadily. So the line is near enough straight: off the perch,
+       a climb away, and out past the left edge. All the life is in a small
+       unsteady bob — two slow beats at rates that don't divide into one another,
+       so it never repeats and never reads as a wave. Half a body of sway in all,
+       not tens of pixels. */
+    var BOB = w * 0.5;
 
     /* The smooth flight line. Heading is read off this and this only — the
        wingbeat wobble below is deliberately kept out of it, because its
        derivative is far larger than the path's and would spin the sprite
        back and forth instead of pointing it where it is actually going. */
     function basePos(t) {
-      if (t <= LOOP_END) {
-        // A single vertical loop that begins and ends at the perch. It leaves
-        // and returns heading left, so the cruise picks up without a kink.
-        var th = (t / LOOP_END) * Math.PI * 2;
-        return {
-          x: sx - R * Math.sin(th),
-          y: sy + (loopDown ? 1 : -1) * R * (1 - Math.cos(th))
-        };
-      }
-      // Outbound: accelerates away to the left, riding a settling sine wave.
-      var u = (t - LOOP_END) / (1 - LOOP_END);
-      var travel = 0.35 * u + 0.65 * u * u;      // non-zero speed at handover
-      var s = smooth(u);
+      /* Barely moving as it lets go, then gathering pace — the small constant
+         term keeps a little sideways drift from the very first frame, so the
+         heading has a direction to read instead of guessing at a standstill. */
+      var travel = 0.08 * t + 0.92 * t * t;
+      var s = smooth(t);
       return {
         x: sx - (sx - EXIT_X) * travel,
-        y: sy + (cruiseY - sy) * s + Math.sin(u * Math.PI * 2 * WAVES) * amp * s
+        y: sy + (cruiseY - sy) * s +
+           (Math.sin(t * Math.PI * 2 * 1.3) * 0.6 +
+            Math.sin(t * Math.PI * 2 * 2.1 + 1.1) * 0.4) * BOB * s
       };
     }
 
@@ -379,7 +378,7 @@
       // The perched turn unwinds on top of that, so it leaves the perch at the
       // angle it was hovering at and swings into line as it goes.
       var turn = rot ? rot * (1 - smooth(Math.min(t / TURN_OUT, 1))) : 0;
-      var heading = turn +
+      var heading = turn + FLIGHT_ROT +
         ((dx * dx + dy * dy) < 1e-6 ? 180 : Math.atan2(dy, dx) * 180 / Math.PI);
 
       /* A shudder either side of the moment it drops the paper — it should

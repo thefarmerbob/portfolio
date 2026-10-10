@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Rat Hole</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #8ba87a;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* The room is one stage with the drawing's own proportions, fitted to the
+     window. Everything in it is placed as a share of that stage rather than in
+     px, so the whole scene keeps its arrangement at any window size or zoom —
+     the same rule the rest of the site follows. */
+  #room {
+    position: relative;
+    width: min(56.97vw, calc(56.97vh * 455 / 291));
+    aspect-ratio: 455 / 291;
+    /* The sign hangs above the room, outside its box, so the room drops by
+       half of what the sign sticks up — that centres the two of them together
+       rather than centring the room and letting the sign hang off the top. */
+    translate: 0 10%;
+  }
+  #room img, #room .prop {
+    position: absolute;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  #shell { left: 0; top: 0; width: 100%; height: 100%; }
+
+  /* Every piece of furniture is inlined rather than loaded as an image, so only
+     the ink takes the pointer: the bed is a thin diagonal in a large square box,
+     and hovering the empty half of that box should do nothing.
+
+     The lift is written to `transform`, which place.js never touches — it works
+     in `translate`, `scale` and `rotate` — so a piece can be moved by hand and
+     still hover properly. */
+  #room .prop {
+    --rise: 1vh;                  /* how far off the floor it goes */
+    --drift: 1.9vh;               /* and how far it rises and falls up there */
+    --dur: 3.6s;                  /* its own pace — no two are alike */
+    overflow: visible;
+    pointer-events: none;
+    /* Only the transform moves once it is up, and it gets its own layer, so
+       the drawing is drawn once and pushed about rather than re-rendered —
+       these are big paths and the drop-shadow would repaint every frame. */
+    will-change: transform;
+    opacity: 0;                   /* until the whole room is ready — see below */
+    transition: transform 320ms cubic-bezier(0.34, 1.4, 0.64, 1), filter 320ms ease;
+  }
+  /* The drawings are fetched, so they would otherwise turn up one at a time,
+     in whatever order they arrived. Nothing shows until they all can. */
+  #shell { opacity: 0; }
+  #room.ready .prop, #room.ready #shell { opacity: 1; }
+  #room .prop * { pointer-events: auto; }
+  /* Nothing grows on hover — it lifts off the floor and bobs, and the bob is
+     the same distance for everything in the room. In per cent the bed would
+     have risen about fifteen times as far as the airpods; in vh a pin and a
+     bed float alike, which is the daft part. */
+  /* The sign over the arch never quite settles, whether or not you are looking
+     at it — it is the one thing in the room that is not furniture. */
+  /* The sign is a sign. It doesn't drift, it doesn't rise, and it can't be
+     pointed at — the pointer goes straight through it to whatever is behind. */
+  #room .prop.sign { pointer-events: none; }
+  #room .prop.sign * { pointer-events: none; }
+
+  #room .prop.lift {
+    transform: translateY(calc(-1 * var(--rise)));
+    filter: drop-shadow(0 1vh 1.3vh rgba(24, 34, 18, 0.18));
+    /* The drift takes over the moment the lift lands, from exactly where it
+       left off, so there is no pause in the middle of the movement. */
+    animation: room-float var(--dur) 320ms ease-in-out infinite;
+  }
+
+  /* Straight up and down, nothing else — no lean, no drift sideways. */
+  @keyframes room-float {
+    0%, 100% { transform: translateY(calc(-1 * var(--rise))); }
+    50%      { transform: translateY(calc(-1 * var(--drift))); }
+  }
+
+  /* Something resting on a piece that has itself risen goes up by its own float
+     again, on top of its anchor's — so the pillow leaves the bed rather than
+     riding it up. A beat later, too, so the gap opens rather than appearing. */
+  #room .prop.lift.carried {
+    --rise: 2vh;
+    --drift: 3vh;
+    transition-delay: 60ms;
+    animation-delay: 380ms;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #room .prop, #shell { transition-duration: 1ms; }
+    #room .prop.lift, #room .prop.sign { animation: none; }
+  }
+
+  /* The arch leads back out the way the rat came in. */
+  #exit {
+    position: absolute;
+    border-radius: 50% 50% 0 0;
+  }
+
+  /* Same placement and behaviour as the other pages. */
+  #back-link {
+    position: fixed;
+    bottom: 0.8vw;
+    left: 1.5vw;
+    width: max(44px, 3vw);
+    cursor: pointer;
+    z-index: 10;
+    filter: brightness(0);
+    transition: transform 0.2s ease, filter 0.2s ease;
+  }
+  #back-link:hover { transform: scale(1.05); filter: brightness(1); }
+  #back-link img { width: 100%; display: block; }
+
+</style>
+</head>
+<body>
+
+<div id="room">
+  <img id="shell" src="svgs/rat/rathole-room.svg" alt="a room dug out behind the wall">
+  <div id="exit" title="back out through the arch"></div>
+</div>
+
+<a id="back-link" href="home.html" title="Go back">
+  <img src="svgs/data-and-swe-projects/back-text.svg" alt="Go back">
+</a>
+
+
+<script>
+(function () {
+  'use strict';
+
+  var DIR = 'svgs/rat/';
+
+  /* Where everything sits, as a share of the room: x and y are the top left
+     corner in per cent of the room's width and height, w is the width in per
+     cent of the room's width. Height follows from each drawing's own
+     proportions, so only three numbers are ever needed.
+
+     These are the starting values. Press p, move things about, press c, and
+     paste what you get back over this table. */
+  var PROPS = [
+    { key: 'picture',       file: 'picture.svg',       x:  11.65, y:  27.22, w:  10.58 },
+    { key: 'photo-printer', file: 'photo-printer.svg', x:  32.80, y:  24.17, w:  10.04 },
+    { key: 'bed',           file: 'bed.svg',           x:  11.30, y:  42.30, w:  33.73 },
+    { key: 'pillow',        file: 'pillow.svg',        x:  29.48, y:  46.10, w:  10.80, rides: 'bed' },
+    { key: 'stool',         file: 'stool.svg',         x:  47.67, y:  46.63, w:  14.13 },
+    { key: 'airpods',       file: 'airpods.svg',       x:  50.07, y:  47.98, w:   5.87, rides: 'stool' },
+    /* Over the whole room rather than over the doorway, centred on it and
+       clear of the roof — the room's own top edge comes up to 4.3% under the
+       middle of the sign, and this sits above that. */
+    { key: 'coming-soon',   file: 'coming-soon.svg',   x:  25.00, y: -20.00, w:  50.00, sign: true }
+  ];
+
+  /* The way out, in the same units — a plain box over the arch rather than a
+     drawing, so it carries its own height. */
+  var EXIT = { key: 'exit', x: 61.94, y: 10.79, w: 25.03, h: 74.29 };
+
+  var room = document.getElementById('room');
+  var exitEl = document.getElementById('exit');
+
+  // ── Build the room ────────────────────────────────────────────────────
+  // The drawings are fetched and inlined so the hover can follow their shape.
+  // They arrive in whatever order they arrive in, so the table's order is kept
+  // by z-index rather than by the order they are added.
+  var built = PROPS.map(function (p, i) {
+    return fetch(DIR + p.file)
+      .then(function (r) { return r.ok ? r.text() : Promise.reject(r.status); })
+      .then(function (txt) {
+        var holder = document.createElement('div');
+        holder.innerHTML = txt;
+        var svg = holder.querySelector('svg');
+        if (!svg) throw 0;
+        svg.removeAttribute('width');     // let the stylesheet size it, off the viewBox
+        svg.removeAttribute('height');
+        mount(p, svg, i);
+      })
+      .catch(function () {                // opened without a server, say
+        var img = document.createElement('img');
+        img.src = DIR + p.file;
+        img.alt = '';
+        mount(p, img, i);
+      });
+  });
+
+  // All of it, or none of it yet.
+  Promise.all(built).then(function () { room.classList.add('ready'); });
+
+  function mount(p, el, i) {
+    el.classList.add('prop');
+    if (p.sign) el.classList.add('sign');
+    el.dataset.place = 'room:' + p.key;    // the name place.js knows it by
+    el.style.zIndex = i + 1;
+
+    /* Its own pace, so a roomful of them never falls into step. Worked out
+       from its place in the table rather than at random, so a piece keeps the
+       same rhythm on every visit. */
+    el.style.setProperty('--dur', (3.1 + i * 0.29).toFixed(2) + 's');
+    p.el = el;
+    room.appendChild(el);
+    place(p);
+  }
+
+  /* One listener for the lot: the pointer lands on a path and the drawing
+     rises — and anything resting on it rises with it, so the pillow goes up
+     with the bed and the airpods go up with the stool. Only one group is ever
+     up, which is also what puts the last one down. */
+  var lifted = [];
+
+  function groupOf(el) {
+    var key = (el.dataset.place || '').replace('room:', '');
+    var group = [el];
+    PROPS.forEach(function (p) {
+      if (p.rides === key && p.el && group.indexOf(p.el) < 0) group.push(p.el);
+    });
+    return group;
+  }
+
+  function lift(group) {
+    lifted.forEach(function (el) {
+      if (group.indexOf(el) < 0) el.classList.remove('lift', 'carried');
+    });
+    group.forEach(function (el, i) {
+      el.classList.add('lift');
+      // The first is the one being pointed at; the rest are riding on it.
+      el.classList.toggle('carried', i > 0);
+    });
+    lifted = group;
+  }
+
+  room.addEventListener('mouseover', function (e) {
+    var prop = e.target.closest && e.target.closest('.prop');
+    lift(prop ? groupOf(prop) : []);
+  });
+  room.addEventListener('mouseleave', function () { lift([]); });
+
+  function place(p) {
+    p.el.style.left = p.x + '%';
+    p.el.style.top = p.y + '%';
+    p.el.style.width = p.w + '%';
+    p.el.style.height = 'auto';
+  }
+  function placeExit() {
+    exitEl.style.left = EXIT.x + '%';
+    exitEl.style.top = EXIT.y + '%';
+    exitEl.style.width = EXIT.w + '%';
+    exitEl.style.height = EXIT.h + '%';
+  }
+  function placeAll() { PROPS.forEach(function (p) { if (p.el) place(p); }); placeExit(); }
+
+  placeAll();
+
+  // The arch doesn't lead anywhere yet — the sign says so, and that is all it
+  // does. The back link is the way home.
+
+  exitEl.dataset.place = 'room:exit';
+})();
+</script>
+
+<script src="placements.js"></script>
+<script src="place.js"></script>
+</body>
+</html>

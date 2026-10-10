@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rat Hole — fitting</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* The home page, minus everything that isn't the hole: the same background,
+     the same floor at the same height, and the hole worked out with the same
+     numbers — but sitting in the middle of the window instead of off in the
+     strip of wall you can only reach by sending the rat there. */
+  body {
+    background: #8ba87a;
+    min-height: 100vh;
+    overflow: hidden;
+    font-family: 'DM Mono', monospace;
+  }
+
+  #floor      { position: fixed; bottom: 0;   left: 0; width: 100%; height: 5vh;   background: #fff; z-index: 0; }
+  #floor-line { position: fixed; bottom: 5vh; left: 0; width: 100%; height: 0.2vh; background: #000; z-index: 0; }
+
+  .hole-layer { position: fixed; left: 0; top: 0; transform-origin: top left; }
+  #rat-hole-frame-2 { z-index: 5; }   /* under the rat, like on the home page */
+  #rat-hole-frame-1 { z-index: 7; }   /* over it — the jamb and the floor */
+  #fit-rat        { position: fixed; left: 0; top: 0; z-index: 8; transform-origin: top left; }
+  #fit-rat-gone   { position: fixed; left: 0; top: 0; z-index: 8; transform-origin: top left; opacity: 0.45; }
+
+  /* The canvas both pieces are drawn on, so you can see what is where. */
+  #canvas-box {
+    position: fixed; left: 0; top: 0; z-index: 8;
+    border: 1px dashed rgba(0, 0, 0, 0.45);
+    display: none;
+    pointer-events: none;
+  }
+  body.show-box #canvas-box { display: block; }
+
+  #hints {
+    position: fixed; left: 16px; top: 14px; z-index: 20;
+    font-size: 11px; line-height: 1.7; color: rgba(26, 46, 16, 0.75);
+  }
+  #hints b { font-weight: 400; color: #1a2e10; }
+  #hints .now { color: rgba(26, 46, 16, 0.5); }
+
+  #back-link {
+    position: fixed; bottom: 0.8vw; left: 1.5vw; width: max(44px, 3vw);
+    cursor: pointer; z-index: 20; filter: brightness(0);
+    transition: transform 0.2s ease, filter 0.2s ease;
+  }
+  #back-link:hover { transform: scale(1.05); filter: brightness(1); }
+  #back-link img { width: 100%; display: block; }
+</style>
+</head>
+<body class="show-box">
+
+<div id="floor-line"></div>
+<div id="floor"></div>
+
+<img id="rat-hole-frame-1" class="hole-layer" data-place="hole:frame-1"  src="svgs/rat/rathole-frame-1.svg" alt="">
+<img id="rat-hole-frame-2" class="hole-layer" data-place="hole:frame-2" src="svgs/rat/rathole-front.svg" alt="">
+<img id="fit-rat"      data-place="hole:rat"      src="svgs/rat/rat-walk-1.svg" alt="">
+<img id="fit-rat-gone" data-place="hole:rat-gone" src="svgs/rat/rat-walk-1.svg" alt="">
+<div id="canvas-box"></div>
+
+<div id="hints">
+  <b>p</b> adjust · <b>c</b> copy · then send me what you get<br>
+  <b>b</b> canvas outline · <b>g</b> the rat halfway in · <b>[</b> <b>]</b> hole bigger / smaller<br>
+  <span class="now" id="now"></span>
+</div>
+
+<a id="back-link" href="home.html" title="Go back"><img src="svgs/data-and-swe-projects/back-text.svg" alt="Go back"></a>
+
+<script>
+(function () {
+  'use strict';
+
+  /* Every one of these is copied from the block in home.html that walks the rat
+     into the wall. Change them there and here together, or the fitting is a
+     fitting for a hole that doesn't exist. */
+  var BASE_H     = 1080;
+  var PIC_DS     = 192;           // the photo, in the 1920x1080 design space
+  var SIZE       = 0.55;          // the rat, as a share of the photo's width
+  var SIT        = 0.4;           // how far into the floor strip it stands
+  var WALK_W = 145, WALK_H = 98;
+  var HOLE_AR    = 183 / 305;
+  var FRAME_1_AT = { x: -0.014, y: 0.2089, w: 0.3663 };
+  var HOLE_SIZE  = 2.32;          // canvas widths per rat
+  var HOLE_MOUTH = 0.0285;        // where it stands, nose at the jamb
+  var HOLE_IN    = 0.22;          // and where it is gone
+  var MOUTH_LIFT = 0.053;         // how far it rises onto the lip as it arrives
+  var HOLE_LIFT  = 5 / 183;       // how far up the tunnel takes it
+
+  var frame1 = document.getElementById('rat-hole-frame-1');
+  var frame2 = document.getElementById('rat-hole-frame-2');
+  var rat   = document.getElementById('fit-rat');
+  var gone  = document.getElementById('fit-rat-gone');
+  var box   = document.getElementById('canvas-box');
+  var now   = document.getElementById('now');
+
+  var zoom = 1;                   // the only thing here that isn't the home page
+
+  function draw() {
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var floorH = 0.05 * vh;
+    var s = (vh - floorH) / (BASE_H - 0.05 * BASE_H);
+
+    var w  = PIC_DS * s * SIZE;         // the rat as it lands
+    var ww = w * 1.06;                  // and as it walks
+    var wh = ww * WALK_H / WALK_W;
+
+    var holeW = ww * HOLE_SIZE * zoom;
+    var holeH = holeW * HOLE_AR;
+    var lineY = vh - floorH;            // the top of the floor strip
+    var holeTop = lineY - holeH;
+    var holeX = (vw - holeW) / 2;       // middle of the window, not off in the wall
+    var feet = lineY + floorH * SIT;
+
+    place(frame2, holeX, holeTop, holeW);
+    place(frame1, holeX + holeW * FRAME_1_AT.x, holeTop + holeH * FRAME_1_AT.y,
+                  holeW * FRAME_1_AT.w);
+
+    box.style.left = holeX + 'px';
+    box.style.top = holeTop + 'px';
+    box.style.width = holeW + 'px';
+    box.style.height = holeH + 'px';
+
+    // Standing in the mouth, all of it still out
+    rat.style.width = ww + 'px';
+    rat.style.height = wh + 'px';
+    var mouthY = feet - holeH * MOUTH_LIFT;
+    rat.style.transform = 'translate(' + (holeX + holeW * HOLE_MOUTH - ww / 2) +
+                          'px,' + (mouthY - wh) + 'px)';
+
+    // And on its way in: further along, a little up, and smaller
+    var k = 1 - 0.55;
+    var inY = lineY - holeH * HOLE_LIFT;
+    gone.style.width = ww + 'px';
+    gone.style.height = wh + 'px';
+    gone.style.transform = 'translate(' + (holeX + holeW * HOLE_IN - ww / 2) +
+                           'px,' + (inY - wh) + 'px) scale(' + k + ')';
+
+    now.textContent = 'hole ' + Math.round(holeW) + ' x ' + Math.round(holeH) +
+      ' px · frame 1 at x ' + FRAME_1_AT.x.toFixed(3) + ' y ' + FRAME_1_AT.y.toFixed(3) +
+      ' w ' + FRAME_1_AT.w.toFixed(3) + (zoom !== 1 ? ' · shown at ' + zoom.toFixed(2) + '×' : '');
+  }
+
+  function place(el, x, y, w) {
+    el.style.width = w + 'px';
+    el.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  document.addEventListener('keydown', function (e) {
+    // p, c, r, arrows, -, =, comma and full stop all belong to place.js
+    if (e.key === 'b' || e.key === 'B') { document.body.classList.toggle('show-box'); }
+    else if (e.key === 'g' || e.key === 'G') { gone.style.display = gone.style.display === 'none' ? '' : 'none'; }
+    else if (e.key === '[') { zoom = Math.max(0.4, zoom - 0.1); draw(); }
+    else if (e.key === ']') { zoom = Math.min(3, zoom + 0.1); draw(); }
+  });
+})();
+</script>
+
+<script src="placements.js"></script>
+<script src="place.js"></script>
+</body>
+</html>

@@ -96,7 +96,7 @@
     .dropped-rat {
       position: fixed;
       top: 0; left: 0;
-      z-index: 6;
+      z-index: 8;                     /* over both pieces of the hole */
       pointer-events: none;
       will-change: transform, clip-path;
       /* Squashes onto its feet rather than about its middle. */
@@ -107,14 +107,19 @@
       pointer-events: auto;
       cursor: pointer;
     }
-    /* Over the rat, so walking in makes it disappear into the dark. */
-    #rat-hole {
+    /* The hole is drawn in two pieces that share one canvas, so both sit at the
+       same place and the same size and only their layering differs: the near
+       side of the opening goes over the rat, the far side goes under it. That
+       is what makes walking in read as going *into* the hole rather than behind
+       a shape — it passes in front of the left jamb, then behind the wall. */
+    .rat-hole-layer {
       position: fixed;
       top: 0; left: 0;
-      z-index: 7;
       pointer-events: none;
       will-change: transform;
     }
+    #rat-hole-frame-2 { z-index: 5; }   /* both under the rat (z-index 8), */
+    #rat-hole-frame-1 { z-index: 7; }   /* frame 1 over frame 2 */
     #profile-pic-wrap img {
       position: absolute;
       top: 0; left: 0;
@@ -200,6 +205,41 @@
       opacity: 1;
     }
 
+    /* The falling pose she arrives in. Its own box, because the drawing is a
+       different shape from the walk set — sized and placed from JS so its feet
+       land exactly where the standing sprite's feet are, which is the whole
+       trick to the swap not jumping. */
+    #drop-char {
+      position: fixed;
+      z-index: 2;
+      pointer-events: none;
+      will-change: transform;
+    }
+    /* Laid out by exactly the same rules as the walking character's frames, and
+       given the same box from JS. The two drawings are different shapes, so
+       `contain` seats each one differently inside that box — but because the box
+       is identical, she uncurls into standing without shifting on the swap. */
+    #drop-char img {
+      position: absolute;
+      top: -100%; left: 0;
+      width: 250%; height: 250%;
+      object-fit: contain;
+    }
+    #drop-char[hidden] { display: none; }
+
+    /* Arriving from the quotes page. That page hands over on a bare #8ba87a
+       screen, which is the same colour this one opens on, so the switch itself
+       shows nothing — provided nothing else announces it. Two things did: the
+       loading screen's dot, bar and percentage sitting in the middle of that
+       colour, and the whole scene appearing at full strength in one frame. So
+       the loading screen keeps its colour but loses its furniture, and the
+       scene starts at nothing and is faded up under her as she comes down.
+       Both are set from a flag on <html> written before the first paint, so
+       there is no frame where either one is visible first. */
+    html[data-drop="1"] #loading-screen { display: none; }
+    html[data-drop="1"] #scene { opacity: 0; }
+    html[data-drop="1"] #home-char { visibility: hidden; }
+
     /* Loading screen */
     #loading-screen {
       position: fixed;
@@ -251,6 +291,13 @@
       opacity: 1;
     }
   </style>
+  <script>
+    /* Runs before the body is painted, so the rules above are in force for the
+       very first frame rather than being applied to something already on screen. */
+    if (new URLSearchParams(location.search).get('drop') === '1') {
+      document.documentElement.setAttribute('data-drop', '1');
+    }
+  </script>
 </head>
 <body>
   <div id="loading-screen">
@@ -290,6 +337,11 @@
     <img src="svgs/gallery-character/idleright.svg" class="active" data-idle="right" fetchpriority="high" />
     <img src="svgs/gallery-character/idleleft.svg" data-idle="left" loading="lazy" />
   </div>
+  <!-- The pose she arrives in from the quotes page. It is a different drawing
+       from the walk set and a quite different shape (75x72 curled, against
+       34x124 standing), so it cannot share their box — it gets its own,
+       anchored on the same feet, and is only ever built when she is dropping. -->
+  <div id="drop-char" hidden><img src="svgs/character/character-fall.svg" alt="" /></div>
   <div id="floor-line"></div>
   <div id="floor"></div>
 
@@ -404,11 +456,37 @@
       var RAT_W = 130, RAT_H = 116;   // the drawing's own proportions
       var WALK = ['svgs/rat/rat-walk-1.svg', 'svgs/rat/rat-walk-2.svg'];
       var WALK_W = 145, WALK_H = 98;  // one box for both walk frames
-      var HOLE = 'svgs/rat/rathole.svg';
-      var STEP_MS = 90;               // how fast it moves its legs
-      var SPEED = 420;                // px per second it covers — it scurries
-      var ENTER = 520;                // ms from the mouth of the hole to gone
-      var SIZE = 0.70;                // of the photo's width
+      var FRAME_1 = 'svgs/rat/rathole-frame-1.svg';   // drawn over the rat
+      var FRAME_2 = 'svgs/rat/rathole-front.svg';     // drawn under it
+      /* Both pieces are drawn on one 305 x 183 canvas whose bottom edge is the
+         floor line, so everything below is a fraction of that canvas. */
+      var HOLE_AR    = 183 / 305;     // the drawing's own proportions
+      /* Frame 1 — the jamb and the floor — is drawn on its own tight canvas
+         rather than the full one. This is the corner of the hole canvas it
+         belongs in, and how much of its width it covers; frame 2 still spans
+         the whole canvas. */
+      var FRAME_1_AT = { x: -0.014, y: 0.2089, w: 0.3663 };
+      var HOLE_SIZE  = 2.32;          // canvas widths per rat — sets how big the
+                                      // arch is; the opening comes out a touch
+                                      // wider than the rat, which is the fit
+      var HOLE_MOUTH = 0.0285;        // stands here, nose at the jamb
+      var HOLE_IN    = 0.22;          // and here it is gone, behind the floor
+      var MOUTH_LIFT = 0.053;         // of the canvas: it rises this much as it
+                                      // arrives, onto the lip of the hole
+      var HOLE_EDGE  = 0.47;          // how much of the canvas the view uncovers:
+                                      // the arch plus a little wall past it. The
+                                      // rest is the same green as the wall and
+                                      // runs off the side of the window unseen.
+      var HOLE_LIFT  = 5 / 183;       // ends up just clear of the floor line, so
+                                      // no feet show below the wall's lower edge
+      var STEP_MS = 59;               // how fast it moves its legs
+      var SPEED = 640;                // px per second it covers — it scurries
+      var ENTER = 560;                // ms from the mouth of the hole to gone —
+                                      // the length of the spiral, so the two
+                                      // of them start and end together
+      var CUT   = 0;                  // the spiral starts as it starts going
+                                      // in, and closes over it as it goes
+      var SIZE = 0.55;                // of the photo's width
       var EMERGE = 900;               // ms of easing out before it comes free
       var G = 2800;                   // px/s², what the fall is timed against
       // Where it comes to rest, as a fraction of the floor's height below the
@@ -504,7 +582,9 @@
 
       /* Landed. Now it can be clicked, and it trots off to the right. */
       function wakeUp(rat, x, w, h, yRest) {
-        [WALK[0], WALK[1], HOLE].forEach(function (s) { (new Image()).src = s; });
+        [WALK[0], WALK[1], FRAME_1, FRAME_2].forEach(function (s) {
+          (new Image()).src = s;
+        });
         rat.classList.add('awake');
         rat.addEventListener('click', function () {
           rat.classList.remove('awake');
@@ -536,27 +616,32 @@
            view: the character's scrolling stops dead at MAX_WALL_OFFSET, and
            this sits just past it. Only the rat goes that far.
 
-           Its mouth is comfortably wider and taller than the rat, so the rat is
-           swallowed by the opening rather than sliced along its edge, and it
-           sits on the floor line — a hole in the wall starts where the wall
-           meets the ground, not out on the floor where the rat is standing. */
-        var holeW = ww * 1.45, holeH = holeW * 0.82, PAD = 14;
-        var nook = holeW + PAD * 2;
+           The drawing sits on the floor line — a hole in the wall starts where
+           the wall meets the ground, not out on the floor where the rat is
+           standing — and only the arch end of it is brought into view. */
+        var holeW = ww * HOLE_SIZE, holeH = holeW * HOLE_AR, PAD = 14;
+        var nook = holeW * HOLE_EDGE + PAD * 2;
         var endOffset = MAX_WALL_OFFSET + nook;
-        var holeWallX = (vw - holeW - PAD) + endOffset;
+        var holeWallX = (vw - holeW * HOLE_EDGE - PAD) + endOffset;
         var lineY = document.getElementById('floor-line').getBoundingClientRect().top;
         var holeTop = lineY - holeH;
 
-        var hole = document.createElement('img');
-        hole.id = 'rat-hole';
-        hole.src = HOLE;
-        hole.alt = '';
-        hole.style.width = holeW + 'px';
-        document.body.appendChild(hole);
+        var layers = [FRAME_1, FRAME_2].map(function (src, i) {
+          var el = document.createElement('img');
+          el.className = 'rat-hole-layer';
+          el.id = i ? 'rat-hole-frame-2' : 'rat-hole-frame-1';
+          el.src = src;
+          el.alt = '';
+          el.style.width = (i ? holeW : holeW * FRAME_1_AT.w) + 'px';
+          document.body.appendChild(el);
+          return el;
+        });
 
         function placeHole() {
-          hole.style.transform =
-            'translate(' + (holeWallX - wallOffset) + 'px,' + holeTop + 'px)';
+          var x = holeWallX - wallOffset;
+          layers[0].style.transform = 'translate(' + (x + holeW * FRAME_1_AT.x) +
+                                      'px,' + (holeTop + holeH * FRAME_1_AT.y) + 'px)';
+          layers[1].style.transform = 'translate(' + x + 'px,' + holeTop + 'px)';
         }
         placeHole();
 
@@ -565,18 +650,16 @@
         applyPositions = function () { moveWall(); placeHole(); };
 
         var startOffset = wallOffset;
-        var holeX = vw - holeW - PAD;      // where its left edge ends up
+        var holeX = vw - holeW * HOLE_EDGE - PAD;   // where the canvas's left edge ends up
 
-        /* Two legs to the journey. It trots along the floor to the mouth of the
-           hole, then turns in and goes down it: up onto the floor line where the
-           hole's own floor is, further in toward the middle of the opening, and
-           smaller as it gets further down the tunnel. Because it is heading for
-           the middle of the arch while shrinking, the opening closes over it —
-           which is what makes it read as going in, rather than sliding behind a
-           black shape and being cut in half by its edge. Tail last, since the
-           tail is the end that trails behind. */
-        var cxMouth = holeX + holeW * 0.10;    // its middle, arriving
-        var cxIn    = holeX + holeW * 0.62;    // its middle, gone
+        /* Two legs to the journey. It trots along the floor until it is standing
+           in the mouth of the hole — nose at the jamb, up on the lip — and then
+           goes on in: further along and smaller as the tunnel takes it. It is
+           drawn over both pieces of the hole, so nothing swallows it; the
+           spiral closes over it instead, and the room is on the other side. */
+        var cxMouth = holeX + holeW * HOLE_MOUTH;   // its middle, arriving
+        var cxIn    = holeX + holeW * HOLE_IN;      // its middle, gone
+        var mouthY  = feet - holeH * MOUTH_LIFT;    // and how high it stands there
         var xWalk   = cxMouth - ww / 2;
         var dur     = Math.max(Math.abs(xWalk - x0) / SPEED * 1000, 500);
 
@@ -587,7 +670,16 @@
             'translate(' + (cx - ww / 2) + 'px,' + (feetY - wh) + 'px) scale(' + k + ')';
         }
 
-        var t0 = null, lastOffset = startOffset;
+        /* Where the rat has gone. The same spiral the desk and the painting
+           use — same length, same spin — closing on frame 1, the jamb and the
+           floor it disappears over. */
+        function enterHole(arch) {
+          var url = 'rathole.html';
+          if (typeof irisTransition === 'function') irisTransition(arch, url, arch);
+          else location.href = url;
+        }
+
+        var t0 = null, lastOffset = startOffset, left = false;
         requestAnimationFrame(function step(now) {
           if (t0 === null) t0 = now;
           var t = now - t0;
@@ -595,28 +687,43 @@
           // The view eases across to uncover the nook while it walks; the rat
           // itself keeps a steady pace, so its legs match the ground it covers.
           var p = Math.min(t / dur, 1);
-          wallOffset = startOffset + (endOffset - startOffset) * p * p * (3 - 2 * p);
+          var next = startOffset + (endOffset - startOffset) * p * p * (3 - 2 * p);
 
           /* The character is fixed to the window, so a view that slides without
              her would drag her across the floor sideways, feet still, as the
              scene went past. Move her with it and she stays put where she is
-             standing — it is the camera that travels, not her. */
-          characterX -= wallOffset - lastOffset;
-          lastOffset = wallOffset;
+             standing — it is the camera that travels, not her.
 
-          applyPositions();
+             Once the view has arrived this stops entirely: laying out the whole
+             wall again on every frame of the entry, to put it back exactly
+             where it already was, is what the rest of the animation is
+             competing with. */
+          if (next !== lastOffset) {
+            characterX -= next - lastOffset;
+            wallOffset = next;
+            lastOffset = next;
+            applyPositions();
+          }
 
           if (t < dur) {
-            draw(x0 + ww / 2 + (cxMouth - x0 - ww / 2) * p, feet, 1);
+            // The ground it walked in on is a little lower than the lip of the
+            // hole, so it eases up over the last of the walk rather than
+            // stepping up at the end of it.
+            var up = p * p * (3 - 2 * p);
+            draw(x0 + ww / 2 + (cxMouth - x0 - ww / 2) * p,
+                 feet + (mouthY - feet) * up, 1);
           } else if (t < dur + ENTER) {
             var q = (t - dur) / ENTER;
             var e = q * q * (3 - 2 * q);
+            var inY = lineY - holeH * HOLE_LIFT;
+            if (!left && q >= CUT) { left = true; enterHole(layers[0]); }
             draw(cxMouth + (cxIn - cxMouth) * e,
-                 feet + (lineY - feet) * e,
-                 1 - 0.6 * e);
+                 mouthY + (inY - mouthY) * e,
+                 1 - 0.55 * e);
           } else {
             clearInterval(legs);
             rat.remove();                  // all the way in
+            if (!left) enterHole(layers[0]);
             return;
           }
           requestAnimationFrame(step);
@@ -784,14 +891,21 @@
         (w - cx) * (w - cx) + (h - cy) * (h - cy)
       ));
 
-      const duration = 1000;
+      const duration = 560;
       const start = performance.now();
 
       function draw(now) {
         const t = Math.min((now - start) / duration, 1);
-        const ease = t * t;
+        /* It has to bite the moment it appears, so this is at its fastest at
+           the very start and eases only into the close. (It was t * t, which
+           is slowest exactly where it is most looked at.) */
+        const ease = t * (2 - t);
         const r = maxR * (1 - ease);
-        const rotation = t * Math.PI * 6;
+        /* Three turns a second, whatever the transition's length. This used
+           to be three turns over the whole thing, so shortening it from a
+           second to 300ms spun it three times as fast — the spiral was a
+           blur. */
+        const rotation = ((now - start) / 1000) * Math.PI * 6;
 
         irisCtx.clearRect(0, 0, w, h);
 
@@ -803,7 +917,7 @@
 
         irisCtx.strokeStyle = '#000000';
         irisCtx.lineWidth = 5;
-        const steps = 300;
+        const steps = 150;              // twice as few, indistinguishable, half the work
         const totalAngle = Math.PI * 20;
         irisCtx.beginPath();
         for (let i = 0; i <= steps; i++) {
@@ -1022,6 +1136,82 @@
     // Init
     showIdle();
     applyPositions();
+
+    /* ── arriving from the quotes page ──────────────────────────────────────
+       She went off the bottom of that page, so she comes in off the top of this
+       one: down from above the window, landing on her feet where the walking
+       character stands, and only then becoming that character. Both pages are
+       painted the same #8ba87a and this one opens behind a full screen of it,
+       so the switch itself has nothing to show. */
+    (function arrival() {
+      if (new URLSearchParams(location.search).get('drop') !== '1') return;
+
+      var dropEl = document.getElementById('drop-char');
+      var sceneEl = document.getElementById('scene');
+      var FALL_MS = 2600, FADE_MS = 1600, SETTLE_MS = 340;
+
+      // The same box as the walking character, copied rather than recomputed,
+      // so there is no second opinion about where she stands.
+      dropEl.style.left = charEl.style.left;
+      dropEl.style.bottom = charEl.style.bottom;
+      dropEl.style.width = charEl.style.width;
+      dropEl.style.height = charEl.style.height;
+
+      transitioning = true;                 // nothing walks while she is airborne
+      dropEl.hidden = false;
+
+      var startOffset = -(window.innerHeight + dropEl.offsetHeight * 3);
+      dropEl.style.transform = 'translateY(' + startOffset + 'px)';
+
+      var t0 = null;
+      function fall(now) {
+        if (t0 === null) {
+          t0 = now;
+          // The scene comes up under her, rather than being there all along.
+          sceneEl.style.transition = 'opacity ' + FADE_MS + 'ms ease';
+          sceneEl.style.opacity = '1';
+        }
+        var p = Math.min(1, (now - t0) / FALL_MS);
+        /* Slow, and slow at both ends. It used to accelerate the whole way and
+           meet the floor at its fastest, which is a landing you feel rather than
+           watch; this eases away from the top and back down to nothing at the
+           bottom, so she drifts in and settles instead of arriving. */
+        var e = p * p * (3 - 2 * p);
+        dropEl.style.transform = 'translateY(' + (startOffset * (1 - e)) + 'px)';
+        if (p < 1) return requestAnimationFrame(fall);
+        land();
+      }
+
+      function land() {
+        dropEl.hidden = true;
+        charEl.style.visibility = 'visible';   // explicit: the arrival rule says hidden
+        showIdle();
+        charEl.style.transformOrigin = '50% 100%';
+
+        /* The faintest give in the knees. She is barely moving by the time she
+           touches down now, so this is a settle rather than an impact — much
+           smaller than it was when she was landing at full speed. */
+        var s0 = null;
+        function settle(now) {
+          if (s0 === null) s0 = now;
+          var q = Math.min(1, (now - s0) / SETTLE_MS);
+          var k = Math.sin(q * Math.PI) * (1 - q) * 0.06;
+          charEl.style.transform = 'scaleY(' + (1 - k) + ') scaleX(' + (1 + k * 0.6) + ')';
+          if (q < 1) return requestAnimationFrame(settle);
+          charEl.style.transform = '';
+          transitioning = false;            // she is yours to walk now
+        }
+        requestAnimationFrame(settle);
+      }
+
+      /* Straight into it. There is nothing to wait for: the loading screen is
+         off for an arrival (the rule above), because all it could add here is a
+         pause on a colour the last page was already showing — and the two
+         drawings she needs were pulled into cache a line before she jumped. She
+         is falling on the first frame this page paints, which is what makes it
+         read as one fall continued rather than two falls with a gap. */
+      requestAnimationFrame(fall);
+    })();
 </script>
 <script>
 document.addEventListener('keydown', function(e){
@@ -1034,5 +1224,7 @@ document.addEventListener('wheel', function(e){
 }, {passive: false});
 </script>
 <script src="ladybug.js"></script>
+<script src="placements.js"></script>
+<script src="place.js"></script>
 </body>
 </html>

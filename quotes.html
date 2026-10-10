@@ -9,15 +9,38 @@
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  /* Width reserved down the right for the ladder, so the wall never runs under it. */
-  :root { --rail: clamp(66px, 9vh, 120px); }
+  /* Width reserved down the right for the ladder, so the wall never runs under
+     it. The ladder is drawn 102vh tall and keeps its 89:1356 ratio, so it is
+     6.7vh wide — the strip has to stay in the same unit or the drawing spills
+     out of it on a tall (or zoomed-out) window. */
+  :root {
+    --rail: max(66px, 9vh);
+
+    /* The wall fills the strip left of the ladder. Everything on this page is
+       a fraction of the viewport, never a px cap: the ladder is sized in vh, so
+       a px-capped wall would shrink away from it on a wide screen — or, which
+       is the same thing to CSS, in a window zoomed out. The cap here only
+       guards a very wide, very short window, where the rail gets thin. */
+    --wall: 92vw;
+
+    /* The back link sits in the bottom left corner, over the background — the
+       page keeps a lane clear for it on the left, the way the rail keeps one
+       clear for the ladder on the right. */
+    --back: max(44px, 3vw);
+    --back-left: 1.5vw;
+
+    /* How much of the window an opened quote fills. The script reads it too,
+       so the two can't drift apart. */
+    --viewer-fit: 0.76;
+  }
 
   body {
     background: #8ba87a;
     min-height: 100vh;
     font-family: 'Playfair Display', serif;
-    padding: clamp(28px, 4vw, 70px) clamp(18px, 3vw, 54px) clamp(40px, 5vw, 90px);
-    padding-right: calc(var(--rail) + clamp(18px, 3vw, 54px));
+    padding: max(28px, 4vw) max(18px, 3vw) max(40px, 5vw);
+    padding-right: calc(var(--rail) + max(18px, 3vw));
+    padding-left: calc(var(--back-left) + var(--back) + max(16px, 1.4vw));
   }
 
   /* ====== LADDER & CLIMBER (same sprites as the office) ====== */
@@ -59,23 +82,24 @@
   @media (max-width: 950px) {
     :root { --rail: 0px; }
     #rail { display: none; }
-    body { padding-right: clamp(18px, 3vw, 54px); }
+    body { padding-right: max(18px, 3vw); }
   }
 
-  header { text-align: center; margin-bottom: 3.2vw; }
-  /* Hand-lettered title, like the other pages use. Capped at its natural
-     842px so it never upscales and goes soft. */
+  header { text-align: center; max-width: var(--wall); margin: 0 auto 3.2vw; }
+  /* Hand-lettered title, like the other pages use. Sized as a share of the
+     wall rather than in px, so it keeps its proportion to the columns — the
+     file is pure vector, so it scales past its natural 842px cleanly. */
   h1 { line-height: 0; }
   h1 img {
     display: block;
     margin: 0 auto;
-    width: clamp(240px, 37vw, 680px);
+    width: max(240px, 42%);
     height: auto;
   }
   header p {
     margin-top: 1.4vw;
     font-family: 'Playfair Display', serif;
-    font-size: clamp(12px, 1.05vw, 18px);
+    font-size: max(12px, 1.05vw);
     font-style: italic;
     color: rgba(49, 62, 36, 0.75);
   }
@@ -83,7 +107,14 @@
   /* The images run from 5.5:1 banners to 1:2 portraits, so the wall is laid
      out as balanced columns with one fixed gutter, and very tall images are
      capped so a single one cannot tower over its column. */
-  :root { --gutter: clamp(14px, 1.4vw, 26px); }
+  :root {
+    --gutter: max(14px, 1.4vw);
+
+    /* The white border around a shot and its caption text. The px is only a
+       floor for phones; on anything wider it tracks the viewport like the
+       rest, so a shot looks the same whatever the window is doing. */
+    --unit: max(9px, 0.65vw);
+  }
 
   /* Columns are filled by JS, always into whichever is currently shortest, so
      the wall ends level instead of leaving a hole at the bottom of a column
@@ -92,7 +123,7 @@
     display: flex;
     align-items: flex-start;
     gap: var(--gutter);
-    max-width: 1560px;
+    max-width: var(--wall);
     margin: 0 auto;
   }
   #wall .col {
@@ -106,15 +137,15 @@
   .shot {
     margin: 0;
     background: #fdfaf1;
-    padding: 9px 9px 0;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
-    cursor: zoom-in;
+    padding: var(--unit) var(--unit) 0;
+    box-shadow: 0 0.55vw 1.4vw rgba(0, 0, 0, 0.22);
+    cursor: pointer;
     transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
                 box-shadow 0.24s ease;
   }
   .shot:hover {
     transform: translateY(-5px);
-    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.34);
+    box-shadow: 0 1.1vw 2.35vw rgba(0, 0, 0, 0.34);
   }
   .shot img {
     display: block;
@@ -125,10 +156,10 @@
     background: #f2ece0;
   }
   .shot figcaption {
-    padding: 7px 0 9px;
+    padding: 0.78em 0 1em;
     text-align: center;
     font-family: 'DM Mono', monospace;
-    font-size: 9px;
+    font-size: var(--unit);
     letter-spacing: 0.2em;
     color: rgba(26, 46, 16, 0.4);
   }
@@ -147,30 +178,37 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
-    cursor: zoom-out;
+    cursor: pointer;
     padding: 3vh 3vw;
   }
   #viewer.open { opacity: 1; pointer-events: auto; }
+  /* The script fits every quote to the same box when it opens — the files run
+     from 682x124 to 1024x2048, so left at their own pixel size some filled the
+     screen and others sat small in the middle of it. The box is a share of the
+     viewport, so the popup also comes out the same size at any zoom. What is
+     here is the fallback for before that runs. object-fit keeps a file whose
+     baked-in size is a little off from stretching — it mattes instead. */
   #viewer img {
-    max-width: 92vw;
-    max-height: 92vh;
+    max-width: calc(var(--viewer-fit) * 100vw);
+    max-height: calc(var(--viewer-fit) * 100vh);
     width: auto;
     height: auto;
+    object-fit: contain;
     background: #fdfaf1;
-    padding: 12px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    padding: max(12px, 0.85vw);
+    box-shadow: 0 1.4vw 3.5vw rgba(0, 0, 0, 0.5);
     transform: scale(0.9);
     transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
   }
   #viewer.open img { transform: scale(1); }
-  #viewer img { filter: drop-shadow(0 12px 40px rgba(0, 0, 0, 0.5)); }
+  #viewer img { filter: drop-shadow(0 0.83vw 2.8vw rgba(0, 0, 0, 0.5)); }
   #viewer-hint {
     position: fixed;
     bottom: 3vh;
     left: 0; right: 0;
     text-align: center;
     font-family: 'DM Mono', monospace;
-    font-size: 11px;
+    font-size: max(11px, 0.78vw);
     letter-spacing: 0.18em;
     color: rgba(255, 255, 255, 0.6);
     pointer-events: none;
@@ -180,9 +218,8 @@
   #back-link {
     position: fixed;
     bottom: 0.8vw;
-    left: 1.5vw;
-    width: 3vw;
-    min-width: 44px;
+    left: var(--back-left);
+    width: var(--back);
     cursor: pointer;
     z-index: 10;
     filter: brightness(0);
@@ -193,6 +230,90 @@
     filter: brightness(1);
   }
   #back-link img { width: 100%; display: block; }
+
+  /* ====== What's left once the page has fallen away ====== */
+  /* A line of text with the falling character resting underneath it, the pair
+     centred on the empty background. Click her and she drops out; the next one
+     comes down with the next line. */
+  #after {
+    position: fixed;
+    inset: 0;
+    z-index: 8;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(26px, 5vh, 64px);
+    pointer-events: none;            /* only she is clickable */
+  }
+  #after.on { display: flex; }
+  #after-line {
+    margin: 0;
+    max-width: 78vw;
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(16px, 1.9vw, 32px);
+    line-height: 1.45;
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.75s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  #after-line.show { opacity: 1; }
+  #after-char {
+    width: clamp(140px, 15vw, 240px);
+    height: auto;
+    display: block;
+    cursor: pointer;
+    pointer-events: auto;
+    will-change: transform;
+  }
+
+  /* The visitor on line two. Two frames swapped in place for the wingbeat —
+     the spread-wing drawing is much larger than the closed one and hangs off
+     to the top left of it, so it carries the same offsets ladybug.js uses to
+     line the two up (F2_SCALE / F2_DX / F2_DY). */
+  #after-bug {
+    --bug: clamp(21px, 2.3vw, 36px);
+    position: absolute;              /* out of the centred column */
+    left: 0; top: 0;
+    width: var(--bug);
+    height: calc(var(--bug) * 1.1);  /* 44/40, the drawing's own ratio */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.7s ease;
+    will-change: transform;
+  }
+  #after-bug.show { opacity: 1; }
+  #after-bug img { position: absolute; display: block; }
+  #after-bug .f1 { width: var(--bug); left: 0; top: 0; }
+  #after-bug .f2 {
+    width: calc(var(--bug) * 2.681);
+    left: calc(var(--bug) * -0.6635);
+    top: calc(var(--bug) * -0.7017);
+    visibility: hidden;
+  }
+  #after-bug.alt .f1 { visibility: hidden; }
+  #after-bug.alt .f2 { visibility: visible; }
+
+  /* Specks of light drifting behind her. Points while she hangs, drawn out into
+     streaks as she picks up speed — see the motes block in the script. Sits
+     under #after (z-index 8) so she and her line stay in front of it. */
+  #after-fx {
+    position: fixed;
+    inset: 0;
+    z-index: 7;
+    pointer-events: none;
+  }
+
+  /* Anything caught in the collapse (see "39" in the script) is pinned to the
+     viewport and driven frame by frame from JS, so no stylesheet transition or
+     hover rule may fight the transform. Sits above the rail so the wall comes
+     down in front of the ladder. */
+  .falling {
+    transition: none !important;
+    pointer-events: none;
+    z-index: 6;
+  }
 </style>
 </head>
 <body>
@@ -215,6 +336,17 @@
 <a id="back-link" href="home.html" title="Go back">
   <img src="svgs/data-and-swe-projects/back-text.svg" alt="Go back">
 </a>
+
+<canvas id="after-fx" aria-hidden="true"></canvas>
+
+<div id="after" aria-hidden="true">
+  <p id="after-line"></p>
+  <img id="after-char" src="svgs/character/character-fall.svg" alt="">
+  <div id="after-bug">
+    <img class="f1" src="svgs/ladybug/ladybug-flap-1.svg" alt="">
+    <img class="f2" src="svgs/ladybug/ladybug-flap-2.svg" alt="">
+  </div>
+</div>
 
 <div id="viewer"><img id="viewer-img" src="" alt=""></div>
 <div id="viewer-hint" style="display:none">click anywhere to close &nbsp;·&nbsp; ← → to browse</div>
@@ -245,6 +377,15 @@
 
   var wall = document.getElementById('wall');
 
+  // Set once the wall has been dropped off the page — from then on the layout,
+  // the rail and the climber all stay exactly where they were left.
+  var frozen = false;
+
+  // Gravity for the collapsing wall, in px/s². Heavier than the real thing
+  // because a true 9.8 reads as slow motion at screen distances. (The character
+  // afterwards is eased rather than simulated — she needs to float, not drop.)
+  var G = 2600;
+
   // Built once, then just moved between columns when the width changes.
   var tiles = FILES.map(function (rec, i) {
     var name = rec[0];
@@ -273,12 +414,20 @@
     return 4;
   }
 
-  var laidOutFor = -1;
+  var laidOutFor = -1, laidOutAt = -1;
 
   function layout() {
+    if (frozen) return;
     var n = columnCount(window.innerWidth);
-    if (n === laidOutFor) return;
+    // Subpixel: clientWidth is rounded to whole px, which makes the estimates
+    // below fractionally different at one window size than at another — enough
+    // to send a shot to a different column.
+    var wallW = wall.getBoundingClientRect().width;
+    // The column heights below are estimates, so they go stale when the wall
+    // stretches too, not only when the number of columns changes.
+    if (n === laidOutFor && Math.abs(wallW - laidOutAt) < 60) return;
     laidOutFor = n;
+    laidOutAt = wallW;
 
     wall.innerHTML = '';
     var cols = [], heights = [];
@@ -291,14 +440,31 @@
     }
 
     var gutter = parseFloat(getComputedStyle(wall).gap) || 20;
-    var colW = (wall.clientWidth - gutter * (n - 1)) / n;
+    var colW = (wallW - gutter * (n - 1)) / n;
     var capPx = window.innerHeight * 0.56;      // matches the max-height rule
-    var CHROME = 9 + 27;                        // top padding + caption block
+
+    // The white frame and the caption block under it, worked out from the
+    // styles rather than measured: both are multiples of --unit, so the
+    // estimate stays exactly proportional to the wall at any window size.
+    // Measuring the caption would drag in font metrics, which are rounded per
+    // font size — enough of a wobble to send a shot to a different column at
+    // one zoom level than at another.
+    cols[0].appendChild(tiles[0].el);
+    var shotCs = getComputedStyle(tiles[0].el);
+    var capCs = getComputedStyle(tiles[0].el.querySelector('figcaption'));
+    var CHROME = parseFloat(shotCs.paddingTop) +
+                 parseFloat(capCs.paddingTop) + parseFloat(capCs.paddingBottom) +
+                 parseFloat(capCs.fontSize) * 1.35;      // the one line of DM Mono
+
+    // Two columns level to within a rounding error are a tie, and a tie goes
+    // to the leftmost — without the margin the comparison falls one way at one
+    // window size and the other way at another, and the whole wall reshuffles.
+    var EPS = colW * 1e-3;
 
     tiles.forEach(function (t) {
       // Shortest column wins, so the wall finishes level.
       var k = 0;
-      for (var j = 1; j < n; j++) if (heights[j] < heights[k]) k = j;
+      for (var j = 1; j < n; j++) if (heights[j] < heights[k] - EPS) k = j;
       cols[k].appendChild(t.el);
       var imgH = Math.min(colW * (t.h / t.w), capPx);
       heights[k] += imgH + CHROME + gutter;
@@ -311,7 +477,7 @@
   // rather than tight against the window edge.
   function centreRail() {
     var rail = document.getElementById('rail');
-    if (!rail || getComputedStyle(rail).display === 'none') return;
+    if (frozen || !rail || getComputedStyle(rail).display === 'none') return;
     var right = wall.getBoundingClientRect().right;
     var mid = (right + window.innerWidth) / 2;
     rail.style.right = 'auto';
@@ -321,6 +487,7 @@
   layout();
   var resizeTimer;
   window.addEventListener('resize', function () {
+    fitViewer();                  // no-op unless a quote is open
     centreRail();                 // layout() bails early if the column count is unchanged
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(layout, 150);
@@ -339,6 +506,7 @@
     function measure() { ch = climber.offsetHeight; }
 
     function place() {
+      if (frozen) return;           // he keeps the spot he had when the wall fell
       var max = document.documentElement.scrollHeight - window.innerHeight;
       var y = window.pageYOffset || document.documentElement.scrollTop || 0;
       var p = max > 0 ? Math.min(1, Math.max(0, y / max)) : 0;
@@ -371,10 +539,29 @@
   var hint = document.getElementById('viewer-hint');
   var current = -1;
 
+  // Fit the open quote to one box, the same for all of them. Sized from the
+  // baked-in dimensions rather than the loaded image, so the frame is right
+  // from the first frame of the fade rather than snapping once the file
+  // arrives; object-fit in the stylesheet mattes rather than stretches if a
+  // record and its file ever drift apart.
+  function fitViewer() {
+    if (current < 0) return;
+    var rec = FILES[current];
+    var pad = parseFloat(getComputedStyle(viewerImg).paddingLeft) || 0;
+    var fit = parseFloat(getComputedStyle(document.documentElement)
+                .getPropertyValue('--viewer-fit')) || 0.76;
+    var availW = window.innerWidth * fit - pad * 2;
+    var availH = window.innerHeight * fit - pad * 2;
+    var scale = Math.min(availW / rec[1], availH / rec[2]);
+    viewerImg.style.width = (rec[1] * scale + pad * 2) + 'px';
+    viewerImg.style.height = (rec[2] * scale + pad * 2) + 'px';
+  }
+
   function show(i) {
     current = ((i % FILES.length) + FILES.length) % FILES.length;
     viewerImg.src = DIR + FILES[current][0] + V;
     viewerImg.alt = 'Movie quote ' + (current + 1);
+    fitViewer();
     viewer.classList.add('open');
     hint.style.display = '';
     document.body.style.overflow = 'hidden';
@@ -388,7 +575,10 @@
 
   wall.addEventListener('click', function (e) {
     var fig = e.target.closest ? e.target.closest('.shot') : null;
-    if (fig) show(parseInt(fig.dataset.index, 10));
+    if (!fig) return;
+    var i = parseInt(fig.dataset.index, 10);
+    if (i === SECRET) collapse();
+    else show(i);
   });
   viewer.addEventListener('click', hide);
 
@@ -398,6 +588,531 @@
     else if (e.key === 'ArrowRight') show(current + 1);
     else if (e.key === 'ArrowLeft') show(current - 1);
   });
+
+  // ── 39 ──────────────────────────────────────────────────────────────
+  // The one quote that doesn't open. Click it and the page comes apart: every
+  // picture, the title, the ladder and the climber are pinned where they sit,
+  // then dropped past the bottom edge in one left-to-right sweep.
+  var SECRET = 38;                         // zero-based — the tile captioned "39"
+
+  function collapse() {
+    if (frozen) return;
+    frozen = true;
+
+    var back = document.getElementById('back-link');
+    var backStyle = back.getAttribute('style');   // put back once the dust settles
+
+    var targets = [].concat(
+      [].slice.call(document.querySelectorAll('.shot')),
+      [].slice.call(document.querySelectorAll('header h1 img, header p')),
+      [].slice.call(document.querySelectorAll('#rail .ladder-img, #climber')),
+      [back]
+    );
+
+    // Measure everything before touching anything: the first element that goes
+    // fixed drops out of the flow, which shortens the page and can shunt the
+    // scroll position, and every rect read after that would be off.
+    var measured = [];
+    targets.forEach(function (el) {
+      var r = el.getBoundingClientRect();
+      if (r.width || r.height) measured.push({ el: el, r: r });  // ladder is display:none under 950px
+    });
+
+    // A left-to-right wave gives the fall its shape; everything on top of that
+    // is small enough to read as things coming loose rather than as chaos. Each
+    // piece tips a little, slides a little, and falls at its own slightly
+    // different weight, so no two land in step even inside one column.
+    var minX = Infinity, maxX = -Infinity;
+    measured.forEach(function (m) {
+      var cx = m.r.left + m.r.width / 2;
+      if (cx < minX) minX = cx;
+      if (cx > maxX) maxX = cx;
+    });
+    var span = Math.max(1, maxX - minX);
+    var SWEEP = 0.7;                         // seconds for the wave to cross the page
+
+    var fallers = measured.map(function (m) {
+      var el = m.el, r = m.r;
+      el.classList.add('falling');
+      el.style.position = 'fixed';
+      el.style.left = r.left + 'px';
+      el.style.top = r.top + 'px';
+      el.style.width = r.width + 'px';
+      el.style.height = r.height + 'px';
+      el.style.right = 'auto';
+      el.style.bottom = 'auto';
+      el.style.margin = '0';
+      el.style.transform = 'none';
+      el.style.willChange = 'transform';
+
+      return {
+        el: el, top: r.top,
+        x: 0, y: 0,
+        vx: (Math.random() - 0.5) * 46,      // ~20px of lean by the time it exits
+        v: -Math.random() * 40,              // some let go with a slight lift
+        rot: 0, vrot: (Math.random() - 0.5) * 44,
+        g: 0.92 + Math.random() * 0.2,       // own weight, so a column breaks step
+        delay: (r.left + r.width / 2 - minX) / span * SWEEP +
+               (Math.random() - 0.5) * 0.13  // ragged edge on the wave
+      };
+    });
+
+    // Nothing is in the flow any more, so the page is one screen tall and done
+    // scrolling — which is what keeps the fixed pieces from drifting.
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    document.body.style.height = '100vh';
+
+    var last = null;
+
+    function step(t) {
+      if (last === null) last = t;
+      var dt = Math.min(0.05, (t - last) / 1000);   // clamped so a stalled tab can't teleport them
+      last = t;
+
+      var live = 0;
+      for (var i = 0; i < fallers.length; i++) {
+        var f = fallers[i];
+        if (f.done) continue;
+        live++;
+        if (f.delay > 0) { f.delay -= dt; continue; }
+
+        f.v += G * f.g * dt;
+        f.y += f.v * dt;
+        f.x += f.vx * dt;
+        f.rot += f.vrot * dt;
+        f.el.style.transform = 'translate(' + f.x.toFixed(1) + 'px,' + f.y.toFixed(1) +
+                               'px) rotate(' + f.rot.toFixed(1) + 'deg)';
+
+        // Top edge is past the bottom of the screen, so it's fully gone.
+        if (f.top + f.y > window.innerHeight + 120) {
+          f.done = true;
+          f.el.style.display = 'none';
+        }
+      }
+
+      if (live) requestAnimationFrame(step);
+      else settle();
+    }
+
+    // Everything fell, the back arrow included — fade it in again so the empty
+    // page isn't a dead end, then let her come down.
+    function settle() {
+      back.classList.remove('falling');
+      if (backStyle === null) back.removeAttribute('style');
+      else back.setAttribute('style', backStyle);
+      back.style.opacity = '0';
+      back.style.transition = 'opacity 0.9s ease';
+      requestAnimationFrame(function () { back.style.opacity = '1'; });
+
+      setTimeout(afterlife, 500);        // a beat of empty page first
+    }
+
+    requestAnimationFrame(step);
+  }
+
+  // ── What's left afterwards ──────────────────────────────────────────
+  // She drops in from above the screen and lands under a line, with a couple of
+  // small bounces so the landing has some weight. Clicking her drops her out of
+  // the bottom; the next one comes down with the next line. Runs on the same
+  // gravity as the collapse, so the whole page moves by one set of rules.
+  var LINES = [
+    'every year around the same time, june into july',
+    'a ladybug comes to visit me',
+    'and never quite the ordinary kind',
+    '2023 — a gray one, hearts where its spots should be',
+    '2024 — a yellow one, striped down its back',
+    '2025 — a gold one, more spots than i could count',
+    '2026 — a black one, its colors swapped around',
+    'i used to think they were a sign of the year ahead',
+    'and made up whole stories about what each one meant',
+    'but i had it backwards',
+    'they are but a reflection of my perception of the year left behind'
+  ];
+
+  function afterlife() {
+    var stage = document.getElementById('after');
+    var lineEl = document.getElementById('after-line');
+    var charEl = document.getElementById('after-char');
+    var line = 0, busy = true;
+
+    var IN_TIME = 1.35;              // seconds, easing out of the drop into the float
+    var OUT_TIME = 1.0;              // seconds, easing back into a fall
+
+    // Well clear of the top edge, so she's already moving when she appears.
+    function startY() { return -(window.innerHeight * 0.8 + charEl.offsetHeight); }
+
+    // `base` is where the fall has got to; the float is layered on top of it and
+    // never stops, so she's still drifting on the way in and on the way out.
+    var base = 0, phase = 'in', from = 0, to = 0, dur = 0, phaseStart = 0;
+
+    function startPhase(name, fromY, toY, seconds) {
+      phase = name;
+      from = fromY; to = toY;
+      base = fromY;
+      dur = seconds * 1000;
+      phaseStart = performance.now();
+      /* `base` has just teleported — she ended the last line off the bottom and
+         starts this one high above the top. The motes read their drag off how
+         far she moved since the previous frame, so unless the mark moves with
+         her the seam between two lines is measured as a fall of thousands of
+         pixels a second: for one frame the whole field lurches most of a screen
+         and every speck flashes out to a full-length streak. That single frame
+         is the break in the loop. Nothing here moves the specks themselves —
+         they simply carry on drifting from wherever they were, which is what
+         makes one line run into the next without a seam. */
+      lastBase = base;
+    }
+
+    /* ── motes ────────────────────────────────────────────────────────────
+       Specks of light hanging in the air behind her. While she floats they sit
+       there as points, wandering. The moment she starts to fall they are
+       dragged past her and draw out into streaks along the way they are going —
+       the trick a long exposure plays on anything moving — and settle back to
+       points as she comes to rest. The near ones are bigger, brighter and get
+       dragged further, which is what gives the field its depth. */
+    var fx = document.getElementById('after-fx');
+    var ctx = fx.getContext('2d');
+    var motes = [], FW = 0, FH = 0;
+    var MOTES = 110;
+    var DRIFT = 16;                  // px/s they fall of their own accord
+
+    function sizeFx() {
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      FW = window.innerWidth; FH = window.innerHeight;
+      fx.width = Math.round(FW * dpr);
+      fx.height = Math.round(FH * dpr);
+      fx.style.width = FW + 'px';
+      fx.style.height = FH + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function seedMotes() {
+      motes.length = 0;
+      for (var i = 0; i < MOTES; i++) {
+        motes.push({
+          x: Math.random() * FW,
+          y: Math.random() * FH,
+          d: 0.35 + Math.random() * 0.9,          // depth
+          r: 0.8 + Math.random() * 2,
+          a: 0.3 + Math.random() * 0.5,
+          px: Math.random() * Math.PI * 2,        // its own wander, and its own
+          ps: 0.25 + Math.random() * 0.5          // beat to twinkle on
+        });
+      }
+    }
+
+    sizeFx();
+    seedMotes();
+    window.addEventListener('resize', function () { sizeFx(); seedMotes(); });
+
+    function drawMotes(dt, vel, t) {
+      ctx.clearRect(0, 0, FW, FH);
+      ctx.strokeStyle = '#fdfaf1';
+      ctx.shadowColor = 'rgba(253, 250, 241, 0.95)';
+      ctx.lineCap = 'round';
+
+      /* The height the field repeats over. Every speck is drawn again one span
+         further down, so the one sliding off the bottom is already arriving at
+         the top in the same frame: the field turns like a cylinder rather than
+         being dismantled at one edge and rebuilt at the other. This is what an
+         edge fade cannot do — a fade only makes the seam dimmer, and it thins
+         the field out top and bottom while it is at it.
+
+         Exactly the height of the glass, with no margin either side: a speck
+         straddling the seam is drawn at both ends of it at once, so its two
+         halves make up one whole speck and the density never dips. */
+      var SPAN = FH;
+
+      /* A backstop for the same failure arriving another way: `vel` is a
+         division by the frame time, so a frame that takes almost no time at all
+         reports a speed that never happened. Her real fall peaks around four
+         screen-heights a second, so this only ever bites on a bad frame. */
+      vel = Math.min(vel, FH * 20);
+
+      for (var i = 0; i < motes.length; i++) {
+        var m = motes[i];
+        var sp = (DRIFT + vel * 0.45) * m.d;     // her speed drags them along
+        m.y += sp * dt;
+        m.x += Math.sin(t * m.ps + m.px) * 6 * dt * m.d;
+
+        /* Fold y back into one span. Its x is left alone: a speck that changed
+           column on the way round read as one dying and another being born. */
+        m.y -= Math.floor(m.y / SPAN) * SPAN;
+
+        /* One shape for both states, so there is never a frame where a speck
+           turns from one kind of thing into another. A round cap on a
+           zero-length line IS a dot of exactly the old radius, and that same
+           line grown long is the streak — so it stretches out of its resting
+           shape and settles back into it continuously, instead of switching at
+           a threshold that every speck crosses at the same moment. The halo
+           goes the same way: full at rest, gone by the time it is a streak. */
+        var len = Math.min(sp * 0.075, FH * 0.5);
+        var glow = Math.max(0, 1 - len / 6);
+
+        ctx.globalAlpha = m.a * (0.6 + 0.4 * Math.sin(t * m.ps * 1.7 + m.px));
+        ctx.lineWidth = m.r * 2;
+        ctx.shadowBlur = m.r * 4 * glow;
+
+        /* Its ink runs from the tail up-screen to the head. Draw it wherever
+           that overlaps the glass — this span, or the one below, which is how a
+           long streak keeps its tail on screen after its head has gone off the
+           bottom. Off-screen copies cost only the test. */
+        for (var k = 0; k <= 1; k++) {
+          var yy = m.y + k * SPAN;
+          if (yy + m.r < 0 || yy - len - m.r > FH) continue;
+          ctx.beginPath();
+          ctx.moveTo(m.x, yy - len);             // the tail is where it has been
+          ctx.lineTo(m.x, yy);
+          ctx.stroke();
+        }
+      }
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+    }
+
+    // How fast she is actually travelling, read off the drop itself rather than
+    // guessed from the phase, so the streaks grow and shrink with her easing.
+    var lastBase = 0, lastNow = 0;
+
+    // ── the visitor ───────────────────────────────────────────────────
+    // Line two says a ladybug comes to visit, so one does. It arrives from off
+    // the right, arcs over her and settles off her top left. It flies in facing
+    // the way it is going: the drawing reads right way up at 180°, which is why
+    // it comes in leftward and holds that heading while it hangs there.
+    var BUG_LINE = 1;
+    var bugEl = document.getElementById('after-bug');
+    var bug = { state: 'off', t0: 0, dur: 0, pts: null, rest: null,
+                head: 180, at: { x: 0, y: 0 }, flap: false, rock: 0 };
+
+    /* One long sweeping curve, and nothing else. It used to carry loops laid
+       over the top — a whole extra turn apiece — and they read as tumbling
+       rather than flying, so they are gone.
+
+       The path is still built from its heading rather than as a drawn line:
+       heading is a slow `bend` across the flight, and stepping along it gives a
+       unit-speed path whose direction is continuous everywhere. That is what
+       keeps the bug pointing where it is actually going the whole way.
+
+       What comes out is then rotated and scaled onto start→rest. That is a
+       similarity transform, so the shape survives it intact while the flight
+       still begins and ends exactly where it must. */
+    function buildFlight(start, rest, bend) {
+      var N = 240, pts = new Array(N + 1), x = 0, y = 0, i;
+      pts[0] = { x: 0, y: 0 };
+
+      for (i = 0; i < N; i++) {
+        var u = (i + 0.5) / N;
+        var h = bend * (u - 0.5);
+        x += Math.cos(h) / N;
+        y += Math.sin(h) / N;
+        pts[i + 1] = { x: x, y: y };
+      }
+
+      var ex = pts[N].x, ey = pts[N].y;
+      var dx = rest.x - start.x, dy = rest.y - start.y;
+      var den = ex * ex + ey * ey || 1;
+      var a = (ex * dx + ey * dy) / den;        // rotate + uniform scale
+      var b = (ex * dy - ey * dx) / den;
+      for (i = 0; i <= N; i++) {
+        var px = pts[i].x, py = pts[i].y;
+        pts[i] = { x: start.x + a * px - b * py, y: start.y + b * px + a * py };
+      }
+      bug.pts = pts;
+    }
+
+    // Walk the built path. `u` here is already eased, so this is pure geometry.
+    function bugPath(u) {
+      var p = bug.pts, N = p.length - 1;
+      var f = Math.min(1, Math.max(0, u)) * N;
+      var i = Math.min(N - 1, Math.floor(f)), g = f - i;
+      return { x: p[i].x + (p[i + 1].x - p[i].x) * g,
+               y: p[i].y + (p[i + 1].y - p[i].y) * g };
+    }
+
+    // In low from the right, climbing left across the window in one easy arc,
+    // and up into the rest spot.
+    function bugEnter() {
+      var lr = lineEl.getBoundingClientRect();
+      var bh = bugEl.offsetHeight || 30;
+      var W = window.innerWidth, H = window.innerHeight;
+
+      bug.rest = { x: lr.left, y: lr.top - bh * 2.2 };   // above the line, on its left edge
+      buildFlight({ x: W + 70, y: H * 0.72 }, bug.rest, -0.55);
+      bug.state = 'in';
+      bug.t0 = performance.now();
+      // Straight across now the loops are gone, so it wants less time than the
+      // long way round used to take, or it crawls.
+      bug.dur = 2500;
+      bugEl.classList.add('show');
+    }
+
+    // It carries on the way it was already heading — up and out past the left
+    // edge. Stays visible the whole way and is only hidden once it is gone.
+    function bugLeave() {
+      if (bug.state === 'off') return;
+      var W = window.innerWidth, H = window.innerHeight;
+
+      buildFlight({ x: bug.at.x, y: bug.at.y },
+                  { x: -W * 0.14, y: bug.at.y - H * 0.06 }, -0.5);
+      bug.state = 'out';
+      bug.t0 = performance.now();
+      bug.dur = 1800;
+    }
+
+    function tick(now) {
+      if (phase !== 'rest') {
+        var p = Math.min(1, (now - phaseStart) / dur);
+        // Out of the drop on the way in, back into one on the way out — the two
+        // curves are mirrors, so leaving looks like the entrance reversed.
+        var e = phase === 'in' ? 1 - Math.pow(1 - p, 3) : p * p * p;
+        base = from + (to - from) * e;
+
+        if (p >= 1) {
+          if (phase === 'in') {
+            phase = 'rest';
+            base = 0;
+            busy = false;
+          } else if (line === LINES.length - 1) {
+            /* That was the last thing she had to say, so she does not come back
+               up with another line — she keeps falling, off this page and onto
+               the home one, where she lands on her feet. Parking the phase at
+               'rest' leaves her where she is (off the bottom, out of sight) and
+               stops the fall being restarted, while the frame loop carries on
+               so the specks keep drifting through the handover. `busy` stays
+               true, so nothing responds to a click on the way out. */
+            phase = 'rest';
+            leaveForHome();
+          } else {
+            // She's off the bottom — bring the next line down with the next one.
+            line = line + 1;
+            lineEl.textContent = LINES[line];
+            lineEl.classList.add('show');
+            startPhase('in', startY(), 0, IN_TIME);
+            // Set off with her, not after her, so it is already in the air while
+            // she falls. Needs the new text laid out first to measure against.
+            if (line === BUG_LINE) bugEnter();
+            // One line's warning is enough to have the next page and the two
+            // drawings she lands in already in cache, so the handover is not
+            // spent waiting on the network with nothing on screen.
+            if (line === LINES.length - 1) warmHome();
+          }
+        }
+      }
+
+      // Three slow sines on different periods, so the drift never repeats on an
+      // obvious beat and she reads as still falling while she hangs there.
+      var t = now / 1000;
+      var bob = Math.sin(t * 1.15) * 14;
+      var sway = Math.sin(t * 0.74 + 0.7) * 10;
+      var tilt = Math.sin(t * 0.53 + 1.6) * 4.5;
+
+      charEl.style.transform = 'translate(' + sway.toFixed(2) + 'px,' +
+                               (base + bob).toFixed(2) + 'px) rotate(' + tilt.toFixed(2) + 'deg)';
+
+      var dt = lastNow ? Math.min((now - lastNow) / 1000, 0.05) : 0.016;
+      lastNow = now;
+      drawMotes(dt, Math.abs(base - lastBase) / dt, t);
+      lastBase = base;
+
+      if (bug.state !== 'off') {
+        var want;
+        if (bug.state === 'hover') {
+          bug.at = bug.rest;
+          want = 180;
+        } else {
+          // The built path is unit-speed, so all the easing lives here: a
+          // smoothstep off the mark and into the stop. Heading is read a fixed
+          // step back along the path, not back in time — near the end the time
+          // step shrinks to nothing and would leave nothing to aim by.
+          var u = Math.min(1, (now - bug.t0) / bug.dur);
+          var e = u * u * (3 - 2 * u);
+          bug.at = bugPath(e);
+          var prev = bugPath(Math.max(0, e - 0.01));
+          want = Math.atan2(bug.at.y - prev.y, bug.at.x - prev.x) * 180 / Math.PI;
+          if (u >= 1) {
+            if (bug.state === 'in') { bug.state = 'hover'; }
+            else { bug.state = 'off'; bugEl.classList.remove('show'); }
+          }
+        }
+
+        // Turn the shortest way round. It has to keep up through the loop, where
+        // the heading swings the whole way round, but settle lazily once parked.
+        bug.head += ((((want - bug.head) % 360) + 540) % 360 - 180) *
+                    (bug.state === 'hover' ? 0.07 : 0.3);
+
+        // Once parked it floats the way she does — the same slow rock, eased in
+        // over a second or so rather than switched on, which would show as a
+        // kick the moment it stops.
+        bug.rock += ((bug.state === 'hover' ? 1 : 0) - bug.rock) * 0.03;
+        var rock = Math.sin(t * 0.5 + 0.9) * 7 * bug.rock;
+
+        // Drift on its own slow periods, plus a small quick flutter that keeps
+        // the flight from looking like a bead on a wire. Both are deliberately
+        // left out of the heading above: the flutter's slope is far steeper than
+        // the path's and would shake the sprite instead of aiming it.
+        var bx = Math.sin(t * 0.62 + 2.1) * 9;
+        var by = Math.sin(t * 0.95 + 0.4) * 6 + Math.sin(t * 6.2) * 1.5;
+        bugEl.style.transform = 'translate(' + (bug.at.x + bx).toFixed(2) + 'px,' +
+                                (bug.at.y + by).toFixed(2) + 'px) rotate(' +
+                                (bug.head + rock).toFixed(2) + 'deg)';
+
+        var beat = Math.floor(now / 70) % 2 === 0;
+        if (beat !== bug.flap) { bug.flap = beat; bugEl.classList.toggle('alt', beat); }
+      }
+
+      requestAnimationFrame(tick);
+    }
+
+    /* The handover. She has just gone off the bottom for the last time, so the
+       only thing still drawn is the field of specks: fade that into the
+       background and follow her. Both pages are painted the same #8ba87a, and
+       the home page opens behind its own full screen of that colour, so there
+       is nothing to see across the switch — she leaves the bottom of one page
+       and drops in from the top of the next. */
+    function warmHome() {
+      var l = document.createElement('link');
+      l.rel = 'prefetch'; l.as = 'document'; l.href = 'home.html?drop=1';
+      document.head.appendChild(l);
+      ['svgs/character/character-fall.svg',
+       'svgs/gallery-character/idleright.svg'].forEach(function (src) {
+        var i = new Image(); i.src = src;
+      });
+    }
+
+    var leaving = false;
+    function leaveForHome() {
+      if (leaving) return;
+      leaving = true;
+      warmHome();                             // in case she got here another way
+      /* The moment she is off the bottom, and not a frame later. The specks were
+         faded out on the way down rather than after she landed, so there is
+         nothing left to wait for here: one fall runs straight into the next. */
+      location.href = 'home.html?drop=1';
+    }
+
+    charEl.addEventListener('click', function () {
+      if (busy) return;
+      busy = true;
+      lineEl.classList.remove('show');           // the line leaves with her
+      bugLeave();                                // and so does the visitor, if it's here
+      /* On the last line this fall does not end on this page, so the specks go
+         out *with* her instead of being cleared up afterwards — by the time she
+         is off the bottom the screen is already the bare colour the next page
+         opens on, and the handover costs nothing. */
+      if (line === LINES.length - 1) {
+        fx.style.transition = 'opacity ' + (OUT_TIME * 900) + 'ms linear';
+        fx.style.opacity = '0';
+      }
+      startPhase('out', base, window.innerHeight + charEl.offsetHeight * 1.6, OUT_TIME);
+    });
+
+    lineEl.textContent = LINES[line];
+    stage.classList.add('on');                   // before measuring — no height while hidden
+    startPhase('in', startY(), 0, IN_TIME);
+    requestAnimationFrame(function () { lineEl.classList.add('show'); });
+    requestAnimationFrame(tick);
+  }
 
   // Come back to whichever page sent you here, when that was a page on this site.
   document.getElementById('back-link').addEventListener('click', function (e) {
@@ -421,5 +1136,7 @@ document.addEventListener('wheel', function (e) {
 }, { passive: false });
 document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
 </script>
+<script src="placements.js"></script>
+<script src="place.js"></script>
 </body>
 </html>
